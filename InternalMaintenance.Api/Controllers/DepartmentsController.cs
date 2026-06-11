@@ -1,10 +1,9 @@
 
 using InternalMaintenance.Api.Data;
+using InternalMaintenance.Api.DTOs.Departments;
 using InternalMaintenance.Api.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Update.Internal;
 namespace InternalMaintenance.Api.Controllers;
 
 [ApiController]
@@ -19,14 +18,34 @@ public class DepartmentsController: ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<Department>>> GetDepartments()
     {
-        var departments  = await _context.Departments.ToListAsync();
+        var departments  = await _context.Departments
+        .Select(department=> new DepartmentResponse
+        {
+            Id= department.Id,
+            Name = department.Name,
+            Description = department.Description,
+            CreatedAt = department.CreatedAt
+            
+        }).ToListAsync();
         return Ok(departments);
     }
     [HttpGet("{id:int}")]
     public async Task<ActionResult<List<Department>>> GetDepartmentById(int id)
     {
-        var department = await _context.Departments.FirstOrDefaultAsync(department => department.Id == id);
-        if(department == null)
+        //Where = lọc dữ liệu
+        // Select = chọn dữ liệu muốn trả về
+        // FirstOrDefaultAsync = lấy 1 dòng đầu tiên hoặc null
+        var department = await _context.Departments
+        .Where(department => department.Id == id)
+        .Select(department => new DepartmentResponse
+        {
+            Id = department.Id,
+            Name = department.Name,
+            Description = department.Description,
+            CreatedAt = department.CreatedAt
+        })
+        .FirstOrDefaultAsync();
+        if(department is null)
         {
             return NotFound(new
             {
@@ -37,30 +56,56 @@ public class DepartmentsController: ControllerBase
     }
     
     [HttpPost]
-    public async Task<ActionResult<Department>> CreateDepartment(Department department){
+    public async Task<ActionResult<DepartmentResponse>> CreateDepartment(CreateDepartmentRequest request){
+         // Kiểm tra Tên phòng ban có tồn tại hay không 
+        var normalizedName = request.Name.Trim();
+
+        var isDuplicate = await _context.Departments.AnyAsync(d=>d.Name==normalizedName);
+
+        if(isDuplicate)
+        {
+           return BadRequest(new
+           {
+               message = "Department name already exists"
+           });
+        }
+
+        var department = new Department
+        {
+            Name = normalizedName,
+            Description = request.Description?.Trim()
+        };
         _context.Departments.Add(department);
         //Lưu thay đổi xuống Database
         // Sau khi lưu , database sẽ sinh Id cho department
         await _context.SaveChangesAsync();
        
+        var response = new Department
+        {
+            Id= department.Id,
+            Name = department.Name,
+            Description = department.Description,
+            CreatedAt = department.CreatedAt
+        };
        //Sau khi tạo xong department, Api sẽ chỉ client biết có thể lấy department vừa tạo bằng action GetDepartmentById.
         return CreatedAtAction(
             nameof(GetDepartmentById),
             new {id = department.Id},
-            department
+            response
         );
     }
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<Department>> UpdateDepartment( int id, Department department)
+    public async Task<ActionResult<DepartmentResponse>> UpdateDepartment( int id, UpdateDepartmentRequest request)
     {
         // 1. Lấy department có Id = 2 trong database
         // 2. Nếu không có → trả 404 Not Found
         // 3. Nếu có → sửa Name, Description
         // 4. SaveChangesAsync()
         // 5. Trả về department sau khi update
-        var existingDepartment  = await _context.Departments.FirstOrDefaultAsync(d => d.Id==id);
+        var department   = await _context.Departments
+        .FirstOrDefaultAsync(d => d.Id==id);
         
-        if(existingDepartment is null)
+        if(department  is null)
         {
             return NotFound(
                 new
@@ -69,11 +114,32 @@ public class DepartmentsController: ControllerBase
                 }
             );
         }
-        existingDepartment.Name = department.Name;
-        existingDepartment.Description = department.Description;
+
+         // Kiểm tra Tên phòng ban có tồn tại hay không 
+        var normalizedName = request.Name.Trim();
+        var isDuplicate = await _context.Departments.AnyAsync(d => d.Name==normalizedName);
+        if (isDuplicate)
+        {
+            return BadRequest(
+                new
+                {
+                    message="Department name already exists"
+                }
+            );
+        }
+        department.Name =normalizedName;
+        department.Description = request.Description?.Trim();
         await _context.SaveChangesAsync();
+
+        var response = new DepartmentResponse
+        {
+            Id = department.Id,
+            Name = department.Name,
+            Description = department.Description,
+            CreatedAt = department.CreatedAt
+        };
         
-        return Ok(existingDepartment);
+        return Ok(response);
     }
 
     [HttpDelete("{id:int}")]
@@ -90,6 +156,7 @@ public class DepartmentsController: ControllerBase
                 }
             );
         }
+       
         //Kiểm tra phòng ban nào có User đang thuộc về hay không 
         var hasUsers = await _context.Users.AnyAsync(user=>user.DepartmentId ==id);
         //Kiểm tra phòng ban nào có Thiết bị nào đang thuộc về không
