@@ -15,7 +15,7 @@ public class MaintenanceTicket
     //Thông tin chi tiết của thiết bị; chỉ có dữ liệu khi query có Include
     public Equipment? Equipment{get;set;}
     //Ai là người báo lỗi/ Tạo ticket  
-    public int CreatByUserId {get;set;}
+    public int CreatedByUserId {get;set;}
     // Thông tin chi tiết ngươi tạo; chỉ có dữ liệu khi query có Include
     public User? CreatedByUser  {get;set;}
     //Tại sao là int? : 
