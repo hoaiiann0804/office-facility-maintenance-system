@@ -7,10 +7,10 @@ services:
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
       MSSQL_PID: "Developer"
     ports:
-      - "1433:1433"
+      - "${SQLSERVER_PORT}:1433"
     volumes:
       - internal_sqlserver_data_dev:/var/opt/mssql
     mem_limit: 1024m
