@@ -11,7 +11,7 @@ public class Equipment
     public int DepartmentId {get;set;}
     public Department? Department{get;set;}
     public string Status{get;set;} ="Active";
-    public DateTime? PurchasedDated {get;set;}
+    public DateTime? PurchasedDate {get;set;}
 
     public string? Description {get;set;}
     public DateTime CreatedAt {get;set;} = DateTime.UtcNow;
