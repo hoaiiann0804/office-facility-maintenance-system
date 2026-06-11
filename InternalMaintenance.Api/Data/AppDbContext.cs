@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Role>().HasIndex(role=>role.Name).IsUnique();
         modelBuilder.Entity<User>().HasIndex(user=>user.Email).IsUnique();
+        modelBuilder.Entity<Department>().HasIndex(department => department.Name).IsUnique();
         modelBuilder.Entity<Equipment>().HasIndex(equipment=>equipment.Code).IsUnique();
         modelBuilder.Entity<MaintenanceTicket>().HasIndex(ticket=>ticket.TicketCode).IsUnique();
 
