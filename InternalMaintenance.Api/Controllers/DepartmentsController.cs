@@ -80,7 +80,7 @@ public class DepartmentsController: ControllerBase
         // Sau khi lưu , database sẽ sinh Id cho department
         await _context.SaveChangesAsync();
        
-        var response = new Department
+        var response = new DepartmentResponse
         {
             Id= department.Id,
             Name = department.Name,
