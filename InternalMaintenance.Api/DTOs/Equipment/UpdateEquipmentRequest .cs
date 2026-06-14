@@ -1,4 +1,4 @@
-using InternalMaintenance.Api.DTOs.Equipment;
+using InternalMaintenance.Api.DTOs;
 
 public class UpdateEquipmentRequest: CreateEquipmentRequest   {
     
