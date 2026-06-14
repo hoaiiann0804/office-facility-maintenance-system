@@ -33,19 +33,47 @@ public class AppDbContext : DbContext
             .WithMany(user => user.CreatedTickets)
             .HasForeignKey(ticket => ticket.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
         // 1 Techincian có thể được giao nhiều ticket 
         modelBuilder.Entity<MaintenanceTicket>()
             .HasOne(ticket => ticket.AssignedTechnician)
             .WithMany(user => user.AssignedTickets)
-            .HasForeignKey(user => user.AssignedTechnicianId)
+            .HasForeignKey(ticket => ticket.AssignedTechnicianId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // 1 Thiết bị sẽ có nhiều ticket (Phiếu báo lỗi/ Bảo trì)
+        modelBuilder.Entity<MaintenanceTicket>()
+        .HasOne(ticket => ticket.Equipment)
+        .WithMany(equipment => equipment.MaintenanceTickets)
+        .HasForeignKey(ticket => ticket.EquipmentId)
+        .OnDelete(DeleteBehavior.Restrict);
+
 
         // 1 User có thể thực hiện nhiều lần đổi trạng thái ticket
         modelBuilder.Entity<TicketStatusHistory>()
             .HasOne(history => history.ChangedByUser)
             .WithMany(user => user.TicketStatusHistories)
-            .HasForeignKey(user => user.ChangedByUserId)
+            .HasForeignKey(history => history.ChangedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Equipment>()
+        .HasOne(equipment => equipment.Department)
+        .WithMany(department => department.Equipment)
+        .HasForeignKey(equipment => equipment.DepartmentId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+
+        modelBuilder.Entity<User>()
+        .HasOne(user => user.Role)
+        .WithMany(role => role.Users)
+        .HasForeignKey(user=>user.RoleId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+        .HasOne(user => user.Department)
+        .WithMany(department => department.Users)
+        .HasForeignKey(user => user.DepartmentId)
+        .OnDelete(DeleteBehavior.Restrict);
 
     }
 }
