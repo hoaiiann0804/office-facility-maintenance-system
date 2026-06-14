@@ -1,5 +1,5 @@
 using InternalMaintenance.Api.Data;
-using InternalMaintenance.Api.DTOs.Equipment;
+using InternalMaintenance.Api.DTOs;
 using InternalMaintenance.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
