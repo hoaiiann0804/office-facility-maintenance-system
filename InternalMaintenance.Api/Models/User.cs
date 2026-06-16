@@ -28,6 +28,12 @@ public class User
     public Department? Department {get;set;}
 
     public bool IsActive {get;set;}
+
+    // User(Admin/Manager/Technician/Staff) sau khi đăng nhập lần đầu, Buộc phải thay đổi mật khẩu
+    public bool MustChangePassword { get; set; } = true;
+
+    // User đăng nhập lần cuối lúc nào 
+    public DateTime? LastLoginAt { get; set; }
     public DateTime CreatedAt {get;set;} = DateTime.UtcNow;
 
     //User mới tạo chưa có thể chưa từng được cập nhật nên dùng null (?)
