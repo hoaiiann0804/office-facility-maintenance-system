@@ -1,7 +1,7 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace InternalMaintenance.Api.DTOs;
+namespace InternalMaintenance.Api.DTOs.Equipment;
 
 public class CreateEquipmentRequest
 {

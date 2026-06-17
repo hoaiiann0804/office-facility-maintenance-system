@@ -1,4 +1,4 @@
-namespace InternalMaintenance.Api.DTOs;
+namespace InternalMaintenance.Api.DTOs.MaintenanceTicket;
 
 public class TicketStatusHistoryResponse
 {

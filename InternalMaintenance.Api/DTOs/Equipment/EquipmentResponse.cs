@@ -1,4 +1,4 @@
-namespace InternalMaintenance.Api.DTOs;
+namespace InternalMaintenance.Api.DTOs.Departments;
 public class EquipmentResponse
 {
     public int Id {get;set;}
