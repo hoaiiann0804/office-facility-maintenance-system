@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace InternalMaintenance.Api.DTOs;
+namespace InternalMaintenance.Api.DTOs.MaintenanceTicket;
 
 // Request này chỉ phục vụ phân công ticket cho technician.
 //KHông đại diện cho một bảng riêng cho db 

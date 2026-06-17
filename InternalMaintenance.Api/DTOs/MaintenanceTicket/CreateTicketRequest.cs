@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace InternalMaintenance.Api.DTOs;
+namespace InternalMaintenance.Api.DTOs.MaintenanceTicket;
 
 public class CreateTicketRequest
 {
