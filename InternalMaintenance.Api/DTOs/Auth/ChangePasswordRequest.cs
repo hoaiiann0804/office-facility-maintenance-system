@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace InternalMaintenance.Api.DTOs.Auth;
 
-public class CChangePasswordRequest
+public class ChangePasswordRequest
 {
     [Required(ErrorMessage ="Current password is required")]
     public string CurrentPassword {get;set;} = string.Empty;
