@@ -17,7 +17,7 @@ public class EquipmentController: ControllerBase
 
     }
     [HttpGet]
-    public async Task<ActionResult<List<Equipment>>> GetEquipment()
+    public async Task<ActionResult<List<EquipmentResponse>>> GetEquipment()
     {
         var equipment = await _context.Equipment
         .Select(e => new EquipmentResponse
@@ -39,7 +39,7 @@ public class EquipmentController: ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<List<Equipment>>> GetEquipmentById(int id)
+    public async Task<ActionResult<EquipmentResponse>> GetEquipmentById(int id)
     {
         var equipment = await _context.Equipment
         .Where(e => e.Id == id)
