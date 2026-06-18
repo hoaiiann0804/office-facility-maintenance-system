@@ -30,7 +30,7 @@ public class MaintenanceTicketsController: ControllerBase
     }
     
     [HttpGet]
-    public async Task<ActionResult<List<MaintenanceTicket>>> GetMaintenanceTickets()
+    public async Task<ActionResult<List<MaintenanceTicketResponse>>> GetMaintenanceTickets()
     {
         var tickets = await _context.MaintenanceTickets.Select(
             ticket => new MaintenanceTicketResponse
@@ -59,7 +59,7 @@ public class MaintenanceTicketsController: ControllerBase
     }
 
      [HttpGet("{id:int}")]
-    public async Task<ActionResult<List<MaintenanceTicket>>> GetGetMaintenanceTicketById (int id)
+    public async Task<ActionResult<MaintenanceTicketResponse>> GetGetMaintenanceTicketById (int id)
     {
         var ticket = await _context.MaintenanceTickets.Where(
             ticket => ticket.Id == id

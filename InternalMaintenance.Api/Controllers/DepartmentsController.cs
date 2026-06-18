@@ -16,7 +16,7 @@ public class DepartmentsController: ControllerBase
         _context = context;
     }
     [HttpGet]
-    public async Task<ActionResult<List<Department>>> GetDepartments()
+    public async Task<ActionResult<List<DepartmentResponse>>> GetDepartments()
     {
         var departments  = await _context.Departments
         .Select(department=> new DepartmentResponse
@@ -30,7 +30,7 @@ public class DepartmentsController: ControllerBase
         return Ok(departments);
     }
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<List<Department>>> GetDepartmentById(int id)
+    public async Task<ActionResult<DepartmentResponse>> GetDepartmentById(int id)
     {
         //Where = lọc dữ liệu
         // Select = chọn dữ liệu muốn trả về
