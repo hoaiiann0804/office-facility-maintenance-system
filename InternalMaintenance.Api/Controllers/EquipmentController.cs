@@ -1,7 +1,10 @@
+using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.Departments;
 using InternalMaintenance.Api.DTOs.Equipment;
+using InternalMaintenance.Api.DTOs.TicketComment;
 using InternalMaintenance.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 namespace InternalMaintenance.Api.Controllers;
@@ -16,6 +19,8 @@ public class EquipmentController: ControllerBase
         _context = context;
 
     }
+
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<List<EquipmentResponse>>> GetEquipment()
     {
@@ -38,6 +43,7 @@ public class EquipmentController: ControllerBase
         return Ok(equipment);
     }
 
+    [Authorize]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<EquipmentResponse>> GetEquipmentById(int id)
     {
@@ -68,6 +74,11 @@ public class EquipmentController: ControllerBase
         return Ok(equipment);
     }
     
+    [Authorize(
+        Roles =
+        $"{UserRoles.Admin}," + 
+        $"{UserRoles.Manager}"
+    )]
     [HttpPost]
     public async Task<ActionResult<EquipmentResponse>> CreateEquipment(CreateEquipmentRequest request)
     {
@@ -81,7 +92,7 @@ public class EquipmentController: ControllerBase
 
         if (!departmentExists)
         {
-            return BadRequest(
+            return NotFound(
                 new
                 {
                     message =  "Department does not exist"
@@ -98,7 +109,7 @@ public class EquipmentController: ControllerBase
 
         if (codeExists)
         {
-            return BadRequest (
+            return NotFound (
                 new
                 {
                     message ="Equipment code already exists"
@@ -118,7 +129,24 @@ public class EquipmentController: ControllerBase
                 }
                 );
             }
-            
+        }
+        var status = string.IsNullOrWhiteSpace(request.Status) 
+        ?EquipmentStatuses.Active: request.Status.Trim();
+
+        var allowedStatus = new[]
+        {
+            EquipmentStatuses.Active,
+            EquipmentStatuses.Inactive,
+        };
+
+        if (!allowedStatus.Contains(status))
+        {
+            return BadRequest (
+                new
+                {
+                    message="Invalid equipment status"
+                }
+            );
         }
 
         var equipment = new Equipment
@@ -126,7 +154,7 @@ public class EquipmentController: ControllerBase
             Code = code,
             Name = name,
             DepartmentId = request.DepartmentId,
-            Status = string.IsNullOrWhiteSpace(request.Status) ? "Active" : request.Status.Trim(),
+            Status = status,
             PurchasedDate = request.PurchasedDate,
             Description = request.Description?.Trim()
         };
@@ -160,6 +188,12 @@ public class EquipmentController: ControllerBase
             response
         );
     }
+
+     [Authorize(
+        Roles =
+        $"{UserRoles.Admin}," + 
+        $"{UserRoles.Manager}"
+    )]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<EquipmentResponse>> UpdateEquipment(int id, UpdateEquipmentRequest request)
     {
@@ -187,7 +221,7 @@ public class EquipmentController: ControllerBase
       
         if (!departmentExists)
         {
-            return BadRequest(
+            return NotFound(
                 new
                 {
                     message="Department does not exist"
@@ -211,12 +245,16 @@ public class EquipmentController: ControllerBase
         // Nếu client không gửi status hoặc gửi chuỗi rỗng thì mặc định là Active
         // Điều này giúp thiết bị có trạng thái hợp lệ sau khi update.
 
-        var status = string.IsNullOrWhiteSpace(request.Status) ? "Active" : request.Status.Trim();
+        var status = string.IsNullOrWhiteSpace(request.Status) ? EquipmentStatuses.Active : request.Status.Trim();
 
         // Chỉ cho phép các trạng thái nằm trong quy trình quản lý thiết bị 
         // Tránh việc client gửi status tùy ý như "BrokeABC", "abc", "Done"
-
-        var allowedStatuses  = new [] {"Active", "UnderMaintenance", "Inactive", "Retired"};
+        // UnderMantenance KHông cho phép set thủ công vì nó được quyết định bởi Ticket flow
+        var allowedStatuses  = new [] {
+            EquipmentStatuses.Active,
+            EquipmentStatuses.Inactive,
+            EquipmentStatuses.Retired,
+        };
 
         if (!allowedStatuses.Contains(status))
         {
@@ -226,13 +264,34 @@ public class EquipmentController: ControllerBase
             });
         } 
 
+        // Không cho Retired nếu thiết bị đang có ticket chưa xử lý xong 
+        // Vì retired ngưng sử dụng vĩch viễn, không thể tồn tại và đang cố xử lý 
+        var hasOpenTicket = await _context.MaintenanceTickets
+        .AnyAsync(ticket => ticket.EquipmentId == equipment.Id
+        && (
+            ticket.Status == TicketStatuses.Pending ||
+            ticket.Status == TicketStatuses.Assigned ||
+            ticket.Status == TicketStatuses.InProgress
+        ));
+
+        if(request.Status == EquipmentStatuses.Retired && hasOpenTicket)
+        {
+            return BadRequest(
+                new
+                {
+                    message ="Cannot retire equipment while it has open mantenance tickets"
+                }
+            );
+        }
+        
+
         // PuscharsedDate là ngày mua/ngày đưa vào sử dụng
         // KHông hợp lý nếu ngày mua trong tương lai
 
          if(request.PurchasedDate.HasValue )
             {
-                var todayInVietNam = DateTime.Now.Date;
-                if(request.PurchasedDate.Value.Date > todayInVietNam)
+                var today = DateTime.UtcNow.Date;
+                if(request.PurchasedDate.Value.Date > today)
                 {
                     return BadRequest(
                     new
@@ -253,7 +312,7 @@ public class EquipmentController: ControllerBase
             equipment.Description = request.Description?.Trim();
 
             //  Ghi lại thời điểm cập nhật gần nhất sau khi audit/debug
-            equipment.UpdatedAt = DateTime.Now;
+            equipment.UpdatedAt = DateTime.UtcNow;
             
             //Đây mới là thay đổi được ghi thật xuống SQL Server
             await _context.SaveChangesAsync();
@@ -285,7 +344,7 @@ public class EquipmentController: ControllerBase
             return Ok(response);
     }
 
-
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<Equipment>> DeleteEquipment(int id)
     {
@@ -321,6 +380,6 @@ public class EquipmentController: ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
-}
+    }
 }
 
