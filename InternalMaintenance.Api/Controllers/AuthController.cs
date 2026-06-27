@@ -113,7 +113,7 @@ public class AuthController:ControllerBase
 
         if(user is null)
         {
-            return Unauthorized(
+            return NotFound(
                 new
                 {
                     message="User not found"

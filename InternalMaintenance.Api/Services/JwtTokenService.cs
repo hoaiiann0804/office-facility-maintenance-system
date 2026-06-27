@@ -80,7 +80,15 @@ public class JwtTokenService
                 Guid.NewGuid().ToString()
              )
         };
-
+       if (user.DepartmentId.HasValue)
+            {
+                claims.Add(
+                    new Claim(
+                        "departmentId",
+                        user.DepartmentId.Value.ToString()
+                    )
+                );
+            }   
         //Chuyển secret từ string thành byte[]
         //Để dùng cho thuật toán ký
         var signingKey = new SymmetricSecurityKey(
