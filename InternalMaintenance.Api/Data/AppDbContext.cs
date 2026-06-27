@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<Equipment> Equipment => Set<Equipment>();
     public DbSet<MaintenanceTicket> MaintenanceTickets => Set<MaintenanceTicket>();
     public DbSet<TicketStatusHistory> TicketStatusHistories => Set<TicketStatusHistory>();
+    public DbSet<TicketComment> TicketComments => Set<TicketComment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -73,6 +74,18 @@ public class AppDbContext : DbContext
         .HasOne(user => user.Department)
         .WithMany(department => department.Users)
         .HasForeignKey(user => user.DepartmentId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<TicketComment>()
+        .HasOne(comment => comment.MaintenanceTicket)
+        .WithMany(ticket => ticket.Comments)
+        .HasForeignKey(comment => comment.MaintenanceTicketId)
+        .OnDelete(DeleteBehavior.Restrict);  
+
+        modelBuilder.Entity<TicketComment>()
+        .HasOne(comment => comment.User)
+        .WithMany(user => user.Comments)
+        .HasForeignKey(comment => comment.UserId)
         .OnDelete(DeleteBehavior.Restrict);
 
     }

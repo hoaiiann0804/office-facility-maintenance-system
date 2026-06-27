@@ -48,4 +48,5 @@ public class User
     public ICollection<MaintenanceTicket> AssignedTickets {get;set;} = new List<MaintenanceTicket>();
     //Danh sách lần user này thay đổi trạng thái ticket
     public ICollection <TicketStatusHistory> TicketStatusHistories {get;set;} = new List<TicketStatusHistory>();
+    public ICollection<TicketComment> Comments {get;set;} = new List<TicketComment>();
 }
