@@ -1,7 +1,9 @@
 
+using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.Departments;
 using InternalMaintenance.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 namespace InternalMaintenance.Api.Controllers;
@@ -15,6 +17,8 @@ public class DepartmentsController: ControllerBase
     {
         _context = context;
     }
+
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<List<DepartmentResponse>>> GetDepartments()
     {
@@ -29,6 +33,8 @@ public class DepartmentsController: ControllerBase
         }).ToListAsync();
         return Ok(departments);
     }
+
+    [Authorize]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<DepartmentResponse>> GetDepartmentById(int id)
     {
@@ -55,6 +61,7 @@ public class DepartmentsController: ControllerBase
         return Ok(department);
     }
     
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpPost]
     public async Task<ActionResult<DepartmentResponse>> CreateDepartment(CreateDepartmentRequest request){
          // Kiểm tra Tên phòng ban có tồn tại hay không 
@@ -94,6 +101,8 @@ public class DepartmentsController: ControllerBase
             response
         );
     }
+
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<DepartmentResponse>> UpdateDepartment( int id, UpdateDepartmentRequest request)
     {
@@ -141,7 +150,7 @@ public class DepartmentsController: ControllerBase
         
         return Ok(response);
     }
-
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<Department>> DeletePartment(int id)
     {
