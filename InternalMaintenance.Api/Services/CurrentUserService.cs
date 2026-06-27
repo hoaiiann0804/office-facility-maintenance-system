@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 
 namespace InternalMaintenance.Api.Services;
 public class CurrentUserService
@@ -48,6 +49,20 @@ public class CurrentUserService
         {
             return _httpContextAccessor.HttpContext?.User
             .FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+        }
+    }
+    public int? DepartmentId
+    {
+        get
+        {
+            var value = _httpContextAccessor.HttpContext?.User
+            .FindFirstValue("departmentId");
+           if(!int.TryParse(value, out var departmentId))
+        {
+            return null;
+        }
+
+        return departmentId;
         }
     }
     // Kiểm tra user có đang dùng temporary password hay không 
