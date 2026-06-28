@@ -103,4 +103,40 @@ public class UsersController : ControllerBase
             TotalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize)
         });
     }
+
+    [Authorize(Roles = UserRoles.Admin)]
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<UserResponse>> GetUserById(int id)
+    {
+        var user = await _context.Users
+        .AsNoTracking()
+        .Where(u => u.Id == id)
+        .Select(u => new UserResponse
+        {
+            Id = u.Id,
+            FullName = u.FullName,
+            Email = u.Email,
+            RoleId = u.RoleId,
+            RoleName = u.Role!.Name,
+            DepartmentId = u.DepartmentId,
+            DepartmentName = u.Department!.Name,
+            IsActive = u.IsActive,
+            MustChangePassword = u.MustChangePassword,
+            LastLoginAt = u.LastLoginAt,
+            CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt
+        }).FirstOrDefaultAsync();
+        
+        if (user is null)
+        {
+            return NotFound(
+                new
+                {
+                    message = "User not found"
+                }
+            );
+        }
+
+        return Ok(user);
+    }
 }
