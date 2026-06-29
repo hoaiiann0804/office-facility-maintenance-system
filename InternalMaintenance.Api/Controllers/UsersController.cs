@@ -1,4 +1,5 @@
 
+using InternalMaintenance.Api.DTOs.Common;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.Users;
@@ -32,7 +33,6 @@ public class UsersController : ControllerBase
         .AsNoTracking()
         .AsQueryable();
 
-        // Tìm kiếm người dùng theo họ tên hoặc email 
         var keyword = query.Keyword?.Trim();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
@@ -41,7 +41,6 @@ public class UsersController : ControllerBase
                 user.Email.Contains(keyword)
             );
         }
-        // Lọc danh sách người dùng theo vai trò 
         var role = query.Role?.Trim();
         if (!string.IsNullOrWhiteSpace(role))
         {
@@ -49,14 +48,13 @@ public class UsersController : ControllerBase
                 user => user.Role!.Name == role
             );
         }
-        // Lọc người dùng thuộc phòng ban được chọn 
         if (query.DepartmentId.HasValue)
         {
             usersQuery = usersQuery.Where(
                 user => user.DepartmentId == query.DepartmentId
             );
         }
-        // Lọc tài khoản đang hoạt động hoặc đang bị vô hiệu hóa
+
         if (query.IsActive.HasValue)
         {
             usersQuery = usersQuery.Where(
@@ -73,7 +71,6 @@ public class UsersController : ControllerBase
             .OrderByDescending(user => user.CreatedAt)
             .ThenBy(user => user.Id);
 
-        // Chỉ lấy dữ liệu của trang hiện tại 
         usersQuery = usersQuery.Skip((query.Page - 1) * query.PageSize)
         .Take(query.PageSize);
 
@@ -126,7 +123,7 @@ public class UsersController : ControllerBase
             CreatedAt = u.CreatedAt,
             UpdatedAt = u.UpdatedAt
         }).FirstOrDefaultAsync();
-        
+
         if (user is null)
         {
             return NotFound(

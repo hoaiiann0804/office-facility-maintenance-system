@@ -1,3 +1,4 @@
+namespace InternalMaintenance.Api.DTOs.Common;
 public class PagedResponse<T>
 {
     public List<T> Items { get; set; } = [];
