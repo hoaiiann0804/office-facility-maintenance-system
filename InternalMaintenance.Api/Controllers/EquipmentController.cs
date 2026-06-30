@@ -12,10 +12,11 @@ namespace InternalMaintenance.Api.Controllers;
 [ApiController]
 [Route("api/equipment")]
 
-public class EquipmentController: ControllerBase
+public class EquipmentController : ControllerBase
 {
     private readonly AppDbContext _context;
-    public EquipmentController(AppDbContext context) {
+    public EquipmentController(AppDbContext context)
+    {
         _context = context;
 
     }
@@ -26,19 +27,19 @@ public class EquipmentController: ControllerBase
     {
         var equipment = await _context.Equipment
         .Select(e => new EquipmentResponse
-            {
-                Id = e.Id,
-                Code = e.Code,
-                Name= e.Name,
-                DepartmentId = e.DepartmentId,
-                // ! : bắt buộc phải có dữ liệu để chạy (sẽ ko null khi chạy)
-                DepartmentName = e.Department!.Name,
-                Status = e.Status,
-                PurchasedDate = e.PurchasedDate,
-                Description = e.Description,
-                CreatedAt = e.CreatedAt,
-                UpdatedAt = e.UpdatedAt,
-            }
+        {
+            Id = e.Id,
+            Code = e.Code,
+            Name = e.Name,
+            DepartmentId = e.DepartmentId,
+            // ! : bắt buộc phải có dữ liệu để chạy (sẽ ko null khi chạy)
+            DepartmentName = e.Department!.Name,
+            Status = e.Status,
+            PurchasedDate = e.PurchasedDate,
+            Description = e.Description,
+            CreatedAt = e.CreatedAt,
+            UpdatedAt = e.UpdatedAt,
+        }
         ).ToListAsync();
         return Ok(equipment);
     }
@@ -50,10 +51,11 @@ public class EquipmentController: ControllerBase
         var equipment = await _context.Equipment
         .Where(e => e.Id == id)
         .Select(
-            e => new EquipmentResponse{
+            e => new EquipmentResponse
+            {
                 Id = e.Id,
                 Code = e.Code,
-                Name= e.Name,
+                Name = e.Name,
                 DepartmentId = e.DepartmentId,
                 DepartmentName = e.Department!.Name,
                 Status = e.Status,
@@ -64,19 +66,19 @@ public class EquipmentController: ControllerBase
             }
         ).FirstOrDefaultAsync();
 
-        if(equipment is null)
+        if (equipment is null)
         {
             return NotFound(new
             {
-                message ="Equipment not found"
+                message = "Equipment not found"
             });
         }
         return Ok(equipment);
     }
-    
+
     [Authorize(
         Roles =
-        $"{UserRoles.Admin}," + 
+        $"{UserRoles.Admin}," +
         $"{UserRoles.Manager}"
     )]
     [HttpPost]
@@ -95,7 +97,7 @@ public class EquipmentController: ControllerBase
             return NotFound(
                 new
                 {
-                    message =  "Department does not exist"
+                    message = "Department does not exist"
                 }
             );
         }
@@ -109,29 +111,29 @@ public class EquipmentController: ControllerBase
 
         if (codeExists)
         {
-            return NotFound (
+            return NotFound(
                 new
                 {
-                    message ="Equipment code already exists"
+                    message = "Equipment code already exists"
                 }
             );
         }
 
-        if(request.PurchasedDate.HasValue )
+        if (request.PurchasedDate.HasValue)
         {
-            var todayInVietNam = DateTime.Now.Date;
-            if(request.PurchasedDate.Value.Date > todayInVietNam)
+            var today = DateTime.UtcNow.Date;
+            if (request.PurchasedDate.Value.Date > today)
             {
                 return BadRequest(
                 new
                 {
-                    message ="Purchased date cannot be in the future"
+                    message = "Purchased date cannot be in the future"
                 }
                 );
             }
         }
-        var status = string.IsNullOrWhiteSpace(request.Status) 
-        ?EquipmentStatuses.Active: request.Status.Trim();
+        var status = string.IsNullOrWhiteSpace(request.Status)
+        ? EquipmentStatuses.Active : request.Status.Trim();
 
         var allowedStatus = new[]
         {
@@ -141,10 +143,10 @@ public class EquipmentController: ControllerBase
 
         if (!allowedStatus.Contains(status))
         {
-            return BadRequest (
+            return BadRequest(
                 new
                 {
-                    message="Invalid equipment status"
+                    message = "Invalid equipment status"
                 }
             );
         }
@@ -158,7 +160,7 @@ public class EquipmentController: ControllerBase
             PurchasedDate = request.PurchasedDate,
             Description = request.Description?.Trim()
         };
-        
+
         _context.Equipment.Add(equipment);
         await _context.SaveChangesAsync();
 
@@ -168,43 +170,43 @@ public class EquipmentController: ControllerBase
         // Where theo đúng Id vừa tạo để EF Core tự động JOIN sang bảng Department để Lấy tên về.
         var response = await _context.Equipment
         .Where(e => e.Id == equipment.Id)
-        .Select (e => new EquipmentResponse
+        .Select(e => new EquipmentResponse
         {
-            Id= e.Id,
+            Id = e.Id,
             Code = e.Code,
             Name = e.Name,
             DepartmentId = e.DepartmentId,
             DepartmentName = e.Department!.Name, // Tên phòng ban từ bảng liên kết (Join) dưới database 
-            Status =e.Status,
+            Status = e.Status,
             PurchasedDate = e.PurchasedDate,
             Description = e.Description,
             CreatedAt = e.CreatedAt,
-            UpdatedAt= e.UpdatedAt
+            UpdatedAt = e.UpdatedAt
         }).FirstOrDefaultAsync();
 
         return CreatedAtAction(
             nameof(GetEquipmentById),
-            new{id = equipment.Id},
+            new { id = equipment.Id },
             response
         );
     }
 
-     [Authorize(
-        Roles =
-        $"{UserRoles.Admin}," + 
-        $"{UserRoles.Manager}"
-    )]
+    [Authorize(
+       Roles =
+       $"{UserRoles.Admin}," +
+       $"{UserRoles.Manager}"
+   )]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<EquipmentResponse>> UpdateEquipment(int id, UpdateEquipmentRequest request)
     {
-        
-        var equipment = await _context.Equipment.FirstOrDefaultAsync(e=>e.Id == id);
-        if(equipment is null)
+
+        var equipment = await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id);
+        if (equipment is null)
         {
-            return NotFound (
+            return NotFound(
                 new
                 {
-                    message="Equipment Not Found"
+                    message = "Equipment Not Found"
                 }
             );
 
@@ -218,26 +220,26 @@ public class EquipmentController: ControllerBase
         //Nếu PartmentId không tồn tại thì ko cho update để tránh dữ liệu mồ coi
         var departmentExists = await _context.Departments
         .AnyAsync(e => e.Id == request.DepartmentId);
-      
+
         if (!departmentExists)
         {
             return NotFound(
                 new
                 {
-                    message="Department does not exist"
+                    message = "Department does not exist"
                 }
             );
         }
 
         // Không updte Code vì code  là mã định duy nhất của thiết bị
-        
-        if (equipment.Code != code )
+
+        if (equipment.Code != code)
         {
             return BadRequest(
                 new
                 {
                     message = "Equipment code cannot be changed after creation"
-                    
+
                 }
             );
         }
@@ -250,7 +252,7 @@ public class EquipmentController: ControllerBase
         // Chỉ cho phép các trạng thái nằm trong quy trình quản lý thiết bị 
         // Tránh việc client gửi status tùy ý như "BrokeABC", "abc", "Done"
         // UnderMantenance KHông cho phép set thủ công vì nó được quyết định bởi Ticket flow
-        var allowedStatuses  = new [] {
+        var allowedStatuses = new[] {
             EquipmentStatuses.Active,
             EquipmentStatuses.Inactive,
             EquipmentStatuses.Retired,
@@ -260,9 +262,9 @@ public class EquipmentController: ControllerBase
         {
             return BadRequest(new
             {
-                message= "Invalid equipment status"
+                message = "Invalid equipment status"
             });
-        } 
+        }
 
         // Không cho Retired nếu thiết bị đang có ticket chưa xử lý xong 
         // Vì retired ngưng sử dụng vĩch viễn, không thể tồn tại và đang cố xử lý 
@@ -274,104 +276,105 @@ public class EquipmentController: ControllerBase
             ticket.Status == TicketStatuses.InProgress
         ));
 
-        if(request.Status == EquipmentStatuses.Retired && hasOpenTicket)
+        if (request.Status == EquipmentStatuses.Retired && hasOpenTicket)
         {
             return BadRequest(
                 new
                 {
-                    message ="Cannot retire equipment while it has open mantenance tickets"
+                    message = "Cannot retire equipment while it has open mantenance tickets"
                 }
             );
         }
-        
+
 
         // PuscharsedDate là ngày mua/ngày đưa vào sử dụng
         // KHông hợp lý nếu ngày mua trong tương lai
 
-         if(request.PurchasedDate.HasValue )
+        if (request.PurchasedDate.HasValue)
+        {
+            var today = DateTime.UtcNow.Date;
+            if (request.PurchasedDate.Value.Date > today)
             {
-                var today = DateTime.UtcNow.Date;
-                if(request.PurchasedDate.Value.Date > today)
+                return BadRequest(
+                new
                 {
-                    return BadRequest(
-                    new
-                    {
-                        message ="Purchased date cannot be in the future"
-                    }
-                    );
+                    message = "Purchased date cannot be in the future"
                 }
+                );
             }
+        }
 
-            //  EF Core đang tracking Object equipment lấy từ database
-            //  Chỉ cần gán lại field, sau đó SaveChangeAsync là EF tự sinh câu SQL UPDATE
-            equipment.Code = code;
-            equipment.Name = name;
-            equipment.DepartmentId = request.DepartmentId;
-            equipment.Status = status;
-            equipment.PurchasedDate = request.PurchasedDate;
-            equipment.Description = request.Description?.Trim();
+        //  EF Core đang tracking Object equipment lấy từ database
+        //  Chỉ cần gán lại field, sau đó SaveChangeAsync là EF tự sinh câu SQL UPDATE
+        equipment.Code = code;
+        equipment.Name = name;
+        equipment.DepartmentId = request.DepartmentId;
+        equipment.Status = status;
+        equipment.PurchasedDate = request.PurchasedDate;
+        equipment.Description = request.Description?.Trim();
 
-            //  Ghi lại thời điểm cập nhật gần nhất sau khi audit/debug
-            equipment.UpdatedAt = DateTime.UtcNow;
-            
-            //Đây mới là thay đổi được ghi thật xuống SQL Server
-            await _context.SaveChangesAsync();
+        //  Ghi lại thời điểm cập nhật gần nhất sau khi audit/debug
+        equipment.UpdatedAt = DateTime.UtcNow;
 
-            //Query lại response sau khi update để lấy thêm DepartmentName từ bảng Departments.
-            // DepartmentName không phải cột trong Equipment , mà là dữ liệu join từ Department.Name.
-            var response = await _context.Equipment
-            .Where(e=> e.Id == equipment.Id)
-            .Select(e => new EquipmentResponse{
-                Id= e.Id,
-                Code = e.Code,
-                Name = e.Name,
-                DepartmentId = e.DepartmentId,
+        //Đây mới là thay đổi được ghi thật xuống SQL Server
+        await _context.SaveChangesAsync();
 
-                // Dấu ! nói với compiler rằng Department chắc chắn có dữ liệu
-                // Vì Department không bắt buộc có Department hợp lệ và đã check epartmentExists ở trên.
-                DepartmentName = e.Department!.Name,
-                Status =e.Status,
-                PurchasedDate = e.PurchasedDate,
-                Description = e.Description,
-                CreatedAt = e.CreatedAt,
-                UpdatedAt= e.UpdatedAt
+        //Query lại response sau khi update để lấy thêm DepartmentName từ bảng Departments.
+        // DepartmentName không phải cột trong Equipment , mà là dữ liệu join từ Department.Name.
+        var response = await _context.Equipment
+        .Where(e => e.Id == equipment.Id)
+        .Select(e => new EquipmentResponse
+        {
+            Id = e.Id,
+            Code = e.Code,
+            Name = e.Name,
+            DepartmentId = e.DepartmentId,
 
-                //FirstOrDefaultAsync = dùng khi cần check null / NotFound.
-                // FirstAsync = dùng khi logic đã đảm bảo chắc chắn có dữ liệu.
-                // Tìm dữ liệu đầu method: FirstOrDefaultAsync
-                // Query lại response sau khi update: FirstAsync
-            }).FirstAsync();
-            return Ok(response);
+            // Dấu ! nói với compiler rằng Department chắc chắn có dữ liệu
+            // Vì Department không bắt buộc có Department hợp lệ và đã check epartmentExists ở trên.
+            DepartmentName = e.Department!.Name,
+            Status = e.Status,
+            PurchasedDate = e.PurchasedDate,
+            Description = e.Description,
+            CreatedAt = e.CreatedAt,
+            UpdatedAt = e.UpdatedAt
+
+            //FirstOrDefaultAsync = dùng khi cần check null / NotFound.
+            // FirstAsync = dùng khi logic đã đảm bảo chắc chắn có dữ liệu.
+            // Tìm dữ liệu đầu method: FirstOrDefaultAsync
+            // Query lại response sau khi update: FirstAsync
+        }).FirstAsync();
+        return Ok(response);
     }
 
     [Authorize(Roles = UserRoles.Admin)]
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<Equipment>> DeleteEquipment(int id)
     {
-         
-        var equipment = await _context.Equipment.FirstOrDefaultAsync(e=>e.Id == id);
-        if(equipment is null)
+
+        var equipment = await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id);
+        if (equipment is null)
         {
-            return NotFound (
+            return NotFound(
                 new
                 {
-                    message="Equipment Not Found"
+                    message = "Equipment Not Found"
                 }
             );
         }
-        
+
         //Kiểm tra thiết bị này đã từng phát sinh ticket bảo trì/ sự cố chưa
         var hasTicket = await _context.MaintenanceTickets.AnyAsync(ticket => ticket.EquipmentId == id);
-        if(hasTicket)
+        if (hasTicket)
         {
             return BadRequest(
                 new
                 {
-                    message="Cannot delete equipment because it related maintenance tickets"
+                    message = "Cannot delete equipment because it related maintenance tickets"
                 }
             );
-        }   
-        
+        }
+
         //Remove chỉ đánh dấu entity sẽ bị xóa trong bộ nhớ EF Core
         // Chưa có câu SQL thật ở bước này
         _context.Equipment.Remove(equipment);

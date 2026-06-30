@@ -4,6 +4,7 @@ using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.MaintenanceTicket;
 using InternalMaintenance.Api.DTOs.TicketComment;
+using InternalMaintenance.Api.DTOs.Users;
 using InternalMaintenance.Api.Models;
 using InternalMaintenance.Api.Services;
 using Microsoft.AspNetCore.Authorization;
