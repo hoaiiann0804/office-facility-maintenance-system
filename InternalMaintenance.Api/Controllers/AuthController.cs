@@ -11,16 +11,16 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController:ControllerBase
+public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IConfiguration _configuration;
-    
+
     private readonly CurrentUserService _currentUserService;
-    
+
     private readonly JwtTokenService _jwtTokenService;
-    
-    public AuthController (
+
+    public AuthController(
         AppDbContext context,
         IConfiguration configuration,
         CurrentUserService currentUserService,
@@ -37,25 +37,31 @@ public class AuthController:ControllerBase
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
     {
         var email = request.Email.Trim().ToLower();
-        
-        var user = await _context.Users
-        .Include(u=>u.Role)
-        .Include(u=>u.Department)
-        .FirstOrDefaultAsync(u => u.Email.ToLower() ==email);
 
-        if(user is null)
+        var user = await _context.Users
+        .Include(u => u.Role)
+        .Include(u => u.Department)
+        .FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+
+        if (user is null)
         {
             return Unauthorized(
                 new
                 {
-                    message="Invalid email or password"
+                    message = "Invalid email or password"
                 }
             );
         }
 
-        if(!user.IsActive)
+        if (!user.IsActive)
         {
-            return Forbid();
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "Your account has been deactivated. Please contact the administrator."
+                }
+            );
         }
 
         var passwordValid = BCrypt.Net.BCrypt.Verify(
@@ -67,7 +73,7 @@ public class AuthController:ControllerBase
             return Unauthorized(
                 new
                 {
-                    message="Invalid email or password"
+                    message = "Invalid email or password"
                 }
             );
         }
@@ -81,10 +87,10 @@ public class AuthController:ControllerBase
             _configuration["Jwt:ExpiresInMinutes"] ?? "60"
         );
 
-        return Ok (new LoginResponse
+        return Ok(new LoginResponse
         {
             AccessToken = token,
-            TokenType="Bearer",
+            TokenType = "Bearer",
             ExpiresInMinutes = expiresInMinutes,
             MustChangePassword = user.MustChangePassword,
             User = new AuthUserResponse
@@ -111,12 +117,12 @@ public class AuthController:ControllerBase
         .Include(u => u.Department)
         .FirstOrDefaultAsync(u => u.Id == currentUserId);
 
-        if(user is null)
+        if (user is null)
         {
             return NotFound(
                 new
                 {
-                    message="User not found"
+                    message = "User not found"
                 }
             );
         }
@@ -126,7 +132,7 @@ public class AuthController:ControllerBase
             return Forbid();
         }
 
-        return Ok (new AuthUserResponse
+        return Ok(new AuthUserResponse
         {
             Id = user.Id,
             FullName = user.FullName,
@@ -141,12 +147,12 @@ public class AuthController:ControllerBase
     }
     [Authorize]
     [HttpPost("change-password")]
-    public async Task<ActionResult<AuthUserResponse>> ChangePassword(ChangePasswordRequest request)
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
     {
         var currentUserId = _currentUserService.UserId;
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUserId);
 
-        if(user is null)
+        if (user is null)
         {
             return Unauthorized(
                 new
@@ -155,10 +161,15 @@ public class AuthController:ControllerBase
                 }
             );
         }
-
-        if(!user.IsActive)
+        if (!user.IsActive)
         {
-            return Forbid();
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "Your account has been deactivated. Please contact the administrator."
+                }
+            );
         }
 
         var currentPasswordValid = BCrypt.Net.BCrypt.Verify(
@@ -170,7 +181,7 @@ public class AuthController:ControllerBase
             return BadRequest(
                 new
                 {
-                    message ="Current password is incorrect"
+                    message = "Current password is incorrect"
                 }
             );
         }
@@ -178,12 +189,12 @@ public class AuthController:ControllerBase
             request.NewPassword, user.PasswordHash
         );
 
-        if(isSamePassword)
+        if (isSamePassword)
         {
             return BadRequest(
                 new
                 {
-                    message="New password must be different from current password"
+                    message = "New password must be different from current password"
                 }
             );
         }
@@ -194,8 +205,8 @@ public class AuthController:ControllerBase
         return Ok(
             new
             {
-                message="Password changed successfully. PLease login again. "
+                message = "Password changed successfully. PLease login again. "
             }
         );
-    }    
+    }
 }
