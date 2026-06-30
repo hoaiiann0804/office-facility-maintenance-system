@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 namespace InternalMaintenance.Api.DTOs.Users;
-
 public class UserQuery
 {
     public string? Keyword { get; set; }
