@@ -28,7 +28,8 @@ This repository does not include a deployed live demo yet.
 - Role-based users: Admin, Manager, Staff, Technician
 - Department management with dependency checks
 - Equipment management with unique equipment codes and department ownership
-- Maintenance ticket creation, assignment, status workflow, and history tracking
+- Maintenance ticket creation, assignment, status workflow, comments, and history tracking
+- Admin-only user directory with filtering and paged results
 - Automatic database migration and seed data on application startup
 
 ## Getting Started
@@ -142,6 +143,15 @@ curl -X POST http://localhost:5253/api/tickets ^
   -d "{\"title\":\"Printer jam\",\"description\":\"Paper keeps getting stuck\",\"equipmentId\":1,\"createdByUserId\":3,\"priority\":\"Medium\"}"
 ```
 
+### Add a Ticket Comment
+
+```bash
+curl -X POST http://localhost:5253/api/tickets/1/comments ^
+  -H "Content-Type: application/json" ^
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" ^
+  -d "{\"content\":\"Technician arrived on site and is checking the issue.\"}"
+```
+
 ## API Overview
 
 ### Authentication
@@ -171,9 +181,32 @@ curl -X POST http://localhost:5253/api/tickets ^
 - `GET /api/tickets`
 - `GET /api/tickets/{id}`
 - `POST /api/tickets`
+- `PUT /api/tickets/{id}`
 - `PATCH /api/tickets/{id}/assign`
 - `PATCH /api/tickets/{id}/status`
+- `POST /api/tickets/{id}/comments`
+- `GET /api/tickets/{id}/comments`
 - `GET /api/tickets/{id}/history`
+
+### Users
+
+- `GET /api/users`
+- `GET /api/users/{id}`
+- `POST /api/users`
+
+`GET /api/users` supports these query parameters:
+
+- `keyword`
+- `role`
+- `departmentId`
+- `isActive`
+- `page`
+- `pageSize`
+
+### Ticket Comments
+
+- `POST /api/tickets/{id}/comments`
+- `GET /api/tickets/{id}/comments`
 
 ## Architecture
 
