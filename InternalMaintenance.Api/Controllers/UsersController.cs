@@ -7,6 +7,7 @@ using InternalMaintenance.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using InternalMaintenance.Api.Models;
 
 [ApiController]
 [Route("api/users")]
@@ -136,4 +137,86 @@ public class UsersController : ControllerBase
 
         return Ok(user);
     }
+
+    [Authorize(Roles = UserRoles.Admin)]
+    [HttpPost]
+    public async Task<ActionResult<UserResponse>> CreateUser(CreateUserRequest request)
+    {
+        var fullName = request.FullName.Trim();
+        var email = request.Email.Trim().ToLower();
+
+        var emailExists = await _context.Users
+        .AnyAsync(u => u.Email.ToLower() == email);
+
+        if (emailExists)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "User created exists "
+                }
+            );
+        }
+
+        var roleExists = await _context.Roles
+        .AnyAsync(r => r.Id == request.RoleId);
+        if (!roleExists)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Role not found"
+                });
+        }
+        var departmentExists = await _context.Departments
+        .AnyAsync(d => d.Id == request.DepartmentId);
+
+        if (!departmentExists)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Department not found"
+                });
+        }
+        var user = new User
+        {
+            FullName = fullName,
+            Email = email,
+            RoleId = request.RoleId,
+            DepartmentId = request.DepartmentId,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                request.TemporaryPassword
+            ),
+            IsActive = true,
+            MustChangePassword = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+        var response = await _context.Users
+        .Where(u => u.Id == user.Id)
+        .Select(u => new UserResponse
+        {
+            Id = u.Id,
+            FullName = u.FullName,
+            Email = u.Email,
+            RoleId = u.RoleId,
+            RoleName = u.Role!.Name,
+            DepartmentId = u.DepartmentId,
+            DepartmentName = u.Department!.Name,
+            IsActive = true,
+            MustChangePassword = true,
+            CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt
+        }).FirstOrDefaultAsync();
+
+        return CreatedAtAction(
+            nameof(GetUsers),
+            new { id = user.Id },
+            response
+
+        );
+    }
+
 }
