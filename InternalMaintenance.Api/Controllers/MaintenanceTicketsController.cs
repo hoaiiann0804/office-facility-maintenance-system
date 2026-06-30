@@ -1,4 +1,5 @@
-using Azure.Core.GeoJson;
+
+using InternalMaintenance.Api.DTOs.Common;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.MaintenanceTicket;
@@ -43,111 +44,89 @@ public class MaintenanceTicketsController : ControllerBase
     // Áp dụng phân quyền dữ liệu cho Ticket theo role
     // Mỗi role chỉ được truy cập các ticket thuộc phạm vi được phép 
 
-    // private IQueryable<MaintenanceTicket> ApplyTicketAccessControl(
-    //     IQueryable<MaintenanceTicket> query
-    // )
-    // {
-    //     var role = _currentUserService.Role;
-    //     var userId = _currentUserService.UserId;
-    //     var departmentId  = _currentUserService.DepartmentId;
+    private IQueryable<MaintenanceTicket> ApplyTicketAccessControl(
+        IQueryable<MaintenanceTicket> query
+    )
+    {
+        var role = _currentUserService.Role;
+        var userId = _currentUserService.UserId;
+        var departmentId = _currentUserService.DepartmentId;
 
-    //     //Admin xem toàn bộ ticket 
-    //     if (role == UserRoles.Admin)
-    //     {
-    //         return query;
-    //     }
-    //     // Manager chỉ xem ticket thuộc phòng ban mình quản lý 
-    //     if(role == UserRoles.Manager)
-    //     {
-    //         return query.Where(
-    //             ticket => ticket.Equipment!.DepartmentId == departmentId
-    //         );
-    //     }
-    //     // Staff chỉ được xem ticket do chính mình tạo
-    //       if(role == UserRoles.Staff)
-    //     {
-    //         return query.Where(
-    //             ticket => ticket.CreatedByUserId == departmentId
-    //         );
-    //     }
-    //     // Staff chỉ được xem ticket được giao xử lý 
-    //     if(role == UserRoles.Technician)
-    //     {
-    //         return query.Where(
-    //             ticket => ticket.AssignedTechnicianId == userId
-    //         );
-    //     }
-    //     // Role không hợp lệ
-    //     return query.Where(ticket => false);
-    // }
+        //Admin xem toàn bộ ticket 
+        if (role == UserRoles.Admin)
+        {
+            return query;
+        }
+        // Manager chỉ xem ticket thuộc phòng ban mình quản lý 
+        if (role == UserRoles.Manager)
+        {
+            return query.Where(
+                ticket => ticket.Equipment!.DepartmentId == departmentId
+            );
+        }
+        // Staff chỉ được xem ticket do chính mình tạo
+        if (role == UserRoles.Staff)
+        {
+            return query.Where(
+                ticket => ticket.CreatedByUserId == userId
+            );
+        }
+        // Staff chỉ được xem ticket được giao xử lý 
+        if (role == UserRoles.Technician)
+        {
+            return query.Where(
+                ticket => ticket.AssignedTechnicianId == userId
+            );
+        }
+        // Role không hợp lệ
+        return query.Where(ticket => false);
+    }
 
 
 
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<List<MaintenanceTicketResponse>>> GetMaintenanceTickets(
-        string? status,
-        string? priority,
-        int? equipmentId
+    public async Task<ActionResult<PagedResponse<MaintenanceTicketResponse>>> GetMaintenanceTickets(
+        [FromQuery] TicketQuery query
     )
     {
-        var query = _context.MaintenanceTickets.AsQueryable();
+        var ticketQuery = _context.MaintenanceTickets
+       .AsNoTracking()
+       .AsQueryable();
 
+        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        var status = query.Status?.Trim();
         if (!string.IsNullOrWhiteSpace(status))
         {
-            query = query.Where(
+            ticketQuery = ticketQuery.Where(
                 ticket => ticket.Status == status
             );
         }
 
+        var priority = query.Priority?.Trim();
         if (!string.IsNullOrWhiteSpace(priority))
         {
-            query = query.Where(
+            ticketQuery = ticketQuery.Where(
                 ticket => ticket.Priority == priority
             );
         }
 
-        if (equipmentId.HasValue)
+        if (query.EquipmentId.HasValue)
         {
-            query = query.Where(
-                ticket => ticket.EquipmentId == equipmentId.Value
+            ticketQuery = ticketQuery.Where(
+                ticket => ticket.EquipmentId == query.EquipmentId.Value
             );
         }
-        var role = _currentUserService.Role;
-        var departmentId = _currentUserService.DepartmentId;
-        var userId = _currentUserService.UserId;
 
-        //Áp dụng phân quyền theo role
-        if (role == UserRoles.Admin)
-        {
-            //Admin xem tất cả ticket 
-        }
-        else if (role == UserRoles.Manager)
-        {
-            // Manager chỉ xem ticket thuộc phòng ban mình quản lý
-            query = query.Where(
-                ticket => ticket.Equipment!.DepartmentId == departmentId
-            );
-        }
-        else if (role == UserRoles.Staff)
-        {
-            // Staff chỉ xem ticket do chính mình tạo 
-            query = query.Where(
-                ticket => ticket.CreatedByUserId == userId
-            );
-        }
-        else if (role == UserRoles.Technician)
-        {
-            // Techinician chỉ xem ticket được assign (phân công) cho mình 
-            query = query.Where(
-                ticket => ticket.AssignedTechnicianId == userId
-            );
-        }
-        else
-        {
-            return Forbid();
-        }
-        var tickets = await query.Select(
+        var totalItems = await ticketQuery.CountAsync();
+        ticketQuery = ticketQuery
+        .OrderByDescending(ticket => ticket.CreatedAt)
+        .ThenBy(ticket => ticket.Id);
+
+        ticketQuery = ticketQuery.Skip((query.Page - 1) * query.PageSize)
+        .Take(query.PageSize);
+
+        var tickets = await ticketQuery.Select(
             ticket => new MaintenanceTicketResponse
             {
                 Id = ticket.Id,
@@ -170,52 +149,28 @@ public class MaintenanceTicketsController : ControllerBase
                 ClosedAt = ticket.ClosedAt,
             }
         ).ToListAsync();
-        return Ok(tickets);
+        return Ok(
+            new PagedResponse<MaintenanceTicketResponse>
+            {
+                Items = tickets,
+                Page = query.Page,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize)
+            }
+        );
     }
 
     [Authorize]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<MaintenanceTicketResponse>> GetGetMaintenanceTicketById(int id)
     {
-        var query = _context.MaintenanceTickets.AsQueryable();
+        // Khởi tạo truy vấn và áp dụng phân quyền theo role 
+        var ticketQuery = _context.MaintenanceTickets
+        .AsNoTracking()
+        .AsQueryable();
 
-        var role = _currentUserService.Role;
-        var departmentId = _currentUserService.DepartmentId;
-        var userId = _currentUserService.UserId;
-
-        //Áp dụng phân quyền theo role
-        if (role == UserRoles.Admin)
-        {
-            //Admin xem được tất cả ticket 
-        }
-        else if (role == UserRoles.Manager)
-        {
-            //Manager chỉ xem được ticket thuộc phòng ban mình quản lý
-            query = query.Where(
-                ticket => ticket.Equipment!.DepartmentId == departmentId
-            );
-        }
-        else if (role == UserRoles.Staff)
-        {
-            //Staff chỉ xem được ticket do chính mình tạo ra 
-            query = query.Where(
-                ticket => ticket.CreatedByUserId == userId
-            );
-        }
-        else if (role == UserRoles.Technician)
-        {
-            //Technician chỉ xem ticket được assign cho mình
-            query = query.Where(
-                ticket => ticket.AssignedTechnicianId == userId
-            );
-        }
-        else
-        {
-            return Forbid();
-        }
-
-
-        var ticket = await _context.MaintenanceTickets.Where(
+        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        var ticket = await ticketQuery.Where(
             ticket => ticket.Id == id
         ).Select(
             ticket => new MaintenanceTicketResponse
@@ -246,7 +201,7 @@ public class MaintenanceTicketsController : ControllerBase
             return NotFound(
                 new
                 {
-                    message = "Equipment not found"
+                    message = "Ticket not found"
                 }
             );
         }
@@ -327,9 +282,6 @@ public class MaintenanceTicketsController : ControllerBase
                 }
             );
         }
-
-
-        // kiểm tra Priority có hợp lệ 
 
         var priority = string.IsNullOrWhiteSpace(request.Priority)
         ? TicketPriorities.Medium : request.Priority.Trim();
@@ -437,7 +389,6 @@ public class MaintenanceTicketsController : ControllerBase
                 return BadRequest("Ticket already in processing state");
         }
 
-        // Vaidate Priority
         var allowedPriorities = new[]
         {
             TicketPriorities.Low,
@@ -908,16 +859,14 @@ public class MaintenanceTicketsController : ControllerBase
 
         var canComment =
         //Admin được comment mọi ticket
-            role == UserRoles.Admin ||
+        role == UserRoles.Admin ||
         //Manager chỉ comment ticket thuộc phòng ban mình quản lý
-            (role == UserRoles.Manager && ticket.Equipment!.DepartmentId == departmentId )
+        (role == UserRoles.Manager && ticket.Equipment!.DepartmentId == departmentId)
         ||
         //Staff chỉ commment do chính mình tạo 
-
+        (role == UserRoles.Staff && ticket.CreatedByUserId == userId) ||
         //Technician chỉ comment ticket được assign xử lý 
-            ticket.CreatedByUserId == userId ||
-
-            ticket.AssignedTechnicianId == userId;
+        (role == UserRoles.Technician && ticket.AssignedTechnicianId == userId);
 
         if (!canComment)
         {
@@ -969,13 +918,16 @@ public class MaintenanceTicketsController : ControllerBase
     [HttpGet("{id:int}/comments")]
     public async Task<ActionResult<List<TicketCommentResponse>>> GetCommentById(int id)
     {
-        var query = _context.MaintenanceTickets.AsQueryable();
-        var role = _currentUserService.Role;
-        var departmentId = _currentUserService.DepartmentId;
-        var userId = _currentUserService.UserId;
-        var ticketExists = await _context.MaintenanceTickets
-        .AnyAsync(ticket => ticket.Id == id);
+        // Kiểm tra Ticket có tổn tại và người dùng có quyền xem hay không
 
+        var ticketQuery = _context.MaintenanceTickets
+        .AsNoTracking()
+        .AsQueryable();
+
+        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        var ticketExists = await ticketQuery.AnyAsync(
+            ticket => ticket.Id == id
+        );
         if (!ticketExists)
         {
             return NotFound(
@@ -983,37 +935,6 @@ public class MaintenanceTicketsController : ControllerBase
             {
                 message = "Ticket not found"
             });
-        }
-
-        //Áp dụng phân quyền theo role
-        if (role == UserRoles.Admin)
-        {
-            //Admin xem được tất cả ticket 
-        }
-        else if (role == UserRoles.Manager)
-        {
-            //Manager chỉ xem được ticket thuộc phòng ban mình quản lý
-            query = query.Where(
-                ticket => ticket.Equipment!.DepartmentId == departmentId
-            );
-        }
-        else if (role == UserRoles.Staff)
-        {
-            //Staff chỉ xem được ticket do chính mình tạo ra 
-            query = query.Where(
-                ticket => ticket.CreatedByUserId == userId
-            );
-        }
-        else if (role == UserRoles.Technician)
-        {
-            //Technician chỉ xem ticket được assign cho mình
-            query = query.Where(
-                ticket => ticket.AssignedTechnicianId == userId
-            );
-        }
-        else
-        {
-            return Forbid();
         }
         var comments = await _context.TicketComments
         .AsNoTracking()
@@ -1034,43 +955,9 @@ public class MaintenanceTicketsController : ControllerBase
     [HttpGet("{id:int}/history")]
     public async Task<ActionResult<TicketStatusHistoryResponse>> GetTicketHistory(int id)
     {
-        var query = _context.MaintenanceTickets.AsQueryable();
-        var role = _currentUserService.Role;
-        var departmentId = _currentUserService.DepartmentId;
-        var userId = _currentUserService.UserId;
-
-        //Áp dụng phân quyền theo role
-        if (role == UserRoles.Admin)
-        {
-            //Admin xem được tất cả ticket 
-        }
-        else if (role == UserRoles.Manager)
-        {
-            //Manager chỉ xem được ticket thuộc phòng ban mình quản lý
-            query = query.Where(
-                ticket => ticket.Equipment!.DepartmentId == departmentId
-            );
-        }
-        else if (role == UserRoles.Staff)
-        {
-            //Staff chỉ xem được ticket do chính mình tạo ra 
-            query = query.Where(
-                ticket => ticket.CreatedByUserId == userId
-            );
-        }
-        else if (role == UserRoles.Technician)
-        {
-            //Technician chỉ xem ticket được assign cho mình
-            query = query.Where(
-                ticket => ticket.AssignedTechnicianId == userId
-            );
-        }
-        else
-        {
-            return Forbid();
-        }
-
-        var ticketExists = await _context.MaintenanceTickets.AnyAsync(t => t.Id == id);
+        var ticketQuery = _context.MaintenanceTickets.AsQueryable();
+        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        var ticketExists = await ticketQuery.AnyAsync(t => t.Id == id);
         if (!ticketExists)
         {
             return BadRequest(
