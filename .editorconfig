@@ -1,0 +1,12 @@
+root = true
+
+[*.cs]
+# Sử dụng dấu cách (Spaces) thay vì Tab
+indent_style = space
+indent_size = 4
+
+# Đặt dấu mở ngoặc nhọn { ở dòng mới (Chuẩn C#)
+csharp_new_line_before_open_brace = all
+
+# Hoặc nếu bạn muốn đưa { lên cùng dòng giống TypeScript/JavaScript:
+# csharp_new_line_before_open_brace = none
