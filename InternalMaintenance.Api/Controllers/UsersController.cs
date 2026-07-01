@@ -221,4 +221,171 @@ public class UsersController : ControllerBase
         );
     }
 
+    [Authorize(Roles = UserRoles.Admin)]
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<UserResponse>> UpdateUser(int id, UpdateUserRequest request)
+    {
+        var fullName = request.FullName.Trim();
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user is null)
+        {
+            return NotFound(
+                new
+                {
+                    message = "User not found"
+                }
+            );
+        }
+
+        // Chỉ cho phép Admin cập nhật thông tin nhân sự.
+        // Email (đăng nhập) và Password (bảo mật) không được sửa tại đây.
+        var roleExists = await _context.Roles
+        .AnyAsync(r => r.Id == request.RoleId);
+        if (!roleExists)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Role not found"
+                });
+        }
+
+        var departmentExists = await _context.Departments
+        .AnyAsync(d => d.Id == request.DepartmentId);
+
+        if (!departmentExists)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Department not found"
+                });
+        }
+        user.FullName = fullName;
+        user.RoleId = request.RoleId;
+        user.DepartmentId = request.DepartmentId;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        var response = await _context.Users
+        .Where(u => u.Id == user.Id)
+        .Select(u => new UserResponse
+        {
+            Id = u.Id,
+            FullName = u.FullName,
+            Email = u.Email,
+            RoleId = u.RoleId,
+            RoleName = u.Role!.Name,
+            DepartmentId = u.DepartmentId,
+            DepartmentName = u.Department!.Name,
+            IsActive = u.IsActive,
+            MustChangePassword = u.MustChangePassword,
+            CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt
+        }).FirstOrDefaultAsync();
+        return Ok(response);
+    }
+
+    [Authorize(Roles = UserRoles.Admin)]
+    [HttpPatch("{id:int}/status")]
+    public async Task<ActionResult<UserResponse>> UpdateUserStatus(int id, UpdateUserActiveRequest request)
+    {
+        var user = await _context.Users
+        .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user is null)
+        {
+            return NotFound(
+                new
+                {
+                    message = "User not found"
+                }
+            );
+        }
+
+        // Không cho phép Admin tự khóa tài khoản khi đăng nhập
+        if (user.Id == _currentUserService.UserId &&
+        !request.IsActive)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "You cannot deactivate your own account"
+                }
+            );
+        }
+
+        if (user.IsActive == request.IsActive)
+        {
+            return BadRequest(new
+            {
+                message = "User already has this status"
+            });
+        }
+
+        user.IsActive = request.IsActive;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        var response = await _context.Users
+        .Where(u => u.Id == user.Id)
+        .Select(u => new UserResponse
+        {
+            Id = u.Id,
+            FullName = u.FullName,
+            Email = u.Email,
+            RoleId = u.RoleId,
+            RoleName = u.Role!.Name,
+            DepartmentId = u.DepartmentId,
+            DepartmentName = u.Department!.Name,
+            IsActive = u.IsActive,
+            MustChangePassword = u.MustChangePassword,
+            CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt
+        }).FirstOrDefaultAsync();
+        return Ok(response);
+    }
+
+    [Authorize(Roles = UserRoles.Admin)]
+    [HttpPatch("{id:int}/reset-password")]
+    public async Task<IActionResult> ResetUserPassword(int id, ResetUserPasswordRequest request)
+    {
+        var user = await _context.Users
+        .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user is null)
+        {
+            return NotFound(
+                new
+                {
+                    message = "User not found"
+                }
+            );
+        }
+
+        // Admin không tự reset cho mật khẩu chính mình
+        if (user.Id == _currentUserService.UserId)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Please use Change Password to update your own password"
+                }
+            );
+        }
+
+        // Reset mật khẩu tạm cho người dùng 
+        // Sau lần đăng nhập tiếp theo, người dùng bắt buộc phải đổi mật khẩu mới
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.TemporaryPassword);
+        user.MustChangePassword = true;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return Ok(
+             new
+             {
+                 message = "User password has been reset successfully."
+             }
+         );
+    }
 }

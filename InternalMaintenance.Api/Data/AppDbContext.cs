@@ -6,7 +6,7 @@ namespace InternalMaintenance.Api.Data;
 public class AppDbContext : DbContext
 {
     //Nhận cấu hình database từ Program.cs
-    public AppDbContext (DbContextOptions<AppDbContext> options) : base(options)
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
     //Các bảng chính trong Database 
@@ -17,16 +17,20 @@ public class AppDbContext : DbContext
     public DbSet<MaintenanceTicket> MaintenanceTickets => Set<MaintenanceTicket>();
     public DbSet<TicketStatusHistory> TicketStatusHistories => Set<TicketStatusHistory>();
     public DbSet<TicketComment> TicketComments => Set<TicketComment>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Role>().HasIndex(role=>role.Name).IsUnique();
-        modelBuilder.Entity<User>().HasIndex(user=>user.Email).IsUnique();
+        modelBuilder.Entity<Role>().HasIndex(role => role.Name).IsUnique();
+        modelBuilder.Entity<User>().HasIndex(user => user.Email).IsUnique();
+        modelBuilder.Entity<RefreshToken>().HasIndex(rt => rt.UserId);
         modelBuilder.Entity<Department>().HasIndex(department => department.Name).IsUnique();
-        modelBuilder.Entity<Equipment>().HasIndex(equipment=>equipment.Code).IsUnique();
-        modelBuilder.Entity<MaintenanceTicket>().HasIndex(ticket=>ticket.TicketCode).IsUnique();
+        modelBuilder.Entity<Equipment>().HasIndex(equipment => equipment.Code).IsUnique();
+        modelBuilder.Entity<MaintenanceTicket>().HasIndex(ticket => ticket.TicketCode).IsUnique();
+        modelBuilder.Entity<RefreshToken>().HasIndex(rt => rt.Token).IsUnique();
+        modelBuilder.Entity<RefreshToken>().Property(rt => rt.Token).HasMaxLength(500);
 
         // 1 User có thể tạo nhiều Ticket
         modelBuilder.Entity<MaintenanceTicket>()
@@ -67,7 +71,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>()
         .HasOne(user => user.Role)
         .WithMany(role => role.Users)
-        .HasForeignKey(user=>user.RoleId)
+        .HasForeignKey(user => user.RoleId)
         .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<User>()
@@ -80,13 +84,19 @@ public class AppDbContext : DbContext
         .HasOne(comment => comment.MaintenanceTicket)
         .WithMany(ticket => ticket.Comments)
         .HasForeignKey(comment => comment.MaintenanceTicketId)
-        .OnDelete(DeleteBehavior.Restrict);  
+        .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<TicketComment>()
         .HasOne(comment => comment.User)
         .WithMany(user => user.Comments)
         .HasForeignKey(comment => comment.UserId)
         .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<RefreshToken>()
+        .HasOne(rt => rt.User)
+        .WithMany(u => u.RefreshTokens)
+        .HasForeignKey(rt => rt.UserId)
+        .OnDelete(DeleteBehavior.Cascade);
 
     }
 }
