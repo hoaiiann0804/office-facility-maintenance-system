@@ -155,6 +155,7 @@ public class MaintenanceTicketsController : ControllerBase
             {
                 Items = tickets,
                 Page = query.Page,
+                PageSize = query.PageSize,
                 TotalItems = totalItems,
                 TotalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize)
             }
