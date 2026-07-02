@@ -1,6 +1,7 @@
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using InternalMaintenance.Api.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -11,29 +12,29 @@ public class JwtTokenService
 {
     //Dùng để đọc Jwt: Key , Jwt: Issuer, Jwt: Audience
     // và Jwt: ExpiresInMinutes từ cofiguration. 
-    private readonly IConfiguration  _configuration;
-    public JwtTokenService (IConfiguration configuration)
+    private readonly IConfiguration _configuration;
+    public JwtTokenService(IConfiguration configuration)
     {
         _configuration = configuration;
     }
 
     //Nhận user đã được xác thực email/password thành công
     // Tạo Jwt access token cho user đó 
-    public string GenerateAccessToken (User user)
+    public string GenerateAccessToken(User user)
     {
         var jwtKey = _configuration["Jwt:Key"];
         //Định danh của Server tạo ra cái Token này
-        var issuer = _configuration["Jwt:Issuer"]; 
+        var issuer = _configuration["Jwt:Issuer"];
         //Định danh của Client/ứng dụng được phép sử dụng Token này
         //Nó xác định xem "Tấm vé này dành cho ai và được dùng ở đâu"
-        var audience = _configuration["Jwt:Audience"]; 
-     
+        var audience = _configuration["Jwt:Audience"];
+
         if (string.IsNullOrWhiteSpace(jwtKey))
         {
             throw new InvalidOperationException("JWT key is missing");
         }
 
-        if(user.Role is null)
+        if (user.Role is null)
         {
             throw new InvalidOperationException(
                 "User role must be loaded before generating JWT"
@@ -80,15 +81,15 @@ public class JwtTokenService
                 Guid.NewGuid().ToString()
              )
         };
-       if (user.DepartmentId.HasValue)
-            {
-                claims.Add(
-                    new Claim(
-                        "departmentId",
-                        user.DepartmentId.Value.ToString()
-                    )
-                );
-            }   
+        if (user.DepartmentId.HasValue)
+        {
+            claims.Add(
+                new Claim(
+                    "departmentId",
+                    user.DepartmentId.Value.ToString()
+                )
+            );
+        }
         //Chuyển secret từ string thành byte[]
         //Để dùng cho thuật toán ký
         var signingKey = new SymmetricSecurityKey(
@@ -104,7 +105,7 @@ public class JwtTokenService
         var expiresInMinutes = int.TryParse(
             _configuration["Jwt:ExpiresInMinutes"],
             out var configuredMinutes
-        ) ? configuredMinutes:60;
+        ) ? configuredMinutes : 60;
 
         // Tạo object JWT với issuer, audience,
         // claims, thời gian hết hạn và chữ ký
@@ -119,5 +120,15 @@ public class JwtTokenService
         // Chuyển JwtSecurity object thành chuỗi JWT
         return new JwtSecurityTokenHandler().WriteToken(token);
 
+    }
+
+
+    public static string GenerateRefreshToken()
+    {
+        // Sinh 64 bytes ngẫu nhiên bằng Cryptographically Secure Random
+        var randomBytes = RandomNumberGenerator.GetBytes(64);
+
+        // Chuyển sang Base64 để lưu DB và gửi cho client
+        return Convert.ToBase64String(randomBytes);
     }
 }
