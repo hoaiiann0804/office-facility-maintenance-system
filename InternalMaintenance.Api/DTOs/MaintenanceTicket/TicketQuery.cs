@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using InternalMaintenance.Api.DTOs.Common;
 namespace InternalMaintenance.Api.DTOs.MaintenanceTicket;
 
-public class TicketQuery
+public class TicketQuery : PaginationQuery
 {
     public string? Status { get; set; }
 
@@ -9,9 +10,4 @@ public class TicketQuery
 
     public int? EquipmentId { get; set; }
 
-    [Range(1, int.MaxValue)]
-    public int Page { get; set; } = 1;
-
-    [Range(1, 100)]
-    public int PageSize { get; set; } = 10;
 }

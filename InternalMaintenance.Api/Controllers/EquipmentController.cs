@@ -1,5 +1,6 @@
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
+using InternalMaintenance.Api.DTOs.Common;
 using InternalMaintenance.Api.DTOs.Departments;
 using InternalMaintenance.Api.DTOs.Equipment;
 using InternalMaintenance.Api.DTOs.TicketComment;
@@ -23,25 +24,69 @@ public class EquipmentController : ControllerBase
 
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<List<EquipmentResponse>>> GetEquipment()
+    public async Task<ActionResult<PagedResponse<EquipmentResponse>>> GetEquipment(
+        [FromQuery] EquipmentQuery query
+    )
     {
-        var equipment = await _context.Equipment
-        .Select(e => new EquipmentResponse
+        var equipmentQuery = _context.Equipment
+        .AsNoTracking()
+        .AsQueryable();
+        var keyword = query.Keyword?.Trim();
+        if (!string.IsNullOrWhiteSpace(keyword))
         {
-            Id = e.Id,
-            Code = e.Code,
-            Name = e.Name,
-            DepartmentId = e.DepartmentId,
-            // ! : bắt buộc phải có dữ liệu để chạy (sẽ ko null khi chạy)
-            DepartmentName = e.Department!.Name,
-            Status = e.Status,
-            PurchasedDate = e.PurchasedDate,
-            Description = e.Description,
-            CreatedAt = e.CreatedAt,
-            UpdatedAt = e.UpdatedAt,
+            equipmentQuery = equipmentQuery.Where(
+                equipment => equipment.Name.Contains(keyword)
+                || equipment.Code.Contains(keyword)
+                || (equipment.Description != null && equipment.Description.Contains(keyword)));
         }
-        ).ToListAsync();
-        return Ok(equipment);
+        var status = query.Status?.Trim();
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            equipmentQuery = equipmentQuery.Where(e =>
+                e.Status == status
+            );
+        }
+        if (query.DepartmentId.HasValue)
+        {
+            equipmentQuery = equipmentQuery.Where(
+                equipment => equipment.DepartmentId == query.DepartmentId.Value
+            );
+        }
+
+        var totalItems = await equipmentQuery.CountAsync();
+        equipmentQuery = equipmentQuery
+        .OrderByDescending(equipment => equipment.CreatedAt)
+        .ThenBy(equipment => equipment.Id);
+
+        equipmentQuery = equipmentQuery.Skip((query.Page - 1) * query.PageSize)
+        .Take(query.PageSize);
+
+        var equipment = await equipmentQuery
+            .Select(e => new EquipmentResponse
+            {
+                Id = e.Id,
+                Code = e.Code,
+                Name = e.Name,
+                DepartmentId = e.DepartmentId,
+                // ! : bắt buộc phải có dữ liệu để chạy (sẽ ko null khi chạy)
+                DepartmentName = e.Department!.Name,
+                Status = e.Status,
+                PurchasedDate = e.PurchasedDate,
+                Description = e.Description,
+                CreatedAt = e.CreatedAt,
+                UpdatedAt = e.UpdatedAt,
+            }
+            ).ToListAsync();
+        return Ok(
+            new PagedResponse<EquipmentResponse>
+            {
+                Items = equipment,
+                Page = query.Page,
+                PageSize = query.PageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize)
+            }
+        );
     }
 
     [Authorize]
