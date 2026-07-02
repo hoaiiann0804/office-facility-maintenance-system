@@ -2,14 +2,12 @@
 using InternalMaintenance.Api.DTOs.Common;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
-using InternalMaintenance.Api.DTOs.Common;
 using InternalMaintenance.Api.DTOs.Users;
 using InternalMaintenance.Api.Models;
 using InternalMaintenance.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using InternalMaintenance.Api.Models;
 
 [ApiController]
 [Route("api/users")]
