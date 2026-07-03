@@ -93,8 +93,6 @@ public class AuthController : ControllerBase
         };
 
         _context.RefreshTokens.Add(refreshTokenEntity);
-
-        return Ok(new LoginResponse
         await _context.SaveChangesAsync();
         return Ok(new LoginResponse
         {
@@ -219,106 +217,105 @@ public class AuthController : ControllerBase
                 message = "Password changed successfully. PLease login again. "
             }
         );
-
-
     }
-}
 
-[AllowAnonymous]
-[HttpPost("refresh-token")]
-public async Task<ActionResult<RefreshTokenResponse>> RefreshToken(RefreshTokenRequest request)
-{
-
-    var storedRefreshToken = await _context.RefreshTokens
-    .Include(rt => rt.User)
-    .ThenInclude(rt => rt.Role)
-    .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
-    if (storedRefreshToken is null)
+    [AllowAnonymous]
+    [HttpPost("refresh-token")]
+    public async Task<ActionResult<RefreshTokenResponse>> RefreshToken(RefreshTokenRequest request)
     {
-        return Unauthorized(new
+        var storedRefreshToken = await _context.RefreshTokens
+            .Include(rt => rt.User)
+            .ThenInclude(rt => rt.Role)
+            .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
+
+        if (storedRefreshToken is null)
         {
-            message = "Refresh token not found"
-        });
-    }
-
-    if (storedRefreshToken.IsRevoked)
-    {
-        return Unauthorized(new
-        {
-            message = "Refresh token revoked"
-        });
-    }
-
-    if (storedRefreshToken.ExpiresAt <= DateTime.UtcNow)
-    {
-        return Unauthorized(new
-        {
-            message = "Refresh token expired"
-        });
-    }
-    var user = storedRefreshToken.User;
-    if (!user.IsActive)
-    {
-        return StatusCode(
-            StatusCodes.Status403Forbidden,
-            new
-            {
-                message = "Your account has been deactivated."
-            });
-    }
-    var accessToken = _jwtTokenService.GenerateAccessToken(user);
-    var refreshToken = _jwtTokenService.GenerateRefreshToken();
-    var expiresInMinutes = _jwtTokenService.GetAccessTokenLifeTime();
-    var refreshTokenEntity = new RefreshToken
-    {
-        UserId = user.Id,
-        Token = refreshToken,
-        CreatedAt = DateTime.UtcNow,
-        ExpiresAt = DateTime.UtcNow.AddDays(
-            _jwtTokenService.GetRefreshTokenLifeTime())
-    };
-    storedRefreshToken.IsRevoked = true;
-    storedRefreshToken.RevokedAt = DateTime.UtcNow;
-    _context.RefreshTokens.Add(refreshTokenEntity);
-    await _context.SaveChangesAsync();
-
-    return Ok(
-        new RefreshTokenResponse
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            TokenType = "Bearer",
-            ExpiresInMinutes = expiresInMinutes,
-
+            return Unauthorized(
+                new
+                {
+                    message = "Refresh token not found"
+                });
         }
-    );
-}
 
-[AllowAnonymous]
-[HttpPost("logout")]
-public async Task<IActionResult> Logout(LogoutRequest request)
-{
-
-    var storedRefreshToken = await _context.RefreshTokens
-    .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
-    if (storedRefreshToken is null)
-    {
-        return Unauthorized(new
+        if (storedRefreshToken.IsRevoked)
         {
-            message = "Refresh token not found"
-        });
+            return Unauthorized(new
+            {
+                message = "Refresh token revoked"
+            });
+        }
+
+        if (storedRefreshToken.ExpiresAt <= DateTime.UtcNow)
+        {
+            return Unauthorized(new
+            {
+                message = "Refresh token expired"
+            });
+        }
+
+        var user = storedRefreshToken.User;
+        if (!user.IsActive)
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "Your account has been deactivated."
+                });
+        }
+
+        var accessToken = _jwtTokenService.GenerateAccessToken(user);
+        var refreshToken = _jwtTokenService.GenerateRefreshToken();
+        var expiresInMinutes = _jwtTokenService.GetAccessTokenLifeTime();
+        var refreshTokenEntity = new RefreshToken
+        {
+            UserId = user.Id,
+            Token = refreshToken,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(
+                _jwtTokenService.GetRefreshTokenLifeTime())
+        };
+
+        storedRefreshToken.IsRevoked = true;
+        storedRefreshToken.RevokedAt = DateTime.UtcNow;
+        _context.RefreshTokens.Add(refreshTokenEntity);
+        await _context.SaveChangesAsync();
+
+        return Ok(
+            new RefreshTokenResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                TokenType = "Bearer",
+                ExpiresInMinutes = expiresInMinutes,
+            }
+        );
     }
 
-    if (storedRefreshToken.IsRevoked)
+    [AllowAnonymous]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(LogoutRequest request)
     {
-        return NoContent();
-    }
-    var refreshToken = _jwtTokenService.GenerateRefreshToken();
-    storedRefreshToken.IsRevoked = true;
-    storedRefreshToken.RevokedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+        var storedRefreshToken = await _context.RefreshTokens
+            .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
 
-    return NoContent();
-}
+        if (storedRefreshToken is null)
+        {
+            return Unauthorized(new
+            {
+                message = "Refresh token not found"
+            });
+        }
+
+        if (storedRefreshToken.IsRevoked)
+        {
+            return NoContent();
+        }
+
+        storedRefreshToken.IsRevoked = true;
+        storedRefreshToken.RevokedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }
