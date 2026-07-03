@@ -105,7 +105,7 @@ public class JwtTokenService
         var expiresInMinutes = int.TryParse(
             _configuration["Jwt:ExpiresInMinutes"],
             out var configuredMinutes
-        ) ? configuredMinutes : 60;
+        ) ? configuredMinutes : 15;
 
         // Tạo object JWT với issuer, audience,
         // claims, thời gian hết hạn và chữ ký
@@ -123,12 +123,30 @@ public class JwtTokenService
     }
 
 
-    public static string GenerateRefreshToken()
+    public string GenerateRefreshToken()
     {
         // Sinh 64 bytes ngẫu nhiên bằng Cryptographically Secure Random
         var randomBytes = RandomNumberGenerator.GetBytes(64);
 
         // Chuyển sang Base64 để lưu DB và gửi cho client
         return Convert.ToBase64String(randomBytes);
+    }
+
+    public int GetAccessTokenLifeTime()
+    {
+        return int.TryParse(
+       _configuration["Jwt:ExpiresInMinutes"],
+       out var configuredMinutes)
+           ? configuredMinutes
+           : 60;
+    }
+
+    public int GetRefreshTokenLifeTime()
+    {
+        return int.TryParse(
+       _configuration["Jwt:RefreshTokenExpiresInDays"],
+       out var configuredDays)
+           ? configuredDays
+           : 7;
     }
 }
