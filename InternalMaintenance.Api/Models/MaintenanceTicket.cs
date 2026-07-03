@@ -62,4 +62,5 @@ public class MaintenanceTicket
 
     // Lịch sử thay đổi trạng thái (1 MaintenanceTicket có nhiều TicketStatusHistory)
     public ICollection<TicketStatusHistory> StatusHistories {get;set;} = new List<TicketStatusHistory>();
+    public ICollection<TicketComment> Comments {get;set;} = new List<TicketComment>();
     }

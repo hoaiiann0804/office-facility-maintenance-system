@@ -54,7 +54,13 @@ public class AuthController : ControllerBase
 
         if (!user.IsActive)
         {
-            return Forbid();
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "Your account has been deactivated. Please contact the administrator."
+                }
+            );
         }
 
         var passwordValid = BCrypt.Net.BCrypt.Verify(
@@ -151,7 +157,7 @@ public class AuthController : ControllerBase
     }
     [Authorize]
     [HttpPost("change-password")]
-    public async Task<ActionResult<AuthUserResponse>> ChangePassword(ChangePasswordRequest request)
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
     {
         var currentUserId = _currentUserService.UserId;
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUserId);
@@ -168,7 +174,13 @@ public class AuthController : ControllerBase
 
         if (!user.IsActive)
         {
-            return Forbid();
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "Your account has been deactivated. Please contact the administrator."
+                }
+            );
         }
 
         var currentPasswordValid = BCrypt.Net.BCrypt.Verify(
@@ -207,6 +219,7 @@ public class AuthController : ControllerBase
                 message = "Password changed successfully. PLease login again. "
             }
         );
+
 
     }
 }
@@ -307,4 +320,5 @@ public async Task<IActionResult> Logout(LogoutRequest request)
 
     return NoContent();
 }
+    }
 }

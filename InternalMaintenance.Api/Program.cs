@@ -15,7 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Giá trị thật được lấy từ môi trường ConnectionStrings__DefaultConnection
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-if(string.IsNullOrWhiteSpace(connectionString)){
+if (string.IsNullOrWhiteSpace(connectionString))
+{
     throw new InvalidOperationException("Missing connection string: ConnectionStrings__DefaultConnection");
 }
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -51,14 +52,14 @@ builder.Services
         ValidateAudience = true,
         ValidAudience = builder.Configuration["Jwt:Audience"],
         //Kiểm tra token còn hạn hay hết hạn.
-        ValidateLifetime=true,
+        ValidateLifetime = true,
         //Kiểm tra chữ ký token có hợp lệ không
         ValidateIssuerSigningKey = true,
         // Dùng secrect key để xác minh token
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(jwtKey)
-        ) 
-        
+        )
+
     };
 });
 
@@ -97,7 +98,10 @@ app.MapControllers();
 // app.UseHttpsRedirection();
 
 
-app.MapGet("/",()=>"Internal Maintenance API is running");
+app.MapGet("/", () => "Internal Maintenance API is running");
+// var hash = BCrypt.Net.BCrypt.HashPassword("Temp@123456");
+// Console.WriteLine(hash);
 app.Run();
+
 
 

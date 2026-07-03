@@ -18,8 +18,8 @@ public class CreateTicketRequest
     [StringLength(20, ErrorMessage = "Priority must not exceed 20 characters")]
     public string Priority { get; set; } = "Medium";
 
-    // Tạm thời để test khi chưa có authentication
-    // Sau này có login/JWT thì bỏ field này và lấy UserId từ token 
-    [Range(1, int.MaxValue, ErrorMessage = "CreatedByUserId must be greater than 0")]
+    // // Tạm thời để test khi chưa có authentication
+    // // Sau này có login/JWT thì bỏ field này và lấy UserId từ token 
+    // [Range(1, int.MaxValue, ErrorMessage = "CreatedByUserId must be greater than 0")]
     public int CreatedByUserId { get; set; }
 }
