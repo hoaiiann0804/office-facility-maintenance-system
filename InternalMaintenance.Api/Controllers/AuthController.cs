@@ -78,19 +78,30 @@ public class AuthController : ControllerBase
         }
 
         user.LastLoginAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+
 
         var token = _jwtTokenService.GenerateAccessToken(user);
+        var expiresInMinutes = _jwtTokenService.GetAccessTokenLifeTime();
+        var refreshToken = _jwtTokenService.GenerateRefreshToken();
+        var refreshTokenExpiresInDays = _jwtTokenService.GetRefreshTokenLifeTime();
+        var refreshTokenEntity = new RefreshToken
+        {
+            UserId = user.Id,
+            Token = refreshToken,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiresInDays)
+        };
 
-        var expiresInMinutes = int.Parse(
-            _configuration["Jwt:ExpiresInMinutes"] ?? "60"
-        );
+        _context.RefreshTokens.Add(refreshTokenEntity);
 
+        return Ok(new LoginResponse
+        await _context.SaveChangesAsync();
         return Ok(new LoginResponse
         {
             AccessToken = token,
             TokenType = "Bearer",
             ExpiresInMinutes = expiresInMinutes,
+            RefreshToken = refreshToken,
             MustChangePassword = user.MustChangePassword,
             User = new AuthUserResponse
             {
@@ -160,6 +171,7 @@ public class AuthController : ControllerBase
                 }
             );
         }
+
         if (!user.IsActive)
         {
             return StatusCode(
@@ -207,5 +219,106 @@ public class AuthController : ControllerBase
                 message = "Password changed successfully. PLease login again. "
             }
         );
+
+
+    }
+}
+
+[AllowAnonymous]
+[HttpPost("refresh-token")]
+public async Task<ActionResult<RefreshTokenResponse>> RefreshToken(RefreshTokenRequest request)
+{
+
+    var storedRefreshToken = await _context.RefreshTokens
+    .Include(rt => rt.User)
+    .ThenInclude(rt => rt.Role)
+    .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
+    if (storedRefreshToken is null)
+    {
+        return Unauthorized(new
+        {
+            message = "Refresh token not found"
+        });
+    }
+
+    if (storedRefreshToken.IsRevoked)
+    {
+        return Unauthorized(new
+        {
+            message = "Refresh token revoked"
+        });
+    }
+
+    if (storedRefreshToken.ExpiresAt <= DateTime.UtcNow)
+    {
+        return Unauthorized(new
+        {
+            message = "Refresh token expired"
+        });
+    }
+    var user = storedRefreshToken.User;
+    if (!user.IsActive)
+    {
+        return StatusCode(
+            StatusCodes.Status403Forbidden,
+            new
+            {
+                message = "Your account has been deactivated."
+            });
+    }
+    var accessToken = _jwtTokenService.GenerateAccessToken(user);
+    var refreshToken = _jwtTokenService.GenerateRefreshToken();
+    var expiresInMinutes = _jwtTokenService.GetAccessTokenLifeTime();
+    var refreshTokenEntity = new RefreshToken
+    {
+        UserId = user.Id,
+        Token = refreshToken,
+        CreatedAt = DateTime.UtcNow,
+        ExpiresAt = DateTime.UtcNow.AddDays(
+            _jwtTokenService.GetRefreshTokenLifeTime())
+    };
+    storedRefreshToken.IsRevoked = true;
+    storedRefreshToken.RevokedAt = DateTime.UtcNow;
+    _context.RefreshTokens.Add(refreshTokenEntity);
+    await _context.SaveChangesAsync();
+
+    return Ok(
+        new RefreshTokenResponse
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            TokenType = "Bearer",
+            ExpiresInMinutes = expiresInMinutes,
+
+        }
+    );
+}
+
+[AllowAnonymous]
+[HttpPost("logout")]
+public async Task<IActionResult> Logout(LogoutRequest request)
+{
+
+    var storedRefreshToken = await _context.RefreshTokens
+    .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
+    if (storedRefreshToken is null)
+    {
+        return Unauthorized(new
+        {
+            message = "Refresh token not found"
+        });
+    }
+
+    if (storedRefreshToken.IsRevoked)
+    {
+        return NoContent();
+    }
+    var refreshToken = _jwtTokenService.GenerateRefreshToken();
+    storedRefreshToken.IsRevoked = true;
+    storedRefreshToken.RevokedAt = DateTime.UtcNow;
+    await _context.SaveChangesAsync();
+
+    return NoContent();
+}
     }
 }
