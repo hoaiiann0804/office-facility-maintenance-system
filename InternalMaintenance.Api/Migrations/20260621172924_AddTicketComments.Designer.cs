@@ -4,6 +4,7 @@ using InternalMaintenance.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InternalMaintenance.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260621172924_AddTicketComments")]
+    partial class AddTicketComments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -154,44 +157,6 @@ namespace InternalMaintenance.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("MaintenanceTickets");
-                });
-
-            modelBuilder.Entity("InternalMaintenance.Api.Models.RefreshToken", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsRevoked")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Token")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("InternalMaintenance.Api.Models.Role", b =>
@@ -371,17 +336,6 @@ namespace InternalMaintenance.Api.Migrations
                     b.Navigation("Equipment");
                 });
 
-            modelBuilder.Entity("InternalMaintenance.Api.Models.RefreshToken", b =>
-                {
-                    b.HasOne("InternalMaintenance.Api.Models.User", "User")
-                        .WithMany("RefreshTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("InternalMaintenance.Api.Models.TicketComment", b =>
                 {
                     b.HasOne("InternalMaintenance.Api.Models.MaintenanceTicket", "MaintenanceTicket")
@@ -469,8 +423,6 @@ namespace InternalMaintenance.Api.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("CreatedTickets");
-
-                    b.Navigation("RefreshTokens");
 
                     b.Navigation("TicketStatusHistories");
                 });

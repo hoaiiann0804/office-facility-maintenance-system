@@ -114,3 +114,1466 @@
   </div>
 </body>
 </html>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      font-family: "Segoe UI Variable Text", "Segoe UI", "Aptos", sans-serif;
+    }
+
+    .glass {
+      backdrop-filter: blur(18px);
+      background: rgba(15, 23, 42, 0.72);
+    }
+
+    .soft-card {
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .grid-pattern {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <div class="fixed inset-0 -z-10 overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.22),_transparent_32%),radial-gradient(circle_at_top_right,_rgba(249,115,22,0.18),_transparent_30%),linear-gradient(180deg,_#0f172a_0%,_#111827_45%,_#f8fafc_45%,_#f8fafc_100%)]"></div>
+    <div class="grid-pattern absolute inset-0 opacity-50"></div>
+    <div class="absolute -top-20 right-0 h-72 w-72 rounded-full bg-sky-500/20 blur-3xl"></div>
+    <div class="absolute top-80 left-0 h-96 w-96 rounded-full bg-orange-500/10 blur-3xl"></div>
+  </div>
+
+  <div id="login-screen" class="min-h-screen flex items-center justify-center px-4 py-10">
+    <div class="w-full max-w-6xl grid lg:grid-cols-[1.15fr_0.85fr] gap-6">
+      <div class="rounded-[28px] border border-white/10 bg-white/6 p-8 lg:p-10 soft-card">
+        <div class="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1 text-xs font-semibold text-sky-100">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+          Internal Maintenance Management
+        </div>
+        <h1 class="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl">
+          Wireframe điều phối bảo trì nội bộ
+        </h1>
+        <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-200/90">
+          Bản thử nghiệm này bám theo README và API hiện có: đăng nhập, profile, đổi mật khẩu, ticket workflow, quản lý phòng ban, quản lý thiết bị và danh sách người dùng.
+        </p>
+
+        <div class="mt-8 grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          <div class="rounded-2xl border border-white/10 bg-slate-900/55 p-4">
+            <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Auth</div>
+            <div class="mt-2 text-lg font-bold">Login, me, change-password</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-900/55 p-4">
+            <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Tickets</div>
+            <div class="mt-2 text-lg font-bold">Create, assign, resolve, close</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-900/55 p-4">
+            <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Catalog</div>
+            <div class="mt-2 text-lg font-bold">Departments & equipment</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-900/55 p-4">
+            <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Roles</div>
+            <div class="mt-2 text-lg font-bold">Admin, Manager, Staff, Technician</div>
+          </div>
+        </div>
+
+        <div class="mt-8 rounded-3xl border border-white/10 bg-slate-900/55 p-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-bold text-white">Quick demo accounts</h2>
+              <p class="mt-1 text-sm text-slate-300">Chọn 1 tài khoản để test ngay mà không cần nhớ mật khẩu.</p>
+            </div>
+            <div class="text-xs text-slate-400">Temp password: <span class="font-semibold text-slate-100">Temp@123456</span></div>
+          </div>
+          <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4" id="quick-login-list"></div>
+        </div>
+      </div>
+
+      <div class="rounded-[28px] border border-slate-200 bg-white p-6 lg:p-8 text-slate-900 shadow-2xl">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Demo login</div>
+            <h2 class="mt-2 text-2xl font-black">Vào khu vực mô phỏng</h2>
+          </div>
+          <div class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">
+            JWT flow preview
+          </div>
+        </div>
+
+        <form id="login-form" class="mt-6 space-y-4">
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Email</label>
+            <input id="login-email" type="email" class="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="admin@test.com" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Password</label>
+            <input id="login-password" type="password" class="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Temp@123456" />
+          </div>
+          <button type="submit" class="w-full rounded-2xl bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-800">
+            Đăng nhập
+          </button>
+        </form>
+
+        <div class="mt-6 rounded-3xl bg-slate-50 p-5">
+          <div class="flex items-start gap-3">
+            <div class="mt-1 rounded-2xl bg-amber-100 p-2 text-amber-700">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <div class="font-bold text-slate-900">Điểm còn thiếu nếu chỉ nhìn wireframe cũ</div>
+              <ul class="mt-2 space-y-2 text-sm leading-6 text-slate-600">
+                <li>Thiếu luồng đăng nhập, profile và đổi mật khẩu.</li>
+                <li>Thiếu module phòng ban và thiết bị đúng với API.</li>
+                <li>Thiếu góc nhìn admin/user directory để test phân quyền.</li>
+                <li>Thiếu ticket search, filter và panel xem chi tiết workflow.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-shell" class="hidden min-h-screen">
+    <header class="sticky top-0 z-40 border-b border-white/10 bg-slate-950/88 backdrop-blur-xl">
+      <div class="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-4 py-4 lg:px-6">
+        <div class="flex items-center gap-3">
+          <div class="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-300 text-slate-950 shadow-lg shadow-sky-500/20">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-[0.28em] text-slate-400">Internal Maintenance</div>
+            <div class="text-lg font-black text-white">Management Console</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2" id="persona-switcher"></div>
+
+        <div class="flex items-center gap-3">
+          <div class="hidden md:block text-right">
+            <div id="header-user-name" class="text-sm font-bold text-white"></div>
+            <div id="header-user-meta" class="text-xs text-slate-400"></div>
+          </div>
+          <button id="logout-btn" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">
+            Đăng xuất
+          </button>
+        </div>
+      </div>
+      <div class="mx-auto max-w-[1600px] px-4 pb-4 lg:px-6">
+        <nav class="flex flex-wrap gap-2" id="module-tabs"></nav>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-[1600px] px-4 py-6 lg:px-6">
+      <div id="app-banner" class="mb-5 hidden rounded-3xl border px-4 py-4 text-sm"></div>
+
+      <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5" id="stats-grid"></section>
+
+      <section id="view-overview" class="mt-6 space-y-6">
+        <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          <div class="rounded-[28px] border border-slate-200 bg-white p-5 text-slate-900 soft-card">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Today</div>
+                <h2 class="mt-1 text-2xl font-black">Tổng quan hoạt động</h2>
+              </div>
+              <div class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600" id="current-role-chip"></div>
+            </div>
+            <div class="mt-5 grid gap-4 md:grid-cols-2">
+              <div class="rounded-3xl bg-slate-50 p-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Workflow chính</div>
+                <div class="mt-2 text-sm leading-6 text-slate-700">
+                  Pending -> Assigned -> In Progress -> Resolved -> Closed
+                </div>
+              </div>
+              <div class="rounded-3xl bg-slate-50 p-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Business rules</div>
+                <div class="mt-2 text-sm leading-6 text-slate-700">
+                  Không tạo ticket trùng thiết bị đang mở. Không cho đổi code thiết bị sau khi tạo. Đóng phòng ban/thiết bị phải xét dữ liệu liên quan.
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-5 overflow-hidden rounded-3xl border border-slate-200">
+              <div class="grid grid-cols-2 bg-slate-50 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                <div>API area</div>
+                <div>Wireframe coverage</div>
+              </div>
+              <div class="divide-y divide-slate-200 text-sm text-slate-700" id="coverage-list"></div>
+            </div>
+          </div>
+
+          <div class="rounded-[28px] border border-slate-200 bg-white p-5 text-slate-900 soft-card">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Current profile</div>
+                <h2 class="mt-1 text-2xl font-black">Thông tin đăng nhập</h2>
+              </div>
+              <div class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600" id="password-alert-chip"></div>
+            </div>
+            <div class="mt-5 rounded-[26px] border border-slate-200 bg-slate-50 p-5">
+              <div class="flex items-center gap-4">
+                <div class="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-slate-900 to-slate-700 text-2xl font-black text-white" id="profile-avatar"></div>
+                <div>
+                  <div class="text-lg font-black" id="profile-name"></div>
+                  <div class="text-sm text-slate-600" id="profile-email"></div>
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    <span id="profile-role" class="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white"></span>
+                    <span id="profile-dept" class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                <div class="rounded-2xl bg-white p-4 border border-slate-200">
+                  <div class="text-xs uppercase tracking-[0.18em] text-slate-500">Last login</div>
+                  <div class="mt-2 text-sm font-semibold" id="profile-last-login"></div>
+                </div>
+                <div class="rounded-2xl bg-white p-4 border border-slate-200">
+                  <div class="text-xs uppercase tracking-[0.18em] text-slate-500">Account state</div>
+                  <div class="mt-2 text-sm font-semibold" id="profile-state"></div>
+                </div>
+              </div>
+            </div>
+
+            <form id="change-password-form" class="mt-5 rounded-[26px] border border-slate-200 bg-white p-5">
+              <div class="text-sm font-black text-slate-900">Đổi mật khẩu</div>
+              <div class="mt-4 grid gap-3">
+                <input id="current-password" type="password" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Current password" />
+                <input id="new-password" type="password" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="New password" />
+                <button class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Lưu mật khẩu mới</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-tickets" class="mt-6 hidden space-y-6">
+        <div class="grid gap-6 xl:grid-cols-[0.95fr_1.15fr_0.9fr]">
+          <div class="rounded-[28px] border border-slate-200 bg-white p-5 text-slate-900 soft-card">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Create ticket</div>
+                <h2 class="mt-1 text-2xl font-black">Báo cáo sự cố mới</h2>
+              </div>
+              <span class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">Staff only</span>
+            </div>
+
+            <form id="ticket-form" class="mt-5 space-y-4">
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">Thiết bị</label>
+                <select id="ticket-equipment" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200"></select>
+              </div>
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">Tiêu đề</label>
+                <input id="ticket-title" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Ví dụ: Máy in kẹt giấy" />
+              </div>
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">Mô tả</label>
+                <textarea id="ticket-description" rows="4" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Mô tả hiện tượng, bối cảnh, thời điểm..."></textarea>
+              </div>
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">Priority</label>
+                <select id="ticket-priority" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200">
+                  <option>Low</option>
+                  <option selected>Medium</option>
+                  <option>High</option>
+                  <option>Urgent</option>
+                </select>
+              </div>
+              <button class="w-full rounded-2xl bg-amber-500 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-amber-400">
+                Gửi yêu cầu bảo trì
+              </button>
+            </form>
+
+            <div id="ticket-create-hint" class="mt-5 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600"></div>
+          </div>
+
+          <div class="rounded-[28px] border border-slate-200 bg-white p-5 text-slate-900 soft-card">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Ticket list</div>
+                <h2 class="mt-1 text-2xl font-black">Danh sách phiếu bảo trì</h2>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <input id="ticket-search" class="rounded-2xl border border-slate-300 px-4 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Tìm theo mã, tiêu đề..." />
+                <select id="ticket-status-filter" class="rounded-2xl border border-slate-300 px-4 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200">
+                  <option value="All">All</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Assigned">Assigned</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2 text-xs" id="ticket-scope-chips"></div>
+            <div class="mt-4 space-y-3" id="ticket-list"></div>
+          </div>
+
+          <div class="rounded-[28px] border border-slate-200 bg-white p-5 text-slate-900 soft-card">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Ticket detail</div>
+                <h2 class="mt-1 text-2xl font-black">Workflow panel</h2>
+              </div>
+              <span class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600" id="selected-ticket-code"></span>
+            </div>
+
+            <div class="mt-5 rounded-[26px] border border-slate-200 bg-slate-50 p-5" id="ticket-detail"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-catalog" class="mt-6 hidden space-y-6">
+        <div class="grid gap-6 xl:grid-cols-2">
+          <div class="rounded-[28px] border border-slate-200 bg-white p-5 text-slate-900 soft-card">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Departments</div>
+                <h2 class="mt-1 text-2xl font-black">Quản lý phòng ban</h2>
+              </div>
+              <span class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">GET/POST/PUT/DELETE</span>
+            </div>
+
+            <form id="department-form" class="mt-5 grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+              <input type="hidden" id="department-id" />
+              <input id="department-name" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Department name" />
+              <textarea id="department-description" rows="3" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Description"></textarea>
+              <div class="flex flex-wrap gap-2">
+                <button class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white">Lưu phòng ban</button>
+                <button type="button" id="department-reset" class="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700">Hủy chỉnh sửa</button>
+              </div>
+            </form>
+
+            <div class="mt-5 overflow-hidden rounded-3xl border border-slate-200">
+              <div class="grid grid-cols-[1.1fr_1fr_0.6fr] bg-slate-50 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                <div>Name</div>
+                <div>Description</div>
+                <div>Actions</div>
+              </div>
+              <div id="department-list" class="divide-y divide-slate-200 bg-white"></div>
+            </div>
+          </div>
+
+          <div class="rounded-[28px] border border-slate-200 bg-white p-5 text-slate-900 soft-card">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Equipment</div>
+                <h2 class="mt-1 text-2xl font-black">Quản lý thiết bị</h2>
+              </div>
+              <span class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">Code immutable</span>
+            </div>
+
+            <form id="equipment-form" class="mt-5 grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+              <input type="hidden" id="equipment-id" />
+              <input id="equipment-code" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="EQ-IT-001" />
+              <input id="equipment-name" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Equipment name" />
+              <select id="equipment-department" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200"></select>
+              <select id="equipment-status" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200">
+                <option>Active</option>
+                <option>UnderMaintenance</option>
+                <option>Inactive</option>
+                <option>Retired</option>
+              </select>
+              <input id="equipment-purchased" type="date" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" />
+              <textarea id="equipment-description" rows="3" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Description"></textarea>
+              <div class="flex flex-wrap gap-2">
+                <button class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white">Lưu thiết bị</button>
+                <button type="button" id="equipment-reset" class="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700">Hủy chỉnh sửa</button>
+              </div>
+            </form>
+
+            <div class="mt-5 overflow-hidden rounded-3xl border border-slate-200">
+              <div class="grid grid-cols-[0.85fr_1fr_1fr_0.9fr_0.7fr] bg-slate-50 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                <div>Code</div>
+                <div>Name</div>
+                <div>Department</div>
+                <div>Status</div>
+                <div>Actions</div>
+              </div>
+              <div id="equipment-list" class="divide-y divide-slate-200 bg-white"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-users" class="mt-6 hidden space-y-6">
+        <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <div class="rounded-[28px] border border-slate-200 bg-white p-5 text-slate-900 soft-card">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Users</div>
+                <h2 class="mt-1 text-2xl font-black">Danh sách người dùng</h2>
+              </div>
+              <span class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">Admin view</span>
+            </div>
+            <div class="mt-5 overflow-hidden rounded-3xl border border-slate-200">
+              <div class="grid grid-cols-[1.2fr_0.9fr_0.9fr_0.7fr_0.8fr] bg-slate-50 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                <div>User</div>
+                <div>Email</div>
+                <div>Role</div>
+                <div>Dept</div>
+                <div>Status</div>
+              </div>
+              <div id="user-list" class="divide-y divide-slate-200 bg-white"></div>
+            </div>
+          </div>
+
+          <div class="rounded-[28px] border border-slate-200 bg-white p-5 text-slate-900 soft-card">
+            <div class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Access matrix</div>
+            <h2 class="mt-1 text-2xl font-black">Quyền theo vai trò</h2>
+            <div class="mt-5 space-y-3" id="role-matrix"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const now = new Date();
+    const ts = (offsetMinutes = 0) => new Date(now.getTime() + offsetMinutes * 60000).toLocaleString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    });
+
+    const seedUsers = [
+      { id: 1, fullName: "Nguyễn Văn Admin", email: "admin@test.com", password: "Temp@123456", role: "Admin", departmentId: 1, departmentName: "Facilities", isActive: true, mustChangePassword: true, lastLoginAt: ts(-150) },
+      { id: 2, fullName: "Trần Thị Manager", email: "manager@test.com", password: "Temp@123456", role: "Manager", departmentId: 1, departmentName: "Facilities", isActive: true, mustChangePassword: true, lastLoginAt: ts(-90) },
+      { id: 3, fullName: "Lê Văn Staff", email: "staff@test.com", password: "Temp@123456", role: "Staff", departmentId: 2, departmentName: "IT", isActive: true, mustChangePassword: true, lastLoginAt: ts(-15) },
+      { id: 4, fullName: "Phạm Văn Technician", email: "technician@test.com", password: "Temp@123456", role: "Technician", departmentId: 2, departmentName: "IT", isActive: true, mustChangePassword: true, lastLoginAt: ts(-5) }
+    ];
+
+    const seedDepartments = [
+      { id: 1, name: "Facilities", description: "Bảo trì hạ tầng, điện, điều hòa, môi trường làm việc.", createdAt: ts(-2400) },
+      { id: 2, name: "IT", description: "Thiết bị văn phòng, máy in, máy chủ, network.", createdAt: ts(-2300) },
+      { id: 3, name: "Operations", description: "Vận hành sản xuất và các thiết bị chuyên dụng.", createdAt: ts(-2200) }
+    ];
+
+    const seedEquipment = [
+      { id: 1, code: "EQ-FAC-001", name: "Điều hòa tầng 2", departmentId: 1, status: "Active", purchasedDate: "2025-03-15", description: "Daikin 12000BTU" },
+      { id: 2, code: "EQ-IT-001", name: "Máy in Canon LBP2900", departmentId: 2, status: "UnderMaintenance", purchasedDate: "2024-12-10", description: "Hay bị kẹt giấy" },
+      { id: 3, code: "EQ-IT-003", name: "Máy chủ Dell PowerEdge", departmentId: 2, status: "Active", purchasedDate: "2024-06-01", description: "Server phòng IT" },
+      { id: 4, code: "EQ-OPS-004", name: "Băng tải đóng gói", departmentId: 3, status: "Inactive", purchasedDate: "2023-09-20", description: "Chờ thay motor" }
+    ];
+
+    const seedTickets = [
+      {
+        id: 1,
+        ticketCode: "TICKET-20260618-0001",
+        title: "Máy in kẹt giấy liên tục",
+        description: "Máy in tầng 2 in 5-7 tờ thì kẹt giấy, cần kiểm tra roller.",
+        equipmentId: 2,
+        createdByUserId: 3,
+        assignedTechnicianId: 4,
+        priority: "High",
+        status: "Assigned",
+        resolutionNote: "",
+        createdAt: ts(-420),
+        resolvedAt: null,
+        closedAt: null,
+        history: [
+          { status: "Pending", changedBy: "Lê Văn Staff", time: ts(-420), note: "Tạo ticket từ trang báo sự cố." },
+          { status: "Assigned", changedBy: "Trần Thị Manager", time: ts(-380), note: "Giao cho Phạm Văn Technician." }
+        ]
+      },
+      {
+        id: 2,
+        ticketCode: "TICKET-20260618-0002",
+        title: "Điều hòa phát tiếng ồn lớn",
+        description: "Dàn nóng rung mạnh và phát ra tiếng kêu khi chạy lâu.",
+        equipmentId: 1,
+        createdByUserId: 2,
+        assignedTechnicianId: 4,
+        priority: "Medium",
+        status: "In Progress",
+        resolutionNote: "",
+        createdAt: ts(-260),
+        resolvedAt: null,
+        closedAt: null,
+        history: [
+          { status: "Pending", changedBy: "Trần Thị Manager", time: ts(-260), note: "Tạo để mô phỏng ticket nội bộ." },
+          { status: "Assigned", changedBy: "Trần Thị Manager", time: ts(-230), note: "Đã giao kỹ thuật viên." },
+          { status: "In Progress", changedBy: "Phạm Văn Technician", time: ts(-30), note: "Đã tiếp nhận sửa chữa." }
+        ]
+      },
+      {
+        id: 3,
+        ticketCode: "TICKET-20260618-0003",
+        title: "Server cần vệ sinh và kiểm tra quạt",
+        description: "Quạt chạy to, nhiệt độ tăng cao vào cuối giờ chiều.",
+        equipmentId: 3,
+        createdByUserId: 1,
+        assignedTechnicianId: 4,
+        priority: "Urgent",
+        status: "Resolved",
+        resolutionNote: "Vệ sinh bụi, thay keo tản nhiệt, test tải ổn định 30 phút.",
+        createdAt: ts(-900),
+        resolvedAt: ts(-120),
+        closedAt: null,
+        history: [
+          { status: "Pending", changedBy: "Nguyễn Văn Admin", time: ts(-900), note: "Tạo ticket kiểm tra server." },
+          { status: "Assigned", changedBy: "Trần Thị Manager", time: ts(-870), note: "Giao cho kỹ thuật viên." },
+          { status: "In Progress", changedBy: "Phạm Văn Technician", time: ts(-240), note: "Bắt đầu xử lý tại phòng IT." },
+          { status: "Resolved", changedBy: "Phạm Văn Technician", time: ts(-120), note: "Đã khắc phục xong." }
+        ]
+      }
+    ];
+
+    const coverageRows = [
+      ["AuthController", "Login, me, change-password"],
+      ["DepartmentsController", "List, detail, create, update, delete"],
+      ["EquipmentController", "List, detail, create, update, delete"],
+      ["MaintenanceTicketsController", "List, detail, create, assign, status, history"]
+    ];
+
+    const roleRules = {
+      Admin: [
+        "Xem toàn bộ modules",
+        "Quản lý phòng ban và thiết bị",
+        "Xem danh sách người dùng",
+        "Xử lý ticket như manager"
+      ],
+      Manager: [
+        "Xem ticket của toàn bộ đội",
+        "Giao ticket cho technician",
+        "Đóng ticket sau khi resolved",
+        "Không chỉnh catalog nếu không phải admin"
+      ],
+      Staff: [
+        "Tạo ticket mới",
+        "Xem ticket mình tạo",
+        "Nghiệm thu ticket đã resolved",
+        "Không được assign"
+      ],
+      Technician: [
+        "Xem ticket được giao",
+        "Chuyển trạng thái In Progress / Resolved",
+        "Ghi resolution note bắt buộc",
+        "Không được tạo phòng ban hoặc thiết bị"
+      ]
+    };
+
+    const state = {
+      currentUser: null,
+      view: "overview",
+      selectedTicketId: 1,
+      ticketSearch: "",
+      ticketStatusFilter: "All",
+      ticketScopeFilter: "All",
+      departmentEditId: null,
+      equipmentEditId: null,
+      departments: structuredClone(seedDepartments),
+      equipment: structuredClone(seedEquipment),
+      tickets: structuredClone(seedTickets)
+    };
+
+    const els = {};
+
+    function cacheElements() {
+      const pairs = [
+        ["login-screen", "loginScreen"],
+        ["app-shell", "appShell"],
+        ["login-form", "loginForm"],
+        ["login-email", "loginEmail"],
+        ["login-password", "loginPassword"],
+        ["quick-login-list", "quickLoginList"],
+        ["logout-btn", "logoutBtn"],
+        ["persona-switcher", "personaSwitcher"],
+        ["module-tabs", "moduleTabs"],
+        ["stats-grid", "statsGrid"],
+        ["app-banner", "appBanner"],
+        ["current-role-chip", "currentRoleChip"],
+        ["password-alert-chip", "passwordAlertChip"],
+        ["header-user-name", "headerUserName"],
+        ["header-user-meta", "headerUserMeta"],
+        ["profile-avatar", "profileAvatar"],
+        ["profile-name", "profileName"],
+        ["profile-email", "profileEmail"],
+        ["profile-role", "profileRole"],
+        ["profile-dept", "profileDept"],
+        ["profile-last-login", "profileLastLogin"],
+        ["profile-state", "profileState"],
+        ["change-password-form", "changePasswordForm"],
+        ["current-password", "currentPassword"],
+        ["new-password", "newPassword"],
+        ["ticket-form", "ticketForm"],
+        ["ticket-equipment", "ticketEquipment"],
+        ["ticket-title", "ticketTitle"],
+        ["ticket-description", "ticketDescription"],
+        ["ticket-priority", "ticketPriority"],
+        ["ticket-create-hint", "ticketCreateHint"],
+        ["ticket-search", "ticketSearch"],
+        ["ticket-status-filter", "ticketStatusFilter"],
+        ["ticket-scope-chips", "ticketScopeChips"],
+        ["ticket-list", "ticketList"],
+        ["ticket-detail", "ticketDetail"],
+        ["selected-ticket-code", "selectedTicketCode"],
+        ["department-form", "departmentForm"],
+        ["department-id", "departmentId"],
+        ["department-name", "departmentName"],
+        ["department-description", "departmentDescription"],
+        ["department-reset", "departmentReset"],
+        ["department-list", "departmentList"],
+        ["equipment-form", "equipmentForm"],
+        ["equipment-id", "equipmentId"],
+        ["equipment-code", "equipmentCode"],
+        ["equipment-name", "equipmentName"],
+        ["equipment-department", "equipmentDepartment"],
+        ["equipment-status", "equipmentStatus"],
+        ["equipment-purchased", "equipmentPurchased"],
+        ["equipment-description", "equipmentDescription"],
+        ["equipment-reset", "equipmentReset"],
+        ["equipment-list", "equipmentList"],
+        ["user-list", "userList"],
+        ["coverage-list", "coverageList"],
+        ["role-matrix", "roleMatrix"]
+      ];
+
+      pairs.forEach(([id, key]) => {
+        els[key] = document.getElementById(id);
+      });
+    }
+
+    function activeRole() {
+      return state.currentUser ? state.currentUser.role : "Guest";
+    }
+
+    function findDept(id) {
+      return state.departments.find((item) => item.id === id);
+    }
+
+    function findEq(id) {
+      return state.equipment.find((item) => item.id === id);
+    }
+
+    function findUser(id) {
+      return seedUsers.find((item) => item.id === id);
+    }
+
+    function fmtDate(value) {
+      return value || "Chưa có";
+    }
+
+    function badgeClass(kind, value) {
+      if (kind === "priority") {
+        if (value === "Urgent") return "bg-rose-100 text-rose-700 border-rose-200";
+        if (value === "High") return "bg-amber-100 text-amber-700 border-amber-200";
+        if (value === "Medium") return "bg-sky-100 text-sky-700 border-sky-200";
+        return "bg-slate-100 text-slate-700 border-slate-200";
+      }
+
+      if (value === "Pending") return "bg-amber-500 text-white";
+      if (value === "Assigned") return "bg-indigo-500 text-white";
+      if (value === "In Progress") return "bg-sky-500 text-white";
+      if (value === "Resolved") return "bg-emerald-500 text-white";
+      if (value === "Closed") return "bg-slate-500 text-white";
+      return "bg-slate-400 text-white";
+    }
+
+    function showBanner(message, tone = "info") {
+      const classes = tone === "error"
+        ? "border-rose-200 bg-rose-50 text-rose-800"
+        : tone === "success"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+          : "border-sky-200 bg-sky-50 text-sky-800";
+
+      els.appBanner.className = `mb-5 rounded-3xl border px-4 py-4 text-sm ${classes}`;
+      els.appBanner.innerHTML = `<i class="fa-solid ${tone === "error" ? "fa-circle-exclamation" : "fa-circle-info"} mr-2"></i>${message}`;
+      els.appBanner.classList.remove("hidden");
+      clearTimeout(showBanner.timer);
+      showBanner.timer = setTimeout(() => els.appBanner.classList.add("hidden"), 4000);
+    }
+
+    function switchView(view) {
+      state.view = view;
+      ["overview", "tickets", "catalog", "users"].forEach((name) => {
+        const el = document.getElementById(`view-${name}`);
+        if (el) el.classList.toggle("hidden", name !== view);
+      });
+      renderModuleTabs();
+    }
+
+    function loginAs(email, password = "Temp@123456") {
+      const account = seedUsers.find((user) => user.email === email && user.password === password);
+      if (!account) {
+        showBanner("Email hoặc mật khẩu không đúng trong bản demo.", "error");
+        return;
+      }
+
+      state.currentUser = { ...account, lastLoginAt: ts() };
+      els.loginScreen.classList.add("hidden");
+      els.appShell.classList.remove("hidden");
+      showBanner(`Đã đăng nhập với vai trò <strong>${state.currentUser.role}</strong>.`, "success");
+      renderApp();
+    }
+
+    function logout() {
+      state.currentUser = null;
+      els.appShell.classList.add("hidden");
+      els.loginScreen.classList.remove("hidden");
+      els.loginPassword.value = "";
+      showBanner("Đã đăng xuất khỏi phiên demo.", "info");
+    }
+
+    function renderQuickLogins() {
+      els.quickLoginList.innerHTML = seedUsers.map((user) => `
+        <button type="button" data-login="${user.email}" class="rounded-2xl border border-white/10 bg-slate-950/55 p-4 text-left transition hover:bg-slate-900">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-bold text-white">${user.fullName}</div>
+              <div class="text-xs text-slate-400">${user.email}</div>
+            </div>
+            <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-slate-200">${user.role}</span>
+          </div>
+        </button>
+      `).join("");
+
+      els.quickLoginList.querySelectorAll("[data-login]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const email = button.getAttribute("data-login");
+          els.loginEmail.value = email;
+          loginAs(email, "Temp@123456");
+        });
+      });
+    }
+
+    function renderPersonaSwitcher() {
+      els.personaSwitcher.innerHTML = seedUsers.map((user) => `
+        <button type="button" data-persona="${user.email}" class="rounded-2xl border px-3 py-2 text-xs font-bold transition ${state.currentUser?.email === user.email ? "border-sky-300 bg-sky-400/15 text-sky-100" : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"}">
+          ${user.role}
+        </button>
+      `).join("");
+
+      els.personaSwitcher.querySelectorAll("[data-persona]").forEach((button) => {
+        button.addEventListener("click", () => {
+          loginAs(button.getAttribute("data-persona"), "Temp@123456");
+        });
+      });
+    }
+
+    function renderModuleTabs() {
+      const tabs = [
+        ["overview", "Tổng quan"],
+        ["tickets", "Tickets"],
+        ["catalog", "Catalog"],
+        ["users", "Users"]
+      ];
+
+      els.moduleTabs.innerHTML = tabs.map(([view, label]) => {
+        const active = state.view === view;
+        return `<button data-view="${view}" class="rounded-2xl px-4 py-2 text-sm font-bold transition ${active ? "bg-white text-slate-950" : "bg-white/5 text-slate-300 hover:bg-white/10"}">${label}</button>`;
+      }).join("");
+
+      els.moduleTabs.querySelectorAll("[data-view]").forEach((button) => {
+        button.addEventListener("click", () => switchView(button.getAttribute("data-view")));
+      });
+    }
+
+    function renderStats() {
+      const total = state.tickets.length;
+      const byStatus = (status) => state.tickets.filter((ticket) => ticket.status === status).length;
+      const stats = [
+        ["Tổng ticket", total, "bg-slate-900 text-white", "fa-ticket"],
+        ["Pending", byStatus("Pending"), "bg-amber-50 text-amber-700 border border-amber-200", "fa-hourglass-half"],
+        ["In Progress", byStatus("In Progress"), "bg-sky-50 text-sky-700 border border-sky-200", "fa-spinner"],
+        ["Resolved", byStatus("Resolved"), "bg-emerald-50 text-emerald-700 border border-emerald-200", "fa-circle-check"],
+        ["Closed", byStatus("Closed"), "bg-slate-100 text-slate-700 border border-slate-200", "fa-box-archive"]
+      ];
+
+      els.statsGrid.innerHTML = stats.map(([label, value, classes, icon]) => `
+        <div class="rounded-[24px] p-4 soft-card ${classes}">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xs font-bold uppercase tracking-[0.2em] opacity-70">${label}</div>
+              <div class="mt-2 text-3xl font-black">${value}</div>
+            </div>
+            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-white/60 text-base">
+              <i class="fa-solid ${icon}"></i>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderProfile() {
+      const user = state.currentUser;
+      els.headerUserName.textContent = user.fullName;
+      els.headerUserMeta.textContent = `${user.role} • ${user.departmentName}`;
+      els.currentRoleChip.textContent = `Active role: ${user.role}`;
+      els.passwordAlertChip.textContent = user.mustChangePassword ? "Must change password" : "Password OK";
+      els.profileAvatar.textContent = user.fullName.split(" ").map((part) => part[0]).slice(0, 2).join("");
+      els.profileName.textContent = user.fullName;
+      els.profileEmail.textContent = user.email;
+      els.profileRole.textContent = user.role;
+      els.profileDept.textContent = user.departmentName;
+      els.profileLastLogin.textContent = user.lastLoginAt || "Chưa có";
+      els.profileState.textContent = user.isActive ? "Active" : "Inactive";
+    }
+
+    function renderCoverage() {
+      els.coverageList.innerHTML = coverageRows.map(([area, coverage]) => `
+        <div class="grid grid-cols-2 gap-3 px-4 py-3">
+          <div class="font-semibold text-slate-900">${area}</div>
+          <div class="text-slate-600">${coverage}</div>
+        </div>
+      `).join("");
+
+      els.roleMatrix.innerHTML = Object.entries(roleRules).map(([role, rules]) => `
+        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div class="font-black text-slate-900">${role}</div>
+            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500">${rules.length} rule(s)</span>
+          </div>
+          <ul class="mt-3 space-y-2 text-sm text-slate-600">
+            ${rules.map((rule) => `<li class="flex gap-2"><i class="fa-solid fa-check mt-1 text-emerald-600"></i><span>${rule}</span></li>`).join("")}
+          </ul>
+        </div>
+      `).join("");
+    }
+
+    function renderTickerHint() {
+      const role = activeRole();
+      if (role === "Staff" || role === "Admin") {
+        els.ticketCreateHint.innerHTML = "Bạn đang ở vai trò <strong>Staff/Admin</strong>, form này cho phép tạo ticket mới. Nếu cùng thiết bị đã có ticket Pending/Assigned/In Progress thì hệ thống sẽ chặn.";
+      } else {
+        els.ticketCreateHint.innerHTML = "Vai trò hiện tại không được tạo ticket. Hãy đổi persona sang Staff để test luồng này.";
+      }
+    }
+
+    function renderTicketFilters() {
+      const role = activeRole();
+      const chips = [
+        ["All", "Tất cả"],
+        ["Open", "Mở"],
+        ["Mine", "Của tôi"],
+        [role, `Role: ${role}`]
+      ];
+
+      els.ticketScopeChips.innerHTML = chips.map(([key, label]) => `
+        <button type="button" data-scope="${key}" class="rounded-full border px-3 py-1.5 transition ${state.ticketScopeFilter === key ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"}">${label}</button>
+      `).join("");
+
+      els.ticketScopeChips.querySelectorAll("[data-scope]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const scope = button.getAttribute("data-scope");
+          state.ticketScopeFilter = scope;
+          if (scope === "All") {
+            state.ticketStatusFilter = "All";
+            state.ticketSearch = "";
+            els.ticketSearch.value = "";
+          } else if (scope === "Open") {
+            state.ticketStatusFilter = "All";
+            state.ticketSearch = "";
+            els.ticketSearch.value = "";
+          } else if (scope === "Mine") {
+            state.ticketStatusFilter = "All";
+            state.ticketSearch = state.currentUser.fullName;
+            els.ticketSearch.value = state.currentUser.fullName;
+          }
+          renderTickets();
+        });
+      });
+    }
+
+    function filteredTickets() {
+      let list = [...state.tickets];
+      const query = state.ticketSearch.trim().toLowerCase();
+
+      if (state.ticketStatusFilter !== "All") {
+        list = list.filter((ticket) => ticket.status === state.ticketStatusFilter);
+      }
+
+      if (state.ticketScopeFilter === "Open") {
+        list = list.filter((ticket) => ["Pending", "Assigned", "In Progress"].includes(ticket.status));
+      }
+
+      if (query) {
+        list = list.filter((ticket) => {
+          const eq = findEq(ticket.equipmentId);
+          const owner = findUser(ticket.createdByUserId);
+          const tech = findUser(ticket.assignedTechnicianId);
+          return [
+            ticket.ticketCode,
+            ticket.title,
+            ticket.description,
+            eq?.name,
+            eq?.code,
+            owner?.fullName,
+            tech?.fullName
+          ].filter(Boolean).some((item) => String(item).toLowerCase().includes(query));
+        });
+      }
+
+      const role = activeRole();
+      if (role === "Staff") {
+        list = list.filter((ticket) => ticket.createdByUserId === state.currentUser.id || ticket.status !== "Pending");
+      } else if (role === "Technician") {
+        list = list.filter((ticket) => ticket.assignedTechnicianId === state.currentUser.id || ticket.status === "Resolved" || ticket.status === "Closed");
+      }
+
+      return list;
+    }
+
+    function renderTickets() {
+      renderTicketFilters();
+      renderTickerHint();
+
+      const list = filteredTickets();
+      if (!list.length) {
+        els.ticketList.innerHTML = `<div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">Không có ticket khớp bộ lọc hiện tại.</div>`;
+        els.ticketDetail.innerHTML = `<div class="text-sm text-slate-500">Chọn 1 ticket từ danh sách để xem workflow.</div>`;
+        els.selectedTicketCode.textContent = "No ticket";
+        return;
+      }
+
+      if (!state.tickets.some((ticket) => ticket.id === state.selectedTicketId)) {
+        state.selectedTicketId = list[0].id;
+      }
+
+      els.ticketList.innerHTML = list.map((ticket) => {
+        const eq = findEq(ticket.equipmentId);
+        const owner = findUser(ticket.createdByUserId);
+        const tech = findUser(ticket.assignedTechnicianId);
+        const selected = ticket.id === state.selectedTicketId;
+
+        return `
+          <button type="button" data-ticket="${ticket.id}" class="w-full rounded-[24px] border p-4 text-left transition ${selected ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"}">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-[11px] font-bold text-white">${ticket.ticketCode}</div>
+                <div class="mt-2 text-base font-black text-slate-900">${ticket.title}</div>
+              </div>
+              <div class="flex flex-wrap gap-2 text-[11px] font-bold">
+                <span class="rounded-full border px-2.5 py-1 ${badgeClass("priority", ticket.priority)}">${ticket.priority}</span>
+                <span class="rounded-full px-2.5 py-1 ${badgeClass("status", ticket.status)}">${ticket.status}</span>
+              </div>
+            </div>
+            <div class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+              <div><span class="font-semibold text-slate-900">Thiết bị:</span> ${eq?.name}</div>
+              <div><span class="font-semibold text-slate-900">Người tạo:</span> ${owner?.fullName}</div>
+              <div><span class="font-semibold text-slate-900">Technician:</span> ${tech?.fullName || "Chưa phân công"}</div>
+              <div><span class="font-semibold text-slate-900">Created:</span> ${ticket.createdAt}</div>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      els.ticketList.querySelectorAll("[data-ticket]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.selectedTicketId = Number(button.getAttribute("data-ticket"));
+          renderTickets();
+        });
+      });
+
+      renderTicketDetail();
+    }
+
+    function renderTicketDetail() {
+      const ticket = state.tickets.find((item) => item.id === state.selectedTicketId);
+      if (!ticket) {
+        els.ticketDetail.innerHTML = `<div class="text-sm text-slate-500">Chưa có ticket nào được chọn.</div>`;
+        els.selectedTicketCode.textContent = "No ticket";
+        return;
+      }
+
+      const eq = findEq(ticket.equipmentId);
+      const owner = findUser(ticket.createdByUserId);
+      const tech = findUser(ticket.assignedTechnicianId);
+      els.selectedTicketCode.textContent = ticket.ticketCode;
+
+      let actions = "";
+      const role = activeRole();
+
+      if ((role === "Manager" || role === "Admin") && (ticket.status === "Pending" || ticket.status === "Assigned")) {
+        actions = `
+          <div class="space-y-3">
+            <label class="block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Assign technician</label>
+            <select id="assign-technician" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200">
+              <option value="">Chọn kỹ thuật viên</option>
+              ${seedUsers.filter((user) => user.role === "Technician").map((user) => `<option value="${user.id}">${user.fullName}</option>`).join("")}
+            </select>
+            <input id="assign-note" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Note cho lịch sử bàn giao" />
+            <button id="assign-btn" class="w-full rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-indigo-500">Giao việc</button>
+          </div>
+        `;
+      } else if (role === "Technician" && ticket.status === "Assigned" && ticket.assignedTechnicianId === state.currentUser.id) {
+        actions = `
+          <button id="start-progress-btn" class="w-full rounded-2xl bg-sky-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-500">Bắt đầu xử lý</button>
+        `;
+      } else if (role === "Technician" && ticket.status === "In Progress" && ticket.assignedTechnicianId === state.currentUser.id) {
+        actions = `
+          <div class="space-y-3">
+            <textarea id="resolution-note" rows="3" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Resolution note bắt buộc"></textarea>
+            <input id="status-note" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Note cho history" />
+            <button id="resolve-btn" class="w-full rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-500">Đánh dấu Resolved</button>
+          </div>
+        `;
+      } else if ((role === "Staff" || role === "Manager" || role === "Admin") && ticket.status === "Resolved") {
+        actions = `
+          <input id="close-note" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="Ghi chú nghiệm thu/đóng phiếu" />
+          <button id="close-btn" class="mt-3 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Close ticket</button>
+        `;
+      } else {
+        actions = `<div class="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">Không có hành động khả dụng cho vai trò và trạng thái hiện tại.</div>`;
+      }
+
+      els.ticketDetail.innerHTML = `
+        <div class="space-y-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full border px-3 py-1 text-xs font-bold ${badgeClass("priority", ticket.priority)}">${ticket.priority}</span>
+              <span class="rounded-full px-3 py-1 text-xs font-bold ${badgeClass("status", ticket.status)}">${ticket.status}</span>
+            </div>
+            <h3 class="mt-3 text-xl font-black text-slate-900">${ticket.title}</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">${ticket.description}</p>
+          </div>
+
+          <div class="grid gap-3 rounded-3xl bg-white p-4 border border-slate-200">
+            <div><span class="font-semibold text-slate-900">Equipment:</span> ${eq?.code} - ${eq?.name}</div>
+            <div><span class="font-semibold text-slate-900">Department:</span> ${findDept(eq?.departmentId)?.name}</div>
+            <div><span class="font-semibold text-slate-900">Created by:</span> ${owner?.fullName}</div>
+            <div><span class="font-semibold text-slate-900">Technician:</span> ${tech?.fullName || "Chưa phân công"}</div>
+            <div><span class="font-semibold text-slate-900">Resolved note:</span> ${ticket.resolutionNote || "Chưa có"}</div>
+          </div>
+
+          <div class="rounded-3xl bg-white p-4 border border-slate-200">
+            <div class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Actions</div>
+            <div class="mt-3">${actions}</div>
+          </div>
+
+          <div class="rounded-3xl bg-white p-4 border border-slate-200">
+            <div class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">History</div>
+            <div class="mt-3 space-y-3">
+              ${ticket.history.map((item) => `
+                <div class="rounded-2xl bg-slate-50 p-3 text-sm">
+                  <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span class="font-mono">${item.time}</span>
+                    <span class="rounded-full bg-slate-900 px-2 py-0.5 font-bold text-white">${item.status}</span>
+                    <span>Bởi ${item.changedBy}</span>
+                  </div>
+                  <div class="mt-2 text-slate-700">${item.note}</div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+
+      const assignBtn = document.getElementById("assign-btn");
+      if (assignBtn) {
+        assignBtn.addEventListener("click", () => {
+          const techId = Number(document.getElementById("assign-technician").value);
+          const note = document.getElementById("assign-note").value.trim() || "Bàn giao công việc cho technician.";
+          if (!techId) return showBanner("Hãy chọn kỹ thuật viên.", "error");
+          const tech = findUser(techId);
+          ticket.assignedTechnicianId = techId;
+          ticket.status = "Assigned";
+          ticket.history.push({ status: "Assigned", changedBy: state.currentUser.fullName, time: ts(), note: `${note} (${tech.fullName})` });
+          showBanner(`Đã giao ticket ${ticket.ticketCode} cho ${tech.fullName}.`, "success");
+          renderApp();
+        });
+      }
+
+      const startBtn = document.getElementById("start-progress-btn");
+      if (startBtn) {
+        startBtn.addEventListener("click", () => {
+          ticket.status = "In Progress";
+          ticket.history.push({ status: "In Progress", changedBy: state.currentUser.fullName, time: ts(), note: "Technician đã tiếp nhận và bắt đầu xử lý." });
+          showBanner(`Ticket ${ticket.ticketCode} chuyển sang In Progress.`, "success");
+          renderApp();
+        });
+      }
+
+      const resolveBtn = document.getElementById("resolve-btn");
+      if (resolveBtn) {
+        resolveBtn.addEventListener("click", () => {
+          const resolution = document.getElementById("resolution-note").value.trim();
+          const note = document.getElementById("status-note").value.trim() || "Hoàn tất xử lý";
+          if (!resolution) return showBanner("Resolution note là bắt buộc khi resolve ticket.", "error");
+          ticket.status = "Resolved";
+          ticket.resolutionNote = resolution;
+          ticket.resolvedAt = ts();
+          ticket.history.push({ status: "Resolved", changedBy: state.currentUser.fullName, time: ts(), note: `${note}. Kết quả: ${resolution}` });
+          showBanner(`Ticket ${ticket.ticketCode} đã được resolve.`, "success");
+          renderApp();
+        });
+      }
+
+      const closeBtn = document.getElementById("close-btn");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+          const note = document.getElementById("close-note").value.trim() || "Nghiệm thu và đóng ticket.";
+          ticket.status = "Closed";
+          ticket.closedAt = ts();
+          ticket.history.push({ status: "Closed", changedBy: state.currentUser.fullName, time: ts(), note });
+          showBanner(`Ticket ${ticket.ticketCode} đã đóng.`, "success");
+          renderApp();
+        });
+      }
+    }
+
+    function renderDepartments() {
+      const canEdit = activeRole() === "Admin";
+      els.departmentForm.querySelectorAll("input, textarea, button").forEach((item) => {
+        if (item.id === "department-reset") return;
+        item.disabled = !canEdit;
+      });
+
+      els.departmentList.innerHTML = state.departments.map((dept) => {
+        const usersCount = seedUsers.filter((user) => user.departmentId === dept.id).length;
+        const equipmentCount = state.equipment.filter((item) => item.departmentId === dept.id).length;
+        return `
+          <div class="grid grid-cols-[1.1fr_1fr_0.6fr] gap-3 px-4 py-4 text-sm items-start">
+            <div>
+              <div class="font-bold text-slate-900">${dept.name}</div>
+              <div class="mt-1 text-xs text-slate-500">${usersCount} user(s), ${equipmentCount} equipment item(s)</div>
+            </div>
+            <div class="text-slate-600">${dept.description || "<span class='italic text-slate-400'>No description</span>"}</div>
+            <div class="flex flex-wrap gap-2">
+              <button data-edit-dept="${dept.id}" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 ${canEdit ? "" : "opacity-40 cursor-not-allowed"}" ${canEdit ? "" : "disabled"}>Edit</button>
+              <button data-delete-dept="${dept.id}" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 ${canEdit ? "" : "opacity-40 cursor-not-allowed"}" ${canEdit ? "" : "disabled"}>Delete</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      els.departmentList.querySelectorAll("[data-edit-dept]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const dept = state.departments.find((item) => item.id === Number(button.getAttribute("data-edit-dept")));
+          state.departmentEditId = dept.id;
+          els.departmentId.value = dept.id;
+          els.departmentName.value = dept.name;
+          els.departmentDescription.value = dept.description || "";
+        });
+      });
+
+      els.departmentList.querySelectorAll("[data-delete-dept]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const id = Number(button.getAttribute("data-delete-dept"));
+          const hasUsers = seedUsers.some((user) => user.departmentId === id);
+          const hasEquipment = state.equipment.some((item) => item.departmentId === id);
+          if (hasUsers || hasEquipment) {
+            return showBanner("Không thể xóa phòng ban vì còn user hoặc thiết bị liên quan.", "error");
+          }
+          state.departments = state.departments.filter((item) => item.id !== id);
+          showBanner("Đã xóa phòng ban.", "success");
+          renderApp();
+        });
+      });
+    }
+
+    function renderEquipment() {
+      const canEdit = activeRole() === "Admin";
+      els.equipmentForm.querySelectorAll("input, textarea, select, button").forEach((item) => {
+        if (item.id === "equipment-reset") return;
+        item.disabled = !canEdit;
+      });
+
+      els.ticketEquipment.innerHTML = state.equipment.map((item) => `
+        <option value="${item.id}">${item.code} - ${item.name}</option>
+      `).join("");
+
+      els.equipmentDepartment.innerHTML = state.departments.map((dept) => `
+        <option value="${dept.id}">${dept.name}</option>
+      `).join("");
+
+      els.equipmentList.innerHTML = state.equipment.map((item) => {
+        const dept = findDept(item.departmentId);
+        return `
+          <div class="grid grid-cols-[0.85fr_1fr_1fr_0.9fr_0.7fr] gap-3 px-4 py-4 text-sm items-start">
+            <div class="font-mono font-bold text-slate-900">${item.code}</div>
+            <div>
+              <div class="font-bold text-slate-900">${item.name}</div>
+              <div class="mt-1 text-xs text-slate-500">${item.purchasedDate || "No date"}</div>
+            </div>
+            <div class="text-slate-600">${dept?.name || "N/A"}</div>
+            <div><span class="rounded-full border px-3 py-1 text-xs font-bold ${item.status === "Active" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-700"}">${item.status}</span></div>
+            <div class="flex flex-wrap gap-2">
+              <button data-edit-eq="${item.id}" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 ${canEdit ? "" : "opacity-40 cursor-not-allowed"}" ${canEdit ? "" : "disabled"}>Edit</button>
+              <button data-delete-eq="${item.id}" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 ${canEdit ? "" : "opacity-40 cursor-not-allowed"}" ${canEdit ? "" : "disabled"}>Delete</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      els.equipmentList.querySelectorAll("[data-edit-eq]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const item = state.equipment.find((entry) => entry.id === Number(button.getAttribute("data-edit-eq")));
+          state.equipmentEditId = item.id;
+          els.equipmentId.value = item.id;
+          els.equipmentCode.value = item.code;
+          els.equipmentName.value = item.name;
+          els.equipmentDepartment.value = item.departmentId;
+          els.equipmentStatus.value = item.status;
+          els.equipmentPurchased.value = item.purchasedDate || "";
+          els.equipmentDescription.value = item.description || "";
+        });
+      });
+
+      els.equipmentList.querySelectorAll("[data-delete-eq]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const id = Number(button.getAttribute("data-delete-eq"));
+          const hasTicket = state.tickets.some((ticket) => ticket.equipmentId === id);
+          if (hasTicket) {
+            return showBanner("Không thể xóa thiết bị vì còn ticket liên quan.", "error");
+          }
+          state.equipment = state.equipment.filter((item) => item.id !== id);
+          showBanner("Đã xóa thiết bị.", "success");
+          renderApp();
+        });
+      });
+    }
+
+    function renderUsers() {
+      els.userList.innerHTML = seedUsers.map((user) => `
+        <div class="grid grid-cols-[1.2fr_0.9fr_0.9fr_0.7fr_0.8fr] gap-3 px-4 py-4 text-sm items-start">
+          <div>
+            <div class="font-bold text-slate-900">${user.fullName}</div>
+            <div class="text-xs text-slate-500">${user.id}</div>
+          </div>
+          <div class="text-slate-600">${user.email}</div>
+          <div><span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">${user.role}</span></div>
+          <div class="text-slate-600">${user.departmentName}</div>
+          <div>
+            <div class="flex flex-col gap-1">
+              <span class="rounded-full ${user.isActive ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"} border px-3 py-1 text-xs font-bold">${user.isActive ? "Active" : "Inactive"}</span>
+              <span class="text-xs text-slate-500">${user.mustChangePassword ? "MustChangePassword" : "OK"}</span>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderApp() {
+      if (!state.currentUser) return;
+      renderPersonaSwitcher();
+      renderModuleTabs();
+      renderStats();
+      renderProfile();
+      renderCoverage();
+      renderTicketFilters();
+      renderTickerHint();
+      renderTickets();
+      renderDepartments();
+      renderEquipment();
+      renderUsers();
+      switchView(state.view);
+    }
+
+    function createTicket(event) {
+      event.preventDefault();
+      if (activeRole() !== "Staff" && activeRole() !== "Admin") {
+        return showBanner("Chỉ Staff/Admin mới được tạo ticket trong bản demo này.", "error");
+      }
+
+      const equipmentId = Number(els.ticketEquipment.value);
+      const equipment = findEq(equipmentId);
+      const title = els.ticketTitle.value.trim();
+      const description = els.ticketDescription.value.trim();
+      const priority = els.ticketPriority.value;
+
+      if (!equipment || !title || !description) {
+        return showBanner("Vui lòng điền đầy đủ thiết bị, tiêu đề và mô tả.", "error");
+      }
+
+      const hasOpenTicket = state.tickets.some((ticket) => ticket.equipmentId === equipmentId && ["Pending", "Assigned", "In Progress"].includes(ticket.status));
+      if (hasOpenTicket) {
+        return showBanner("Thiết bị này đã có ticket đang mở, không thể tạo ticket trùng.", "error");
+      }
+
+      const ticketId = Math.max(0, ...state.tickets.map((item) => item.id)) + 1;
+      const ticketCode = `TICKET-${new Date().toISOString().slice(0,10).replaceAll("-", "")}-${String(ticketId).padStart(4, "0")}`;
+      const newTicket = {
+        id: ticketId,
+        ticketCode,
+        title,
+        description,
+        equipmentId,
+        createdByUserId: state.currentUser.id,
+        assignedTechnicianId: null,
+        priority,
+        status: "Pending",
+        resolutionNote: "",
+        createdAt: ts(),
+        resolvedAt: null,
+        closedAt: null,
+        history: [
+          { status: "Pending", changedBy: state.currentUser.fullName, time: ts(), note: "Tạo ticket từ form báo sự cố." }
+        ]
+      };
+
+      state.tickets.unshift(newTicket);
+      state.selectedTicketId = newTicket.id;
+      els.ticketTitle.value = "";
+      els.ticketDescription.value = "";
+      showBanner(`Tạo ticket thành công: ${ticketCode}`, "success");
+      renderApp();
+    }
+
+    function saveDepartment(event) {
+      event.preventDefault();
+      if (activeRole() !== "Admin") return showBanner("Chỉ Admin mới được chỉnh phòng ban trong bản demo này.", "error");
+
+      const name = els.departmentName.value.trim();
+      const description = els.departmentDescription.value.trim();
+      if (!name) return showBanner("Department name là bắt buộc.", "error");
+
+      const duplicate = state.departments.some((item) => item.name.toLowerCase() === name.toLowerCase() && item.id !== state.departmentEditId);
+      if (duplicate) return showBanner("Tên phòng ban đã tồn tại.", "error");
+
+      if (state.departmentEditId) {
+        const item = state.departments.find((entry) => entry.id === state.departmentEditId);
+        item.name = name;
+        item.description = description;
+        showBanner("Đã cập nhật phòng ban.", "success");
+      } else {
+        const id = Math.max(0, ...state.departments.map((item) => item.id)) + 1;
+        state.departments.unshift({ id, name, description, createdAt: ts() });
+        showBanner("Đã tạo phòng ban mới.", "success");
+      }
+
+      resetDepartmentForm();
+      renderApp();
+    }
+
+    function resetDepartmentForm() {
+      state.departmentEditId = null;
+      els.departmentId.value = "";
+      els.departmentName.value = "";
+      els.departmentDescription.value = "";
+    }
+
+    function saveEquipment(event) {
+      event.preventDefault();
+      if (activeRole() !== "Admin") return showBanner("Chỉ Admin mới được chỉnh thiết bị trong bản demo này.", "error");
+
+      const code = els.equipmentCode.value.trim();
+      const name = els.equipmentName.value.trim();
+      const departmentId = Number(els.equipmentDepartment.value);
+      const status = els.equipmentStatus.value;
+      const purchasedDate = els.equipmentPurchased.value;
+      const description = els.equipmentDescription.value.trim();
+
+      if (!code || !name || !departmentId) return showBanner("Code, name và department là bắt buộc.", "error");
+      if (purchasedDate && purchasedDate > new Date().toISOString().slice(0,10)) {
+        return showBanner("Purchased date không được ở tương lai.", "error");
+      }
+
+      const duplicateCode = state.equipment.some((item) => item.code.toLowerCase() === code.toLowerCase() && item.id !== state.equipmentEditId);
+      if (duplicateCode) return showBanner("Equipment code đã tồn tại.", "error");
+
+      if (state.equipmentEditId) {
+        const item = state.equipment.find((entry) => entry.id === state.equipmentEditId);
+        if (item.code !== code) return showBanner("Equipment code không được thay đổi sau khi tạo.", "error");
+        item.name = name;
+        item.departmentId = departmentId;
+        item.status = status;
+        item.purchasedDate = purchasedDate;
+        item.description = description;
+        showBanner("Đã cập nhật thiết bị.", "success");
+      } else {
+        const id = Math.max(0, ...state.equipment.map((item) => item.id)) + 1;
+        state.equipment.unshift({ id, code, name, departmentId, status, purchasedDate, description });
+        showBanner("Đã tạo thiết bị mới.", "success");
+      }
+
+      resetEquipmentForm();
+      renderApp();
+    }
+
+    function resetEquipmentForm() {
+      state.equipmentEditId = null;
+      els.equipmentId.value = "";
+      els.equipmentCode.value = "";
+      els.equipmentName.value = "";
+      els.equipmentDepartment.value = state.departments[0]?.id || "";
+      els.equipmentStatus.value = "Active";
+      els.equipmentPurchased.value = "";
+      els.equipmentDescription.value = "";
+    }
+
+    function changePassword(event) {
+      event.preventDefault();
+      const currentPassword = els.currentPassword.value.trim();
+      const newPassword = els.newPassword.value.trim();
+
+      if (!currentPassword || !newPassword) return showBanner("Vui lòng nhập đủ mật khẩu hiện tại và mật khẩu mới.", "error");
+      if (currentPassword !== state.currentUser.password) return showBanner("Current password không đúng.", "error");
+      if (newPassword === currentPassword) return showBanner("Mật khẩu mới phải khác mật khẩu hiện tại.", "error");
+
+      state.currentUser.password = newPassword;
+      state.currentUser.mustChangePassword = false;
+      seedUsers.find((user) => user.id === state.currentUser.id).password = newPassword;
+      seedUsers.find((user) => user.id === state.currentUser.id).mustChangePassword = false;
+      els.currentPassword.value = "";
+      els.newPassword.value = "";
+      showBanner("Đổi mật khẩu thành công. Hãy login lại nếu muốn test luồng chuẩn.", "success");
+      renderApp();
+    }
+
+    function bindEvents() {
+      els.loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        loginAs(els.loginEmail.value.trim().toLowerCase(), els.loginPassword.value);
+      });
+
+      els.logoutBtn.addEventListener("click", logout);
+      els.ticketForm.addEventListener("submit", createTicket);
+      els.departmentForm.addEventListener("submit", saveDepartment);
+      els.departmentReset.addEventListener("click", resetDepartmentForm);
+      els.equipmentForm.addEventListener("submit", saveEquipment);
+      els.equipmentReset.addEventListener("click", resetEquipmentForm);
+      els.changePasswordForm.addEventListener("submit", changePassword);
+
+      els.ticketSearch.addEventListener("input", (event) => {
+        state.ticketSearch = event.target.value;
+        renderTickets();
+      });
+
+      els.ticketStatusFilter.addEventListener("change", (event) => {
+        state.ticketStatusFilter = event.target.value;
+        renderTickets();
+      });
+    }
+
+    function seedDefaults() {
+      els.loginEmail.value = "admin@test.com";
+      els.loginPassword.value = "Temp@123456";
+      els.ticketEquipment.value = "2";
+      els.ticketPriority.value = "Medium";
+      els.departmentName.value = "";
+      els.equipmentDepartment.value = "1";
+      els.equipmentStatus.value = "Active";
+    }
+
+    function init() {
+      cacheElements();
+      renderQuickLogins();
+      bindEvents();
+      seedDefaults();
+      renderCoverage();
+      renderPersonaSwitcher();
+      renderModuleTabs();
+      els.loginScreen.classList.remove("hidden");
+      els.appShell.classList.add("hidden");
+      switchView("overview");
+      showBanner("Sẵn sàng test wireframe. Hãy đăng nhập bằng một tài khoản demo ở bên trái.", "info");
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
+

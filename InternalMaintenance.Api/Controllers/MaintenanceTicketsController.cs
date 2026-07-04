@@ -1,18 +1,31 @@
+using Azure.Core.GeoJson;
+using InternalMaintenance.Api.DTOs.Common;
+using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.MaintenanceTicket;
+using InternalMaintenance.Api.DTOs.TicketComment;
+using InternalMaintenance.Api.DTOs.Users;
 using InternalMaintenance.Api.Models;
+using InternalMaintenance.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 namespace InternalMaintenance.Api.Controllers;
 
 [ApiController]
 [Route("api/tickets")]
-public class MaintenanceTicketsController: ControllerBase
+public class MaintenanceTicketsController : ControllerBase
 {
     private readonly AppDbContext _context;
-    public MaintenanceTicketsController (AppDbContext context)
+    private readonly CurrentUserService _currentUserService;
+
+    public MaintenanceTicketsController(
+        AppDbContext context,
+        CurrentUserService currentUserService
+        )
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     private string GenerateTicketCode()
@@ -23,27 +36,109 @@ public class MaintenanceTicketsController: ControllerBase
         // KHông dùng CountAsync vì 2 request đồng thời có thể cùng count một số thứ tự 
         var randomPart = Guid.NewGuid()
         .ToString("N")
-        .Substring(0,4)
+        .Substring(0, 4)
         .ToUpper();
 
         return $"TICKET-{now:yyyyMMdd-HHmmss}-{randomPart}";
     }
-    
-    [HttpGet]
-    public async Task<ActionResult<List<MaintenanceTicketResponse>>> GetMaintenanceTickets()
+
+    // Áp dụng phân quyền dữ liệu cho Ticket theo role
+    // Mỗi role chỉ được truy cập các ticket thuộc phạm vi được phép 
+
+    private IQueryable<MaintenanceTicket> ApplyTicketAccessControl(
+        IQueryable<MaintenanceTicket> query
+    )
     {
-        var tickets = await _context.MaintenanceTickets.Select(
+        var role = _currentUserService.Role;
+        var userId = _currentUserService.UserId;
+        var departmentId = _currentUserService.DepartmentId;
+
+        //Admin xem toàn bộ ticket 
+        if (role == UserRoles.Admin)
+        {
+            return query;
+        }
+        // Manager chỉ xem ticket thuộc phòng ban mình quản lý 
+        if (role == UserRoles.Manager)
+        {
+            return query.Where(
+                ticket => ticket.Equipment!.DepartmentId == departmentId
+            );
+        }
+        // Staff chỉ được xem ticket do chính mình tạo
+        if (role == UserRoles.Staff)
+        {
+            return query.Where(
+                ticket => ticket.CreatedByUserId == userId
+            );
+        }
+        // Staff chỉ được xem ticket được giao xử lý 
+        if (role == UserRoles.Technician)
+        {
+            return query.Where(
+                ticket => ticket.AssignedTechnicianId == userId
+            );
+        }
+        // Role không hợp lệ
+        return query.Where(ticket => false);
+    }
+
+
+
+    [Authorize]
+    [HttpGet]
+    public async Task<ActionResult<PagedResponse<MaintenanceTicketResponse>>> GetMaintenanceTickets(
+        [FromQuery] TicketQuery query
+    )
+    {
+        var ticketQuery = _context.MaintenanceTickets
+       .AsNoTracking()
+       .AsQueryable();
+
+        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        var status = query.Status?.Trim();
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            ticketQuery = ticketQuery.Where(
+                ticket => ticket.Status == status
+            );
+        }
+
+        var priority = query.Priority?.Trim();
+        if (!string.IsNullOrWhiteSpace(priority))
+        {
+            ticketQuery = ticketQuery.Where(
+                ticket => ticket.Priority == priority
+            );
+        }
+
+        if (query.EquipmentId.HasValue)
+        {
+            ticketQuery = ticketQuery.Where(
+                ticket => ticket.EquipmentId == query.EquipmentId.Value
+            );
+        }
+
+        var totalItems = await ticketQuery.CountAsync();
+        ticketQuery = ticketQuery
+        .OrderByDescending(ticket => ticket.CreatedAt)
+        .ThenBy(ticket => ticket.Id);
+
+        ticketQuery = ticketQuery.Skip((query.Page - 1) * query.PageSize)
+        .Take(query.PageSize);
+
+        var tickets = await ticketQuery.Select(
             ticket => new MaintenanceTicketResponse
             {
-                Id= ticket.Id,
+                Id = ticket.Id,
                 TicketCode = ticket.TicketCode,
                 Title = ticket.Title,
                 Description = ticket.Description,
                 EquipmentId = ticket.EquipmentId,
-                EquipmentCode= ticket.Equipment!.Code,
+                EquipmentCode = ticket.Equipment!.Code,
                 EquipmentName = ticket.Equipment!.Name,
                 CreatedByUserId = ticket.CreatedByUserId,
-                CreatedByUserName = ticket.CreatedByUser!.FullName, 
+                CreatedByUserName = ticket.CreatedByUser!.FullName,
                 // (co the dung cach  CreatedByUserName = ticket.CreatedByUser!= null? ticket.CreatedByUser.FullName: string.Empty )
                 AssignedTechnicianId = ticket.AssignedTechnicianId,
                 AssignedTechnicianName = ticket.AssignedTechnician != null ? ticket.AssignedTechnician.FullName : null,
@@ -55,18 +150,34 @@ public class MaintenanceTicketsController: ControllerBase
                 ClosedAt = ticket.ClosedAt,
             }
         ).ToListAsync();
-        return Ok(tickets);
+        return Ok(
+            new PagedResponse<MaintenanceTicketResponse>
+            {
+                Items = tickets,
+                Page = query.Page,
+                PageSize = query.PageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize)
+            }
+        );
     }
 
-     [HttpGet("{id:int}")]
-    public async Task<ActionResult<MaintenanceTicketResponse>> GetGetMaintenanceTicketById (int id)
+    [Authorize]
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<MaintenanceTicketResponse>> GetGetMaintenanceTicketById(int id)
     {
-        var ticket = await _context.MaintenanceTickets.Where(
+        // Khởi tạo truy vấn và áp dụng phân quyền theo role 
+        var ticketQuery = _context.MaintenanceTickets
+        .AsNoTracking()
+        .AsQueryable();
+
+        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        var ticket = await ticketQuery.Where(
             ticket => ticket.Id == id
         ).Select(
             ticket => new MaintenanceTicketResponse
             {
-                Id= ticket.Id,
+                Id = ticket.Id,
                 TicketCode = ticket.TicketCode,
                 Title = ticket.Title,
                 Description = ticket.Description,
@@ -74,7 +185,7 @@ public class MaintenanceTicketsController: ControllerBase
                 EquipmentCode = ticket.Equipment!.Code,
                 EquipmentName = ticket.Equipment!.Name,
                 CreatedByUserId = ticket.CreatedByUserId,
-                CreatedByUserName = ticket.CreatedByUser!.FullName, 
+                CreatedByUserName = ticket.CreatedByUser!.FullName,
                 // (co the dung cach  CreatedByUserName = ticket.CreatedByUser!= null? ticket.CreatedByUser.FullName: string.Empty )
                 AssignedTechnicianId = ticket.AssignedTechnicianId,
                 AssignedTechnicianName = ticket.AssignedTechnician != null ? ticket.AssignedTechnician.FullName : null,
@@ -83,90 +194,119 @@ public class MaintenanceTicketsController: ControllerBase
                 ResolutionNote = ticket.ResolutionNote,
                 CreatedAt = ticket.CreatedAt,
                 ResolvedAt = ticket.ResolvedAt,
-                ClosedAt = ticket.ClosedAt,          
+                ClosedAt = ticket.ClosedAt,
             }
         ).FirstOrDefaultAsync();
 
-        if(ticket is null)
+        if (ticket is null)
         {
             return NotFound(
                 new
                 {
-                    message ="Equipment not found"
+                    message = "Ticket not found"
                 }
             );
         }
         return Ok(ticket);
     }
 
+    [Authorize(
+    Roles =
+    $"{UserRoles.Admin}," +
+    $"{UserRoles.Manager}," +
+    $"{UserRoles.Staff}"
+)]
     [HttpPost]
-    public async Task<ActionResult<MaintenanceTicketResponse>> CreateMaintenanceTicket(CreateTicketRequest request){
+    public async Task<ActionResult<MaintenanceTicketResponse>> CreateMaintenanceTicket(CreateTicketRequest request)
+    {
         var title = request.Title.Trim();
         var description = request.Description.Trim();
+        var userId = _currentUserService.UserId;
+        var role = _currentUserService.Role;
+        var departmentId = _currentUserService.DepartmentId;
+        var equipment = await _context.Equipment
+        .FirstOrDefaultAsync(e => e.Id == request.EquipmentId);
 
-        var equipmentExists  = await _context.Equipment
-        .AnyAsync(e => e.Id == request.EquipmentId);
-
-        if(!equipmentExists)
+        if (equipment is null)
         {
-         return BadRequest(
-            new
-            {
-                 message = "Equipment does not exist"
-            }
-         );
+            return NotFound(
+               new
+               {
+                   message = "Equipment does not exist"
+               }
+            );
+        }
+        // Không cho tạo ticket cho thiết bị đã thanh lý
+
+        if (equipment.Status == EquipmentStatuses.Retired)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Cannot create ticket for retired equipment"
+                }
+            );
         }
 
-        
+        //Nếu đang sửa thì không được tạo ticket mới
+        if (equipment.Status == EquipmentStatuses.UnderMaintenance)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Equipment is already under maintenance"
+                }
+            );
+        }
+
         // Không cho tạo nhiều ticket đang mở cùng một thiết bị
         // Nếu Equipment này đã có ticket Pending/Assgined/InProgress
         // Nghĩa là sự cố cũ chưa xử lý xong, nên chặn để tránh tạo ticket trùng
 
-        var openStatus = new[] { "Pending", "Assigned", "InProgress" };
+        var openStatuses = new[]
+        {
+            TicketStatuses.Pending,
+            TicketStatuses.Assigned,
+            TicketStatuses.InProgress,
+            TicketStatuses.Resolved
+        };
 
         var hasOpenTicket = await _context.MaintenanceTickets
-        .AnyAsync(ticket => ticket.EquipmentId == request.EquipmentId 
-        && openStatus.Contains(ticket.Status));
+        .AnyAsync(ticket => ticket.EquipmentId == request.EquipmentId
+        && openStatuses.Contains(ticket.Status));
 
         if (hasOpenTicket)
         {
             return BadRequest(
                 new
                 {
-                    message="This equipment already has an open maintenance ticket"
+                    message = "This equipment already has an open maintenance ticket"
                 }
             );
-        }   
-        // kiểm tra User tạo tickets cho có tồn tại ? 
-        var createUserExists = await _context.Users
-        .AnyAsync(u=>u.Id == request.CreatedByUserId);
+        }
 
-        if (!createUserExists)
+        var priority = string.IsNullOrWhiteSpace(request.Priority)
+        ? TicketPriorities.Medium : request.Priority.Trim();
+
+        var allowedPriorities = new[]
+        {
+            TicketPriorities.Low,
+            TicketPriorities.Medium,
+            TicketPriorities.High,
+            TicketPriorities.Critical
+        };
+
+        if (!allowedPriorities.Contains(priority))
         {
             return BadRequest(
                 new
                 {
-                    message="Created user does not exist"
+                    message = "Invalid ticket priority"
                 }
             );
         }
 
-        // kiểm tra Priority có hợp lệ 
 
-        var priority = string.IsNullOrWhiteSpace(request.Priority)
-        ? "Medium":request.Priority.Trim();
-
-        var allowedPriorities  = new[] {"Low", "Medium", "High", "Urgent"};
-
-        if (!allowedPriorities.Contains(priority))
-        {
-            return BadRequest (
-                new
-                {
-                    message="Invalid ticket priority"
-                }
-            );
-        }
 
         var ticket = new MaintenanceTicket
         {
@@ -175,8 +315,8 @@ public class MaintenanceTicketsController: ControllerBase
             Description = description,
             EquipmentId = request.EquipmentId,
             Priority = priority,
-            Status = "Pending",
-            CreatedByUserId = request.CreatedByUserId,
+            Status = TicketStatuses.Pending,
+            CreatedByUserId = userId,
             AssignedTechnicianId = null,
             CreatedAt = DateTime.UtcNow,
         };
@@ -189,16 +329,16 @@ public class MaintenanceTicketsController: ControllerBase
         .Select(
             t => new MaintenanceTicketResponse
             {
-                Id=t.Id,
-                TicketCode=t.TicketCode,
+                Id = t.Id,
+                TicketCode = t.TicketCode,
                 Title = t.Title,
                 Description = t.Description,
                 EquipmentId = t.EquipmentId,
                 EquipmentCode = t.Equipment!.Code,
                 EquipmentName = t.Equipment!.Name,
                 CreatedByUserId = t.CreatedByUserId,
-                CreatedByUserName= t.CreatedByUser!.FullName,
-                AssignedTechnicianId= t.AssignedTechnicianId,
+                CreatedByUserName = t.CreatedByUser!.FullName,
+                AssignedTechnicianId = t.AssignedTechnicianId,
                 AssignedTechnicianName = t.AssignedTechnician != null ? t.AssignedTechnician.FullName : null,
                 Priority = t.Priority,
                 Status = t.Status,
@@ -208,88 +348,214 @@ public class MaintenanceTicketsController: ControllerBase
                 ClosedAt = t.ClosedAt
             }
         ).FirstOrDefaultAsync();
-        
+
         return CreatedAtAction(
             nameof(GetGetMaintenanceTicketById),
-            new{id=ticket.Id},
+            new { id = ticket.Id },
             response
         );
-
     }
-    [HttpPatch("{id:int}/assign")]
-    public async Task<ActionResult<MaintenanceTicketResponse>> AssignTicket(int id, AssignTicketRequest request)
+
+    [Authorize(
+    Roles =
+        $"{UserRoles.Admin}," +
+        $"{UserRoles.Manager}," +
+        $"{UserRoles.Staff}"
+    )]
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<MaintenanceTicketResponse>> UpdateTicket(int id, UpdateTicketRequest request)
     {
         var ticket = await _context.MaintenanceTickets
-        .FirstOrDefaultAsync(t => t.Id==id);
+        .FirstOrDefaultAsync(t => t.Id == id);
 
         if (ticket is null)
         {
-           return NotFound(
-            new
-            {
-                message="Ticket Not Found"
-            }
-           );
+            return NotFound(
+                new
+                {
+                    message = "Ticket Not Found"
+                }
+            );
         }
 
+        var role = _currentUserService.Role;
+        var userId = _currentUserService.UserId;
+
+        // Staff chỉ sửa ticket của mình chỉ khi Pending 
+        if (role == UserRoles.Staff)
+        {
+            if (ticket.CreatedByUserId != userId)
+                return Forbid();
+
+            if (ticket.Status != TicketStatuses.Pending)
+                return BadRequest("Ticket already in processing state");
+        }
+
+        var allowedPriorities = new[]
+        {
+            TicketPriorities.Low,
+            TicketPriorities.Medium,
+            TicketPriorities.High,
+            TicketPriorities.Critical
+        };
+
+        if (!allowedPriorities.Contains(request.Priority))
+        {
+            return BadRequest("Invalid priority");
+        }
+
+        ticket.Title = request.Title.Trim();
+        ticket.Description = request.Description.Trim();
+        ticket.Priority = request.Priority.Trim();
+
+        await _context.SaveChangesAsync();
+
+        var response = new MaintenanceTicketResponse
+        {
+            Id = ticket.Id,
+            TicketCode = ticket.TicketCode,
+            Title = ticket.Title,
+            Description = ticket.Description,
+            EquipmentId = ticket.EquipmentId,
+            EquipmentCode = ticket.Equipment!.Code,
+            EquipmentName = ticket.Equipment!.Name,
+            CreatedByUserId = ticket.CreatedByUserId,
+            CreatedByUserName = ticket.CreatedByUser!.FullName,
+            AssignedTechnicianId = ticket.AssignedTechnicianId,
+            AssignedTechnicianName = ticket.AssignedTechnician?.FullName,
+            Priority = ticket.Priority,
+            Status = ticket.Status,
+            ResolutionNote = ticket.ResolutionNote,
+            CreatedAt = ticket.CreatedAt,
+            ResolvedAt = ticket.ResolvedAt,
+            ClosedAt = ticket.ClosedAt
+        };
+
+        return Ok(response);
+    }
+
+    [Authorize(Roles = $"{UserRoles.Admin},{UserRoles.Manager}")]
+    [HttpPatch("{id:int}/assign")]
+    public async Task<ActionResult<MaintenanceTicketResponse>> AssignTicket(int id, AssignTicketRequest request)
+    {
+        var role = _currentUserService.Role;
+        var departmentId = _currentUserService.DepartmentId;
+
+        var ticket = await _context.MaintenanceTickets
+        .Include(t => t.Equipment)
+        .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (ticket is null)
+        {
+            return NotFound(
+             new
+             {
+                 message = "Ticket Not Found"
+             }
+            );
+        }
+
+        // Admin được assign mọi ticket
+        if (role == UserRoles.Manager)
+        {
+            // Manager chỉ assign ticket thuộc phòng ban mình 
+            if (ticket.Equipment!.DepartmentId != departmentId)
+            {
+                return Forbid();
+            }
+        }
+
+        // Chặn phân công công việc khi  trạng thái đã  kết thúc và hủy công việc phân công 
+        if (ticket.Status == TicketStatuses.Closed || ticket.Status == TicketStatuses.Cancelled)
+        {
+            return BadRequest(new
+            {
+                message = "Cannot assign a closed or cancelled ticket"
+            });
+        }
         // Chỉ cho assign ticket đang Pending hoặc Assigned
         //Pending = assign lần đầu
         //Assigned= đổi technician nếu cần
 
-        var assignableStatuses  = new[] {"Pending", "Assigned"};
+        var assignableStatuses = new[]
+        {
+            TicketStatuses.Pending,
+            TicketStatuses.Assigned
+        };
         if (!assignableStatuses.Contains(ticket.Status))
         {
             return BadRequest(
                   new
                   {
-                    message="Only pending or assigned tickets can be assigned "
+                      message = "Only pending or assigned tickets can be assigned "
                   }
             );
-          
+
         }
 
-        
+
         //Không nên assign ticket cho Staff/Admin/Manager
         //Ticket bảo trì phải được giao cho technician xử lý
-        var technician = await _context.Users.Include(user=> user.Role).
-        FirstOrDefaultAsync(u=>u.Id == request.AssignedTechnicianId);
-        
-        if(technician is null)
+        var technician = await _context.Users.Include(user => user.Role).
+        FirstOrDefaultAsync(u => u.Id == request.AssignedTechnicianId);
+
+        if (technician is null)
         {
-            return BadRequest(
+            return NotFound(
                 new
                 {
-                    message="Technician does not exists"
+                    message = "Technician does not exists"
                 }
             );
         }
 
-        if(technician.Role == null || technician.Role.Name != "Technician")
+        if (technician.Role == null || technician.Role.Name != UserRoles.Technician)
         {
             return BadRequest(
                 new
                 {
-                    message="Assigned user must be a technician"
+                    message = "Assigned user must be a technician"
                 }
             );
+        }
+
+        if (!technician.IsActive)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Technician account is inactive"
+                });
         }
         var oldStatus = ticket.Status;
         // Update ticket hiện tại
+        // Tránh assign lại đúng technician hiện tại.
+        // Nếu không có thay đổi thực sự không cần tạo history mới
+        if (ticket.AssignedTechnicianId == request.AssignedTechnicianId)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Technician already assigned"
+                }
+            );
+        }
+        // Cập nhật technician phụ trách ticker
         ticket.AssignedTechnicianId = request.AssignedTechnicianId;
-        ticket.Status="Assigned";
+        ticket.Status = TicketStatuses.Assigned;
 
         //Ghi lịch sử assign
         var history = new TicketStatusHistory
         {
             MaintenanceTicketId = ticket.Id,
             OldStatus = oldStatus,
-            NewStatus="Assigned",
+            NewStatus = TicketStatuses.Assigned,
 
             //Chưa có Auth thì tạm hard code
             //Sau này lấy từ currentUser 
-            ChangedByUserId=1,
+            ChangedByUserId = _currentUserService.UserId,
             ChangedAt = DateTime.UtcNow,
-            Note= request.Note
+            Note = request.Note
         };
 
         _context.TicketStatusHistories.Add(history);
@@ -299,7 +565,7 @@ public class MaintenanceTicketsController: ControllerBase
 
         var response = await _context.MaintenanceTickets
             .Where(t => t.Id == id)
-            .Select( t=> new MaintenanceTicketResponse
+            .Select(t => new MaintenanceTicketResponse
             {
                 Id = t.Id,
                 TicketCode = t.TicketCode,
@@ -326,36 +592,65 @@ public class MaintenanceTicketsController: ControllerBase
                 ClosedAt = t.ClosedAt
 
             }).FirstAsync();
-        return Ok (response);
+        return Ok(response);
     }
 
+    [Authorize(
+    Roles =
+    $"{UserRoles.Admin}," +
+    $"{UserRoles.Manager}," +
+    $"{UserRoles.Technician}"
+    )]
     [HttpPatch("{id:int}/status")]
-    public async Task<ActionResult<MaintenanceTicketResponse>> UpdateTicketStatus(int id, UpdateTicketStatusRequest request)
+    public async Task<ActionResult<MaintenanceTicketResponse>> TransitionTicketStatus(int id, ChangeTicketStatusRequest request)
     {
-        var ticket = await _context.MaintenanceTickets
-        .FirstOrDefaultAsync( t => t.Id==id);
+        var role = _currentUserService.Role;
+        var userId = _currentUserService.UserId;
+        var departmentId = _currentUserService.DepartmentId;
 
-        if(ticket is null)
+        var ticket = await _context.MaintenanceTickets
+        .Include(t => t.Equipment)
+        .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (ticket is null)
         {
             return NotFound(
                 new
                 {
-                    message= "Ticket not found"
+                    message = "Ticket not found"
                 });
         }
 
-        var newStatus = request.Status.Trim();
+        // Ticket luôn gắn với 1 thiết bị
+        // Trạng thái thiết bị cần được đồng bộ với trạng thái ticket
+        var equipment = await _context.Equipment
+        .FirstOrDefaultAsync(e => e.Id == ticket.EquipmentId);
 
+        if (equipment is null)
+        {
+            return NotFound(
+                new
+                {
+                    message = "Equipment not found"
+                }
+            );
+        }
+        var newStatus = request.Status.Trim();
         //Chỉ cho phép những status có trong workflow xử lý
         // KHông cho client gửi status tùy ý
-        var allowedStatuses = new[] { "InProgress", "Resolved", "Closed" };
+        var allowedStatuses = new[] {
+            TicketStatuses.InProgress,
+            TicketStatuses.Resolved,
+            TicketStatuses.Closed,
+            TicketStatuses.Cancelled
+             };
 
         if (!allowedStatuses.Contains(newStatus))
         {
             return BadRequest(
                 new
                 {
-                    message="Invalid ticket status"
+                    message = "Invalid ticket status"
                 }
             );
         }
@@ -363,25 +658,27 @@ public class MaintenanceTicketsController: ControllerBase
         //Ticket đã "Closed" nghĩa là quy trình đã kết thúc hoàn toàn.
         //Không cho đổi trạng thái nữa để tránh làm sai lịch sử
 
-        if(ticket.Status == "Closed")
+        if (ticket.Status == TicketStatuses.Closed || ticket.Status == TicketStatuses.Cancelled)
         {
             return BadRequest(
                 new
                 {
-                    message ="Closed ticket cannot be updated"
+                    message = "Finalized ticket cannot be updated"
                 }
             );
         }
-        
+
         //Kiểm tra chuyển trạng thái có đúng workflow không 
         // Chỉ cho đi từng bước , không cho nhảy cóc
 
-        var isValidTransition = 
-            (ticket.Status =="Assigned" && newStatus=="InProgress") ||
-            (ticket.Status=="InProgress"&& newStatus=="Resolved") ||
-            (ticket.Status=="Resolved" && newStatus=="Closed");
+        var isValidTransition =
+            (ticket.Status == TicketStatuses.Pending && newStatus == TicketStatuses.Cancelled) ||
+            (ticket.Status == TicketStatuses.Assigned && newStatus == TicketStatuses.Cancelled) ||
+            (ticket.Status == TicketStatuses.Assigned && newStatus == TicketStatuses.InProgress) ||
+            (ticket.Status == TicketStatuses.InProgress && newStatus == TicketStatuses.Resolved) ||
+            (ticket.Status == TicketStatuses.Resolved && newStatus == TicketStatuses.Closed);
 
-        if(!isValidTransition)
+        if (!isValidTransition)
         {
             return BadRequest(
                 new
@@ -393,41 +690,91 @@ public class MaintenanceTicketsController: ControllerBase
         // Muốn chuyển sang InProgress thì ticket phải được assign cho technician trước.
         // Nếu chưa có AssignedTechnicianId mà cho xử lý thì không biết ai đang phụ trách
 
-        if(newStatus=="InProgress" && ticket.AssignedTechnicianId is null)
+        if (newStatus == TicketStatuses.InProgress && ticket.AssignedTechnicianId is null)
         {
             return BadRequest(
                 new
                 {
-                    message="Ticket must be assigned before moving to InProgress"
+                    message = "Ticket must be assigned before moving to InProgress"
                 }
             );
         }
 
+        // Chỉ technician được assign mới làm 
+        if (newStatus == TicketStatuses.InProgress ||
+        newStatus == TicketStatuses.Resolved)
+        {
+            if (ticket.AssignedTechnicianId != userId)
+            {
+                return Forbid();
+            }
+        }
+
         // Khi technician báo xử lý xong, bắt buộc phải có kết quả xử lý xong.
-        if(newStatus=="Resolved" && string.IsNullOrWhiteSpace(request.ResolutionNote))
+        if (newStatus == TicketStatuses.Resolved && string.IsNullOrWhiteSpace(request.ResolutionNote))
         {
             return BadRequest(
                 new
                 {
-                    message="Resolution note is required when resolving a ticket"
+                    message = "Resolution note is required when resolving a ticket"
                 }
             );
         }
-        
+
         var oldStatus = ticket.Status;
 
         //Update trạng thái hiện tại của ticket
         ticket.Status = newStatus;
 
-        if (newStatus == "Resolved")
+        if (newStatus == TicketStatuses.InProgress)
+        {
+            equipment.Status = EquipmentStatuses.UnderMaintenance;
+        }
+
+        if (newStatus == TicketStatuses.Resolved)
         {
             ticket.ResolutionNote = request.ResolutionNote?.Trim();
             ticket.ResolvedAt = DateTime.UtcNow;
         }
 
-        if(newStatus == "Closed")
+        if (newStatus == TicketStatuses.Closed)
         {
             ticket.ClosedAt = DateTime.UtcNow;
+            equipment.Status = EquipmentStatuses.Active;
+        }
+
+        if (newStatus == TicketStatuses.Cancelled)
+        {
+            equipment.Status = EquipmentStatuses.Active;
+        }
+
+        // Chỉ Admin hoặc Manager cùng phòng ban thiết bị 
+        // mới được xác nhận hoàn tất và đóng ticket 
+
+        if (newStatus == TicketStatuses.Closed)
+        {
+            var canClose = role == UserRoles.Admin
+            || (role == UserRoles.Manager && equipment.DepartmentId == departmentId);
+
+            if (!canClose)
+            {
+                return Forbid();
+            }
+        }
+
+        // Chỉ Admin hoặc Manager cùng phòng ban 
+        // Được phép hủy ticket trước khi hoàn tất xử lý
+
+        if (newStatus == TicketStatuses.Cancelled)
+        {
+            var canCancel = role == UserRoles.Admin ||
+            (role == UserRoles.Manager &&
+            equipment.DepartmentId == departmentId);
+
+            if (!canCancel)
+            {
+                return Forbid();
+            }
         }
 
         //Ghi lại lịch sử đổi trạng thái
@@ -438,58 +785,187 @@ public class MaintenanceTicketsController: ControllerBase
             MaintenanceTicketId = ticket.Id,
             OldStatus = oldStatus,
             NewStatus = newStatus,
-            ChangedByUserId = 1,
+            ChangedByUserId = _currentUserService.UserId,
             ChangedAt = DateTime.UtcNow,
             Note = request.Note?.Trim()
         };
-        
+
         _context.TicketStatusHistories.Add(history);
         await _context.SaveChangesAsync();
 
         var response = await _context.MaintenanceTickets
-        .Where(t => t.Id==id)
+        .Where(t => t.Id == id)
         .Select(
-            t=> new MaintenanceTicketResponse
+            t => new MaintenanceTicketResponse
             {
-            Id = t.Id,
-            TicketCode = t.TicketCode,
-            Title = t.Title,
-            Description = t.Description,
+                Id = t.Id,
+                TicketCode = t.TicketCode,
+                Title = t.Title,
+                Description = t.Description,
 
-            EquipmentId = t.EquipmentId,
-            EquipmentCode = t.Equipment!.Code,
-            EquipmentName = t.Equipment.Name,
+                EquipmentId = t.EquipmentId,
+                EquipmentCode = t.Equipment!.Code,
+                EquipmentName = t.Equipment.Name,
 
-            CreatedByUserId = t.CreatedByUserId,
-            CreatedByUserName = t.CreatedByUser!.FullName,
+                CreatedByUserId = t.CreatedByUserId,
+                CreatedByUserName = t.CreatedByUser!.FullName,
 
-            AssignedTechnicianId = t.AssignedTechnicianId,
-            AssignedTechnicianName = t.AssignedTechnician != null
+                AssignedTechnicianId = t.AssignedTechnicianId,
+                AssignedTechnicianName = t.AssignedTechnician != null
                 ? t.AssignedTechnician.FullName
                 : null,
 
-            Priority = t.Priority,
-            Status = t.Status,
-            ResolutionNote = t.ResolutionNote,
-            CreatedAt = t.CreatedAt,
-            ResolvedAt = t.ResolvedAt,
-            ClosedAt = t.ClosedAt
+                Priority = t.Priority,
+                Status = t.Status,
+                ResolutionNote = t.ResolutionNote,
+                CreatedAt = t.CreatedAt,
+                ResolvedAt = t.ResolvedAt,
+                ClosedAt = t.ClosedAt
             }
         ).FirstAsync();
 
         return Ok(response);
     }
 
-    [HttpGet("{id:int}/history")]
-    public async Task<ActionResult<TicketStatusHistoryResponse>> GetTicketHistory (int id)
+    [Authorize]
+    [HttpPost("{id:int}/comments")]
+    public async Task<ActionResult<TicketCommentResponse>> CreateComment(int id, CreateTicketCommentRequest request)
     {
-        var ticketExists  = await _context.MaintenanceTickets.AnyAsync(t=>t.Id == id);
-        if(!ticketExists)
+        var userId = _currentUserService.UserId;
+        var role = _currentUserService.Role;
+        var departmentId = _currentUserService.DepartmentId;
+
+        var ticket = await _context.MaintenanceTickets
+        .Include(t => t.Equipment)
+        .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (ticket is null)
         {
-            return BadRequest (
+            return NotFound(
                 new
                 {
-                    message="Ticket not found"
+                    message = "Ticket not found"
+                }
+            );
+        }
+
+        if (ticket.Status == TicketStatuses.Closed || ticket.Status == TicketStatuses.Cancelled)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Cannot comment on finalized ticket"
+                }
+            );
+        }
+
+        var canComment =
+        //Admin được comment mọi ticket
+        role == UserRoles.Admin ||
+        //Manager chỉ comment ticket thuộc phòng ban mình quản lý
+        (role == UserRoles.Manager && ticket.Equipment!.DepartmentId == departmentId)
+        ||
+        //Staff chỉ commment do chính mình tạo 
+        (role == UserRoles.Staff && ticket.CreatedByUserId == userId) ||
+        //Technician chỉ comment ticket được assign xử lý 
+        (role == UserRoles.Technician && ticket.AssignedTechnicianId == userId);
+
+        if (!canComment)
+        {
+            return Forbid();
+        }
+
+        // Lấy thông tin người dùng đăng nhập
+        // UserId lấy từ JWT token thông qua CurrentService
+        // Cần FullName để trả về TicketCommentResponse
+
+        var currentUser = await _context.Users
+        // Chỉ đọc dữ liệu, không cập nhật nên dùng AsNoTracking
+        .AsNoTracking()
+        .Where(user => user.Id == userId)
+        // Chỉ lấy những field cần dùng
+        // Tránh load toàn bộ thông tin User không cần thiết 
+        .Select(user => new
+        {
+            user.FullName
+        }).FirstAsync();
+
+        var comment = new TicketComment
+        {
+            MaintenanceTicketId = ticket.Id,
+            UserId = userId,
+            Content = request.Content.Trim(),
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.TicketComments.Add(comment);
+        await _context.SaveChangesAsync();
+
+        var response = new TicketCommentResponse
+        {
+            Id = comment.Id,
+            UserId = userId,
+            UserName = currentUser.FullName,
+            Content = comment.Content,
+            CreatedAt = comment.CreatedAt
+        };
+
+        return CreatedAtAction(
+            nameof(GetCommentById),
+            new { id = comment.Id },
+            response
+        );
+    }
+
+    [Authorize]
+    [HttpGet("{id:int}/comments")]
+    public async Task<ActionResult<List<TicketCommentResponse>>> GetCommentById(int id)
+    {
+        // Kiểm tra Ticket có tổn tại và người dùng có quyền xem hay không
+
+        var ticketQuery = _context.MaintenanceTickets
+        .AsNoTracking()
+        .AsQueryable();
+
+        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        var ticketExists = await ticketQuery.AnyAsync(
+            ticket => ticket.Id == id
+        );
+        if (!ticketExists)
+        {
+            return NotFound(
+            new
+            {
+                message = "Ticket not found"
+            });
+        }
+        var comments = await _context.TicketComments
+        .AsNoTracking()
+        .Where(comment => comment.MaintenanceTicketId == id)
+        .OrderBy(comment => comment.CreatedAt)
+        .Select(comment => new TicketCommentResponse
+        {
+            Id = comment.Id,
+            UserId = comment.UserId,
+            UserName = comment.User!.FullName,
+            Content = comment.Content,
+            CreatedAt = comment.CreatedAt
+        }).ToListAsync();
+
+        return Ok(comments);
+    }
+    [Authorize]
+    [HttpGet("{id:int}/history")]
+    public async Task<ActionResult<TicketStatusHistoryResponse>> GetTicketHistory(int id)
+    {
+        var ticketQuery = _context.MaintenanceTickets.AsQueryable();
+        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        var ticketExists = await ticketQuery.AnyAsync(t => t.Id == id);
+        if (!ticketExists)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Ticket not found"
                 }
             );
         }
@@ -498,16 +974,16 @@ public class MaintenanceTicketsController: ControllerBase
         var histories = await _context.TicketStatusHistories
         .Where(history => history.MaintenanceTicketId == id)
         .OrderBy(history => history.ChangedAt)
-        .Select( history => new TicketStatusHistoryResponse
+        .Select(history => new TicketStatusHistoryResponse
         {
-           Id = history.Id,
-           MaintenanceTicketId = history.MaintenanceTicketId,
-           OldStatus = history.OldStatus,
-           NewStatus = history.NewStatus,
-           ChangedByUserId = history.ChangedByUserId,
-           ChangedByUserName = history.ChangedByUser!.FullName,
-           ChangedAt = history.ChangedAt,
-           Note = history.Note
+            Id = history.Id,
+            MaintenanceTicketId = history.MaintenanceTicketId,
+            OldStatus = history.OldStatus,
+            NewStatus = history.NewStatus,
+            ChangedByUserId = history.ChangedByUserId,
+            ChangedByUserName = history.ChangedByUser!.FullName,
+            ChangedAt = history.ChangedAt,
+            Note = history.Note
         }).ToListAsync();
 
         return Ok(histories);
