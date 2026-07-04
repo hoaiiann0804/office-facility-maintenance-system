@@ -73,6 +73,8 @@ This repository does not include a public live deployment yet.
 - JWT-based login
 - Current user profile lookup
 - Password change flow
+- Refresh-token rotation
+- Logout via refresh-token revocation
 
 ### User Management
 
@@ -188,6 +190,8 @@ InternalMaintenanceManagement.slnx
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 - `POST /api/auth/change-password`
+- `POST /api/auth/refresh-token`
+- `POST /api/auth/logout`
 
 ### Users
 
@@ -195,7 +199,7 @@ InternalMaintenanceManagement.slnx
 - `GET /api/users/{id}`
 - `POST /api/users`
 - `PUT /api/users/{id}`
-- `PUT /api/users/{id}/active`
+- `PATCH /api/users/{id}/status`
 - `POST /api/users/{id}/reset-password`
 
 `GET /api/users` supports these query parameters:
@@ -207,6 +211,10 @@ InternalMaintenanceManagement.slnx
 - `page`
 - `pageSize`
 
+`PATCH /api/users/{id}/status` accepts:
+
+- `isActive`
+
 ### Departments
 
 - `GET /api/departments`
@@ -215,6 +223,12 @@ InternalMaintenanceManagement.slnx
 - `PUT /api/departments/{id}`
 - `DELETE /api/departments/{id}`
 
+`GET /api/departments` supports:
+
+- `keyword`
+- `page`
+- `pageSize`
+
 ### Equipment
 
 - `GET /api/equipment`
@@ -222,6 +236,14 @@ InternalMaintenanceManagement.slnx
 - `POST /api/equipment`
 - `PUT /api/equipment/{id}`
 - `DELETE /api/equipment/{id}`
+
+`GET /api/equipment` supports:
+
+- `keyword`
+- `status`
+- `departmentId`
+- `page`
+- `pageSize`
 
 ### Maintenance Tickets
 
@@ -234,6 +256,30 @@ InternalMaintenanceManagement.slnx
 - `POST /api/tickets/{id}/comments`
 - `GET /api/tickets/{id}/comments`
 - `GET /api/tickets/{id}/history`
+
+`GET /api/tickets` supports:
+
+- `status`
+- `priority`
+- `equipmentId`
+- `page`
+- `pageSize`
+
+Ticket status flow uses these values:
+
+- `Pending`
+- `Assigned`
+- `InProgress`
+- `Resolved`
+- `Closed`
+- `Cancelled`
+
+Priority values:
+
+- `Low`
+- `Medium`
+- `High`
+- `Critical`
 
 ### Example Requests
 
