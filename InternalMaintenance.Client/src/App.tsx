@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { wireframeData } from "./data/wireframeData";
-import type {
-  Equipment,
-  Priority,
-  Ticket,
-  TicketStatus,
-  User,
-  Role,
-} from "./types/wireframe";
+import type { Equipment, Priority, Ticket, TicketStatus, User, Role } from "./types/wireframe";
 import { Badge, EmptyState, Panel, StatCard } from "./components/ui";
 
 type Banner = {
@@ -87,7 +80,9 @@ function App() {
   const [search, setSearch] = useState("");
   const [ticketStatus, setTicketStatus] = useState<"All" | TicketStatus>("All");
   const [ticketPriority, setTicketPriority] = useState<"All" | Priority>("All");
-  const [selectedTicketId, setSelectedTicketId] = useState<number>(wireframeData.tickets[0]?.id ?? 0);
+  const [selectedTicketId, setSelectedTicketId] = useState<number>(
+    wireframeData.tickets[0]?.id ?? 0,
+  );
   const [tickets, setTickets] = useState<Ticket[]>(() => clone(wireframeData.tickets));
   const [users, setUsers] = useState<User[]>(() => clone(wireframeData.users));
   const [departments] = useState(() => clone(wireframeData.departments));
@@ -100,7 +95,8 @@ function App() {
   const [newPassword, setNewPassword] = useState("");
 
   const currentUser = users.find((user) => user.id === currentUserId) ?? null;
-  const selectedTicket = tickets.find((ticket) => ticket.id === selectedTicketId) ?? tickets[0] ?? null;
+  const selectedTicket =
+    tickets.find((ticket) => ticket.id === selectedTicketId) ?? tickets[0] ?? null;
   const technicians = users.filter((user) => user.role === "Technician" && user.isActive);
   const isAdmin = currentUser?.role === "Admin";
   const isManager = currentUser?.role === "Manager";
@@ -143,7 +139,9 @@ function App() {
 
   const updateSelectedTicket = (patcher: (ticket: Ticket) => Ticket) => {
     if (!selectedTicket) return;
-    setTickets((items) => items.map((ticket) => (ticket.id === selectedTicket.id ? patcher(ticket) : ticket)));
+    setTickets((items) =>
+      items.map((ticket) => (ticket.id === selectedTicket.id ? patcher(ticket) : ticket)),
+    );
   };
 
   const handleAssignTicket = () => {
@@ -178,13 +176,19 @@ function App() {
         },
       ],
     }));
-    setBanner({ tone: "success", message: `Đã assign ${selectedTicket.ticketCode} cho ${technician.fullName}.` });
+    setBanner({
+      tone: "success",
+      message: `Đã assign ${selectedTicket.ticketCode} cho ${technician.fullName}.`,
+    });
   };
 
   const moveTicketStatus = (status: Exclude<TicketStatus, "Cancelled">) => {
     if (!selectedTicket) return;
     if (status === "Resolved" && !resolutionNote.trim()) {
-      setBanner({ tone: "error", message: "Resolution note là bắt buộc khi chuyển sang Resolved." });
+      setBanner({
+        tone: "error",
+        message: "Resolution note là bắt buộc khi chuyển sang Resolved.",
+      });
       return;
     }
 
@@ -206,7 +210,10 @@ function App() {
         },
       ],
     }));
-    setBanner({ tone: "success", message: `${selectedTicket.ticketCode} đã chuyển sang ${status}.` });
+    setBanner({
+      tone: "success",
+      message: `${selectedTicket.ticketCode} đã chuyển sang ${status}.`,
+    });
   };
 
   const cancelTicket = () => {
@@ -238,7 +245,7 @@ function App() {
 
     updateSelectedTicket((ticket) => ({
       ...ticket,
-      comments: [ 
+      comments: [
         ...ticket.comments,
         {
           id: ticket.comments.length + 1,
@@ -282,7 +289,9 @@ function App() {
   const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch =
       !search ||
-      `${ticket.ticketCode} ${ticket.title} ${ticket.description} ${ticket.equipmentName}`.toLowerCase().includes(search.toLowerCase());
+      `${ticket.ticketCode} ${ticket.title} ${ticket.description} ${ticket.equipmentName}`
+        .toLowerCase()
+        .includes(search.toLowerCase());
     const matchesStatus = ticketStatus === "All" || ticket.status === ticketStatus;
     const matchesPriority = ticketPriority === "All" || ticket.priority === ticketPriority;
     return matchesSearch && matchesStatus && matchesPriority;
@@ -309,7 +318,9 @@ function App() {
     .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
     .slice(0, 6);
 
-  const openTickets = tickets.filter((ticket) => !["Closed", "Cancelled"].includes(ticket.status)).length;
+  const openTickets = tickets.filter(
+    (ticket) => !["Closed", "Cancelled"].includes(ticket.status),
+  ).length;
   const activeEquipment = equipment.filter((item) => item.status === "Active").length;
   const techniciansCount = users.filter((user) => user.role === "Technician").length;
 
@@ -321,15 +332,23 @@ function App() {
             <span className="eyebrow">Internal maintenance management</span>
             <h1>Điều phối bảo trì nội bộ, gọn, rõ, dễ mở rộng.</h1>
             <p className="hero-copy">
-              Đây là bản React hóa từ wireframe HTML. Mục tiêu là giữ đúng tinh thần dashboard split-view,
-              đồng thời tách data, state và UI thành các lớp dễ bảo trì.
+              Đây là bản React hóa từ wireframe HTML. Mục tiêu là giữ đúng tinh thần dashboard
+              split-view, đồng thời tách data, state và UI thành các lớp dễ bảo trì.
             </p>
 
             <div className="stats-grid">
               <StatCard label="Login" value="JWT + refresh" note="Ready for auth flow" />
-              <StatCard label="Catalog" value="Departments + equipment" note="Data-driven modules" />
+              <StatCard
+                label="Catalog"
+                value="Departments + equipment"
+                note="Data-driven modules"
+              />
               <StatCard label="Workflow" value="Ticket history" note="Audit-friendly" />
-              <StatCard label="Roles" value="Admin / Manager / Staff / Technician" note="RBAC first" />
+              <StatCard
+                label="Roles"
+                value="Admin / Manager / Staff / Technician"
+                note="RBAC first"
+              />
             </div>
 
             <div className="login-note panel subtle">
@@ -357,7 +376,9 @@ function App() {
           <section className="auth-card panel panel-light">
             <span className="eyebrow eyebrow-dark">Demo login</span>
             <h2>Vào khu mô phỏng</h2>
-            <p className="section-lead">Chỉ giữ layout mới, không còn các block template mặc định của Vite.</p>
+            <p className="section-lead">
+              Chỉ giữ layout mới, không còn các block template mặc định của Vite.
+            </p>
 
             <div className="auth-form">
               <label className="field">
@@ -378,11 +399,17 @@ function App() {
                   type="password"
                   value={draft.password}
                   placeholder="Temp@123456"
-                  onChange={(event) => setDraft((prev) => ({ ...prev, password: event.target.value }))}
+                  onChange={(event) =>
+                    setDraft((prev) => ({ ...prev, password: event.target.value }))
+                  }
                 />
               </label>
 
-              <button type="button" className="button primary" onClick={() => login(draft.email, draft.password)}>
+              <button
+                type="button"
+                className="button primary"
+                onClick={() => login(draft.email, draft.password)}
+              >
                 Đăng nhập
               </button>
             </div>
@@ -453,7 +480,8 @@ function App() {
                     <span className="eyebrow">Overview</span>
                     <h2>Dashboard overview</h2>
                     <p className="section-lead">
-                      Bản nháp này giữ đúng cấu trúc dashboard còn hành vi được viết bằng React state thay vì DOM script.
+                      Bản nháp này giữ đúng cấu trúc dashboard còn hành vi được viết bằng React
+                      state thay vì DOM script.
                     </p>
                     <div className="stats-grid compact">
                       <StatCard label="Open tickets" value={openTickets} />
@@ -473,8 +501,20 @@ function App() {
                             <strong>
                               {index + 1}. {step}
                             </strong>
-                            <Badge tone={index === 0 ? "primary" : index === wireframeData.workflow.length - 1 ? "good" : "default"}>
-                              {index === 0 ? "entry" : index === wireframeData.workflow.length - 1 ? "finish" : "step"}
+                            <Badge
+                              tone={
+                                index === 0
+                                  ? "primary"
+                                  : index === wireframeData.workflow.length - 1
+                                    ? "good"
+                                    : "default"
+                              }
+                            >
+                              {index === 0
+                                ? "entry"
+                                : index === wireframeData.workflow.length - 1
+                                  ? "finish"
+                                  : "step"}
                             </Badge>
                           </div>
                         </div>
@@ -511,7 +551,9 @@ function App() {
                       </div>
                       <div className="mini-card">
                         <strong>Closed tickets are final</strong>
-                        <span>The workflow is intentionally strict so the history remains auditable.</span>
+                        <span>
+                          The workflow is intentionally strict so the history remains auditable.
+                        </span>
                       </div>
                     </div>
                   </Panel>
@@ -524,7 +566,8 @@ function App() {
                     <span className="eyebrow">Tickets</span>
                     <h2>Ticket queue</h2>
                     <p className="section-lead">
-                      Search, filter, select, then act on the ticket. Column phải luôn giữ vai trò chi tiết.
+                      Search, filter, select, then act on the ticket. Column phải luôn giữ vai trò
+                      chi tiết.
                     </p>
 
                     <div className="filter-grid">
@@ -539,7 +582,13 @@ function App() {
                       </label>
                       <label className="field">
                         <span>Status</span>
-                        <select className="select" value={ticketStatus} onChange={(event) => setTicketStatus(event.target.value as TicketStatus | "All")}>
+                        <select
+                          className="select"
+                          value={ticketStatus}
+                          onChange={(event) =>
+                            setTicketStatus(event.target.value as TicketStatus | "All")
+                          }
+                        >
                           {["All", ...wireframeData.workflow, "Cancelled"].map((status) => (
                             <option key={status} value={status}>
                               {status}
@@ -549,7 +598,13 @@ function App() {
                       </label>
                       <label className="field">
                         <span>Priority</span>
-                        <select className="select" value={ticketPriority} onChange={(event) => setTicketPriority(event.target.value as Priority | "All")}>
+                        <select
+                          className="select"
+                          value={ticketPriority}
+                          onChange={(event) =>
+                            setTicketPriority(event.target.value as Priority | "All")
+                          }
+                        >
                           {["All", ...wireframeData.priorities].map((priority) => (
                             <option key={priority} value={priority}>
                               {priority}
@@ -582,12 +637,16 @@ function App() {
                             </div>
                           </div>
                           <span className="muted-line">
-                            {ticket.equipmentName} · {ticket.createdByUserName} · {formatDateTime(ticket.createdAt)}
+                            {ticket.equipmentName} · {ticket.createdByUserName} ·{" "}
+                            {formatDateTime(ticket.createdAt)}
                           </span>
                         </button>
                       ))}
                       {!filteredTickets.length ? (
-                        <EmptyState title="Không có ticket phù hợp" description="Thử đổi từ khóa hoặc reset bộ lọc hiện tại." />
+                        <EmptyState
+                          title="Không có ticket phù hợp"
+                          description="Thử đổi từ khóa hoặc reset bộ lọc hiện tại."
+                        />
                       ) : null}
                     </div>
                   </Panel>
@@ -599,9 +658,15 @@ function App() {
                         <h2>{selectedTicket.ticketCode}</h2>
                         <p className="section-lead">{selectedTicket.title}</p>
                         <div className="badge-row">
-                          <Badge tone={statusTone(selectedTicket.status)}>{selectedTicket.status}</Badge>
-                          <Badge tone={priorityTone(selectedTicket.priority)}>{selectedTicket.priority}</Badge>
-                          <Badge tone="default">Created by {selectedTicket.createdByUserName}</Badge>
+                          <Badge tone={statusTone(selectedTicket.status)}>
+                            {selectedTicket.status}
+                          </Badge>
+                          <Badge tone={priorityTone(selectedTicket.priority)}>
+                            {selectedTicket.priority}
+                          </Badge>
+                          <Badge tone="default">
+                            Created by {selectedTicket.createdByUserName}
+                          </Badge>
                         </div>
 
                         <div className="stack spaced">
@@ -647,16 +712,32 @@ function App() {
                             />
                           </label>
                           <div className="button-row">
-                            <button type="button" className="button primary" onClick={handleAssignTicket}>
+                            <button
+                              type="button"
+                              className="button primary"
+                              onClick={handleAssignTicket}
+                            >
                               Assign
                             </button>
-                            <button type="button" className="button secondary" onClick={() => moveTicketStatus("InProgress")}>
+                            <button
+                              type="button"
+                              className="button secondary"
+                              onClick={() => moveTicketStatus("InProgress")}
+                            >
                               Mark In Progress
                             </button>
-                            <button type="button" className="button secondary" onClick={() => moveTicketStatus("Resolved")}>
+                            <button
+                              type="button"
+                              className="button secondary"
+                              onClick={() => moveTicketStatus("Resolved")}
+                            >
                               Resolve
                             </button>
-                            <button type="button" className="button secondary" onClick={() => moveTicketStatus("Closed")}>
+                            <button
+                              type="button"
+                              className="button secondary"
+                              onClick={() => moveTicketStatus("Closed")}
+                            >
                               Close
                             </button>
                             <button type="button" className="button danger" onClick={cancelTicket}>
@@ -697,7 +778,8 @@ function App() {
                                 <div key={item.id} className="timeline-item compact">
                                   <strong>{item.status}</strong>
                                   <span>
-                                    {item.note} · {item.changedBy} · {formatDateTime(item.changedAt)}
+                                    {item.note} · {item.changedBy} ·{" "}
+                                    {formatDateTime(item.changedAt)}
                                   </span>
                                 </div>
                               ))}
@@ -715,14 +797,20 @@ function App() {
                                   </div>
                                 ))
                               ) : (
-                                <EmptyState title="Chưa có comment" description="Ticket này chưa có bình luận nào." />
+                                <EmptyState
+                                  title="Chưa có comment"
+                                  description="Ticket này chưa có bình luận nào."
+                                />
                               )}
                             </div>
                           </div>
                         </div>
                       </>
                     ) : (
-                      <EmptyState title="No ticket selected" description="Chọn một ticket từ danh sách để xem chi tiết." />
+                      <EmptyState
+                        title="No ticket selected"
+                        description="Chọn một ticket từ danh sách để xem chi tiết."
+                      />
                     )}
                   </Panel>
                 </div>
@@ -806,19 +894,29 @@ function App() {
                     <div className="stack">
                       <div className="mini-card">
                         <strong>Admin</strong>
-                        <span>Full management: users, departments, equipment, tickets, and workflow control.</span>
+                        <span>
+                          Full management: users, departments, equipment, tickets, and workflow
+                          control.
+                        </span>
                       </div>
                       <div className="mini-card">
                         <strong>Manager</strong>
-                        <span>Department scope, assignment, and close/cancel permissions for tickets in the same department.</span>
+                        <span>
+                          Department scope, assignment, and close/cancel permissions for tickets in
+                          the same department.
+                        </span>
                       </div>
                       <div className="mini-card">
                         <strong>Technician</strong>
-                        <span>Can work on assigned tickets and push status through the execution flow.</span>
+                        <span>
+                          Can work on assigned tickets and push status through the execution flow.
+                        </span>
                       </div>
                       <div className="mini-card">
                         <strong>Staff</strong>
-                        <span>Can create tickets and follow the progress for their own requests.</span>
+                        <span>
+                          Can create tickets and follow the progress for their own requests.
+                        </span>
                       </div>
                     </div>
                   </Panel>
@@ -865,7 +963,8 @@ function App() {
                     <span className="eyebrow">API map</span>
                     <h2>Backend surface area</h2>
                     <p className="section-lead">
-                      Screen này được giữ để team frontend đọc cùng một mental model với backend và README.
+                      Screen này được giữ để team frontend đọc cùng một mental model với backend và
+                      README.
                     </p>
                   </Panel>
 
@@ -878,7 +977,15 @@ function App() {
                             <div key={`${group.title}-${route.path}`} className="mini-card">
                               <div className="card-row">
                                 <strong>{route.path}</strong>
-                                <Badge tone={route.method === "GET" ? "good" : route.method === "POST" ? "warn" : "primary"}>
+                                <Badge
+                                  tone={
+                                    route.method === "GET"
+                                      ? "good"
+                                      : route.method === "POST"
+                                        ? "warn"
+                                        : "primary"
+                                  }
+                                >
                                   {route.method}
                                 </Badge>
                               </div>

@@ -3,8 +3,6 @@
   font-family: "Segoe UI Variable Text", "Segoe UI", "Aptos", system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   --bg: #050814;
   --bg-2: #0b1220;
   --panel: rgba(15, 23, 42, 0.86);
@@ -23,6 +21,8 @@
   --radius-xl: 28px;
   --radius-lg: 20px;
   --radius-md: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -331,7 +331,10 @@ a {
   border-radius: 16px;
   padding: 12px 16px;
   font-weight: 800;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .button:hover {

@@ -1,5 +1,6 @@
 export type Role = "Admin" | "Manager" | "Technician" | "Staff";
-export type TicketStatus = "Pending" | "Assigned" | "InProgress" | "Resolved" | "Closed" | "Cancelled";
+export type TicketStatus =
+  "Pending" | "Assigned" | "InProgress" | "Resolved" | "Closed" | "Cancelled";
 export type Priority = "Low" | "Medium" | "High" | "Critical";
 export type EquipmentStatus = "Active" | "Inactive" | "UnderMaintenance" | "Retired";
 
