@@ -10,6 +10,7 @@ using InternalMaintenance.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using InternalMaintenance.Api.Services.Interface;
 namespace InternalMaintenance.Api.Controllers;
 
 [ApiController]
@@ -19,28 +20,21 @@ public class MaintenanceTicketsController : ControllerBase
     private readonly AppDbContext _context;
     private readonly CurrentUserService _currentUserService;
 
+    private readonly ITicketCodeGenerator _ticketCodeGenerator;
+
     public MaintenanceTicketsController(
         AppDbContext context,
-        CurrentUserService currentUserService
+        CurrentUserService currentUserService,
+        ITicketCodeGenerator ticketCodeGenerator
+
         )
     {
         _context = context;
         _currentUserService = currentUserService;
+        _ticketCodeGenerator = ticketCodeGenerator;
     }
 
-    private string GenerateTicketCode()
-    {
-        var now = DateTime.UtcNow;
 
-        // Thêm randomPart để giảm nguy cơ trùng mã nếu nhiều người tạo ticket cùng lúc.
-        // KHông dùng CountAsync vì 2 request đồng thời có thể cùng count một số thứ tự 
-        var randomPart = Guid.NewGuid()
-        .ToString("N")
-        .Substring(0, 4)
-        .ToUpper();
-
-        return $"TICKET-{now:yyyyMMdd-HHmmss}-{randomPart}";
-    }
 
     // Áp dụng phân quyền dữ liệu cho Ticket theo role
     // Mỗi role chỉ được truy cập các ticket thuộc phạm vi được phép 
@@ -210,12 +204,7 @@ public class MaintenanceTicketsController : ControllerBase
         return Ok(ticket);
     }
 
-    [Authorize(
-    Roles =
-    $"{UserRoles.Admin}," +
-    $"{UserRoles.Manager}," +
-    $"{UserRoles.Staff}"
-)]
+    [Authorize()]
     [HttpPost]
     public async Task<ActionResult<MaintenanceTicketResponse>> CreateMaintenanceTicket(CreateTicketRequest request)
     {
@@ -310,7 +299,7 @@ public class MaintenanceTicketsController : ControllerBase
 
         var ticket = new MaintenanceTicket
         {
-            TicketCode = GenerateTicketCode(),
+            TicketCode = _ticketCodeGenerator.GenerateTicketCode(),
             Title = title,
             Description = description,
             EquipmentId = request.EquipmentId,
@@ -366,8 +355,11 @@ public class MaintenanceTicketsController : ControllerBase
     public async Task<ActionResult<MaintenanceTicketResponse>> UpdateTicket(int id, UpdateTicketRequest request)
     {
         var ticket = await _context.MaintenanceTickets
+        //Load các thông tin liên quan để trả về đầy đủ thông tin ticket sau khi cập nhật 
+        .Include(t => t.Equipment)
+        .Include(t => t.CreatedByUser)
+        .Include(t => t.AssignedTechnician)
         .FirstOrDefaultAsync(t => t.Id == id);
-
         if (ticket is null)
         {
             return NotFound(
@@ -380,6 +372,7 @@ public class MaintenanceTicketsController : ControllerBase
 
         var role = _currentUserService.Role;
         var userId = _currentUserService.UserId;
+        var department = _currentUserService.DepartmentId;
 
         // Staff chỉ sửa ticket của mình chỉ khi Pending 
         if (role == UserRoles.Staff)
@@ -389,6 +382,15 @@ public class MaintenanceTicketsController : ControllerBase
 
             if (ticket.Status != TicketStatuses.Pending)
                 return BadRequest("Ticket already in processing state");
+        }
+
+        // Manager chỉ sửa được Ticket của phòng ban mình 
+        if (role == UserRoles.Manager)
+        {
+            if (ticket.Equipment!.DepartmentId != department)
+            {
+                return Forbid();
+            }
         }
 
         var allowedPriorities = new[]
@@ -623,9 +625,7 @@ public class MaintenanceTicketsController : ControllerBase
 
         // Ticket luôn gắn với 1 thiết bị
         // Trạng thái thiết bị cần được đồng bộ với trạng thái ticket
-        var equipment = await _context.Equipment
-        .FirstOrDefaultAsync(e => e.Id == ticket.EquipmentId);
-
+        var equipment = ticket.Equipment;
         if (equipment is null)
         {
             return NotFound(
@@ -722,6 +722,8 @@ public class MaintenanceTicketsController : ControllerBase
         }
 
         var oldStatus = ticket.Status;
+
+
 
         //Update trạng thái hiện tại của ticket
         ticket.Status = newStatus;
