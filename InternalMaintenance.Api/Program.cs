@@ -5,6 +5,7 @@ using InternalMaintenance.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using InternalMaintenance.Api.Services.Interface;
 
 // Load biến môi trường từ file .env ở môi trường local
 // Giúp không phải ghi connection string trực tiếp trong appsettings.json
@@ -73,6 +74,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<CurrentUserService>();
+builder.Services.AddScoped<ITicketCodeGenerator, TicketCodeGenerator>();
 
 var app = builder.Build();
 
