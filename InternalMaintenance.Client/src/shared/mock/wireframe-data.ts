@@ -1,4 +1,59 @@
-import type { WireframeData } from "../types/wireframe";
+import type { AuthUser } from "../../entities/auth/model/types";
+import type {
+  EquipmentStatus,
+  MaintenanceTicketDetail,
+  TicketPriority,
+  TicketStatus,
+} from "../../entities/ticket/model/types";
+
+export interface QuickLogin {
+  label: string;
+  email: string;
+  password: string;
+  role: AuthUser["roleName"];
+  hint: string;
+}
+
+export interface Department {
+  id: number;
+  name: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface Equipment {
+  id: number;
+  code: string;
+  name: string;
+  departmentId: number;
+  departmentName: string;
+  status: EquipmentStatus;
+  purchasedDate: string | null;
+  description: string;
+}
+
+export interface ApiRoute {
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  path: string;
+  note: string;
+}
+
+export interface ApiGroup {
+  title: string;
+  routes: ApiRoute[];
+}
+
+export interface WireframeData {
+  quickLogins: QuickLogin[];
+  workflow: TicketStatus[];
+  priorities: TicketPriority[];
+  equipmentStatuses: EquipmentStatus[];
+  departments: Department[];
+  users: Array<AuthUser & { password: string; lastLoginAt: string }>;
+  equipment: Equipment[];
+  tickets: MaintenanceTicketDetail[];
+  apiGroups: ApiGroup[];
+}
 
 export const wireframeData: WireframeData = {
   quickLogins: [
@@ -65,7 +120,7 @@ export const wireframeData: WireframeData = {
       id: 1,
       fullName: "Nguyen Minh An",
       email: "admin@test.com",
-      role: "Admin",
+      roleName: "Admin",
       departmentId: 1,
       departmentName: "IT Support",
       isActive: true,
@@ -77,7 +132,7 @@ export const wireframeData: WireframeData = {
       id: 2,
       fullName: "Tran Thu Ha",
       email: "manager@test.com",
-      role: "Manager",
+      roleName: "Manager",
       departmentId: 2,
       departmentName: "Facilities",
       isActive: true,
@@ -89,7 +144,7 @@ export const wireframeData: WireframeData = {
       id: 3,
       fullName: "Le Hoang Long",
       email: "technician@test.com",
-      role: "Technician",
+      roleName: "Technician",
       departmentId: 2,
       departmentName: "Facilities",
       isActive: true,
@@ -101,7 +156,7 @@ export const wireframeData: WireframeData = {
       id: 4,
       fullName: "Pham Kim Anh",
       email: "staff@test.com",
-      role: "Staff",
+      roleName: "Staff",
       departmentId: 3,
       departmentName: "Finance",
       isActive: true,
@@ -113,7 +168,7 @@ export const wireframeData: WireframeData = {
       id: 5,
       fullName: "Hoang Gia Bao",
       email: "technician2@test.com",
-      role: "Technician",
+      roleName: "Technician",
       departmentId: 1,
       departmentName: "IT Support",
       isActive: true,
@@ -382,65 +437,6 @@ export const wireframeData: WireframeData = {
           note: "Rotates access and refresh tokens.",
         },
         { method: "POST", path: "/api/auth/logout", note: "Revokes the provided refresh token." },
-      ],
-    },
-    {
-      title: "Users",
-      routes: [
-        {
-          method: "GET",
-          path: "/api/users",
-          note: "Supports keyword, role, departmentId, isActive, page, pageSize.",
-        },
-        { method: "GET", path: "/api/users/{id}", note: "Loads one user by id." },
-        {
-          method: "POST",
-          path: "/api/users",
-          note: "Creates a new user with a temporary password.",
-        },
-        { method: "PUT", path: "/api/users/{id}", note: "Updates name, role, and department." },
-        { method: "PATCH", path: "/api/users/{id}/status", note: "Toggles active state." },
-        {
-          method: "PATCH",
-          path: "/api/users/{id}/reset-password",
-          note: "Resets the password and forces change on next login.",
-        },
-      ],
-    },
-    {
-      title: "Departments",
-      routes: [
-        { method: "GET", path: "/api/departments", note: "Supports keyword, page, pageSize." },
-        { method: "GET", path: "/api/departments/{id}", note: "Loads a single department." },
-        { method: "POST", path: "/api/departments", note: "Admin-only create." },
-        { method: "PUT", path: "/api/departments/{id}", note: "Admin-only update." },
-        {
-          method: "DELETE",
-          path: "/api/departments/{id}",
-          note: "Blocked if users or equipment still belong to the department.",
-        },
-      ],
-    },
-    {
-      title: "Equipment",
-      routes: [
-        {
-          method: "GET",
-          path: "/api/equipment",
-          note: "Supports keyword, status, departmentId, page, pageSize.",
-        },
-        { method: "GET", path: "/api/equipment/{id}", note: "Loads one asset by id." },
-        { method: "POST", path: "/api/equipment", note: "Admin and manager create path." },
-        {
-          method: "PUT",
-          path: "/api/equipment/{id}",
-          note: "Updates details but keeps code immutable.",
-        },
-        {
-          method: "DELETE",
-          path: "/api/equipment/{id}",
-          note: "Admin-only delete, blocked if tickets exist.",
-        },
       ],
     },
     {

@@ -179,6 +179,11 @@ a {
   max-width: 70ch;
 }
 
+.field-error {
+  color: var(--bad);
+  font-size: 12px;
+}
+
 .stats-grid {
   display: grid;
   gap: 14px;
@@ -222,6 +227,12 @@ a {
 .api-grid {
   display: grid;
   gap: 12px;
+}
+
+.mini-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .quick-login-list {
@@ -643,7 +654,8 @@ a {
   .tickets-grid,
   .api-grid,
   .filter-grid,
-  .stats-grid {
+  .stats-grid,
+  .mini-grid {
     grid-template-columns: 1fr;
   }
 
