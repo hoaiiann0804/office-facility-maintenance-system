@@ -17,6 +17,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const navigate = useNavigate();
   const setSession = useAuthStore((state) => state.setSession);
+  const isDev = import.meta.env.DEV;
   const {
     register,
     handleSubmit,
@@ -62,78 +63,57 @@ export function LoginForm() {
   return (
     <>
       <section className="auth-hero panel">
-        <span className="eyebrow">Internal maintenance management</span>
+        <span className="eyebrow">Office Facility Maintenance Management System</span>
         <h1>Điều phối bảo trì nội bộ, gọn, rõ, dễ mở rộng.</h1>
         <p className="hero-copy">
-          Bản React này tách đúng các lớp app, shared, entities, features và pages để sau này nối
-          API thật không bị dồn hết vào một component.
+          Đăng nhập để quản lý thiết bị, ticket bảo trì, phân công kỹ thuật viên và theo dõi tiến độ
+          xử lý.
         </p>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-card-label">Login</div>
-            <div className="stat-card-value">JWT + refresh</div>
-            <div className="stat-card-note">Ready for auth flow</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-label">Catalog</div>
-            <div className="stat-card-value">Departments + equipment</div>
-            <div className="stat-card-note">Data-driven modules</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-label">Workflow</div>
-            <div className="stat-card-value">Ticket history</div>
-            <div className="stat-card-note">Audit-friendly</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-label">Roles</div>
-            <div className="stat-card-value">Admin / Manager / Staff / Technician</div>
-            <div className="stat-card-note">RBAC first</div>
-          </div>
-        </div>
-
-        <Panel className="subtle">
-          <span className="eyebrow">Quick login</span>
-          <div className="quick-login-list">
-            {wireframeData.quickLogins.map((item) => (
-              <button
-                key={item.email}
-                type="button"
-                className="quick-login-item"
-                onClick={() => {
-                  setValue("email", item.email, { shouldValidate: true });
-                  setValue("password", item.password, { shouldValidate: true });
-                }}
-              >
-                <div className="quick-login-top">
-                  <strong>{item.label}</strong>
-                  <Badge
-                    tone={
-                      item.role === "Admin"
-                        ? "primary"
-                        : item.role === "Manager"
-                          ? "warn"
-                          : item.role === "Technician"
-                            ? "good"
-                            : "default"
-                    }
-                  >
-                    {item.role}
-                  </Badge>
-                </div>
-                <span>{item.email}</span>
-                <small>{item.hint}</small>
-              </button>
-            ))}
-          </div>
-        </Panel>
+        {isDev ? (
+          <Panel className="subtle">
+            <span className="eyebrow">Quick login</span>
+            <div className="quick-login-list">
+              {wireframeData.quickLogins.map((item) => (
+                <button
+                  key={item.email}
+                  type="button"
+                  className="quick-login-item"
+                  onClick={() => {
+                    setValue("email", item.email, { shouldValidate: true });
+                    setValue("password", item.password, { shouldValidate: true });
+                  }}
+                >
+                  <div className="quick-login-top">
+                    <strong>{item.label}</strong>
+                    <Badge
+                      tone={
+                        item.role === "Admin"
+                          ? "primary"
+                          : item.role === "Manager"
+                            ? "warn"
+                            : item.role === "Technician"
+                              ? "good"
+                              : "default"
+                      }
+                    >
+                      {item.role}
+                    </Badge>
+                  </div>
+                  <span>{item.email}</span>
+                  <small>{item.hint}</small>
+                </button>
+              ))}
+            </div>
+          </Panel>
+        ) : null}
       </section>
 
       <section className="auth-card panel panel-light">
-        <span className="eyebrow eyebrow-dark">Demo login</span>
-        <h2>Vào khu mô phỏng</h2>
+        <span className="eyebrow eyebrow-dark">Đăng nhập</span>
+        <h2>Vào Hệ thống</h2>
         <p className="section-lead">
-          Quick login vẫn chạy local để demo, còn lớp API thật đã được chuẩn bị sẵn bên dưới.
+          Sử dụng tài khoản được cấp để truy cập hệ thống quản lý bảo trì nội bộ.
         </p>
 
         <form className="auth-form" onSubmit={onSubmit}>
@@ -157,24 +137,6 @@ export function LoginForm() {
             {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
-
-        <div className="api-alignment panel subtle">
-          <span className="eyebrow eyebrow-dark">API alignment</span>
-          <div className="stack">
-            <div className="mini-card">
-              <strong>Auth</strong>
-              <span>login, me, change-password, refresh-token, logout</span>
-            </div>
-            <div className="mini-card">
-              <strong>Tickets</strong>
-              <span>create, assign, status, comments, history</span>
-            </div>
-            <div className="mini-card">
-              <strong>Catalog</strong>
-              <span>departments, equipment, users</span>
-            </div>
-          </div>
-        </div>
       </section>
     </>
   );
