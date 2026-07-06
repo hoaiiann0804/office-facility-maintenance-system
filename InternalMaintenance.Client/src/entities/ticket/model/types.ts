@@ -1,6 +1,7 @@
 import type { RoleName } from "../../auth/model/types";
 
-export type TicketStatus = "Pending" | "Assigned" | "InProgress" | "Resolved" | "Closed" | "Cancelled";
+export type TicketStatus =
+  "Pending" | "Assigned" | "InProgress" | "Resolved" | "Closed" | "Cancelled";
 export type TicketPriority = "Low" | "Medium" | "High" | "Critical";
 export type EquipmentStatus = "Active" | "Inactive" | "UnderMaintenance" | "Retired";
 
