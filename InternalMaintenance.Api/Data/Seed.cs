@@ -8,7 +8,6 @@ public static class SeedData
     private const string TemporaryPassword = "Temp@123456";
     public static async Task InitializeAsync(AppDbContext context)
     {
-        await context.Database.MigrateAsync();
         await SeedRolesAsync(context);
         await SeedDepartmentsAsync(context);
         await SeedEquipmentAsync(context);
@@ -40,62 +39,82 @@ public static class SeedData
 
     private static async Task SeedDepartmentsAsync (AppDbContext context)
     {
-        if(await context.Departments.AnyAsync())
+        await EnsureDepartmentAsync(context, "IT", "Information Technology Department");
+        await EnsureDepartmentAsync(context, "Accounting", "Accounting Department");
+        await EnsureDepartmentAsync(context, "HR", "Human Resources Department");
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task EnsureDepartmentAsync(
+        AppDbContext context,
+        string name,
+        string description)
+    {
+        var exists = await context.Departments
+            .AnyAsync(department => department.Name == name);
+
+        if (exists)
         {
             return;
         }
 
-          context.Departments.AddRange(
-            new Department
-            {
-                Name = "IT",
-                Description = "Information Technology Department"
-            },
-            new Department
-            {
-                Name = "Accounting",
-                Description = "Accounting Department"
-            },
-            new Department
-            {
-                Name = "HR",
-                Description = "Human Resources Department"
-            }
-        );
-        await context.SaveChangesAsync();
-        
+        context.Departments.Add(new Department
+        {
+            Name = name,
+            Description = description
+        });
     }
+
     private static async Task SeedEquipmentAsync (AppDbContext context)
     {
-        if(await context.Equipment.AnyAsync())
-        {
-            return;
-        }
         var accountingDepartment = await context.Departments.FirstAsync(d=> d.Name =="Accounting");
         var itDepartment = await context.Departments.FirstAsync(d=>d.Name == "IT");
 
-        context.Equipment.AddRange(
-                new Equipment
-                {
-                    Code = "PRN-ACC-001",
-                    Name = "Canon Printer - Accounting Room",
-                    DepartmentId = accountingDepartment.Id,
-                    Status = "Active",
-                    PurchasedDate = new DateTime(2025, 1, 10),
-                    Description = "Main printer used by accounting department"
-                },
-                new Equipment
-                { Code = "RTR-IT-001",
-                    Name = "Main Office Router",
-                    DepartmentId = itDepartment.Id,
-                    Status = "Active",
-                    PurchasedDate = new DateTime(2024, 8, 15),
-                    Description = "Router used for internal office network"
-                }
-            );
-            
+        await EnsureEquipmentAsync(
+            context,
+            code: "PRN-ACC-001",
+            name: "Canon Printer - Accounting Room",
+            departmentId: accountingDepartment.Id,
+            purchasedDate: new DateTime(2025, 1, 10),
+            description: "Main printer used by accounting department");
+
+        await EnsureEquipmentAsync(
+            context,
+            code: "RTR-IT-001",
+            name: "Main Office Router",
+            departmentId: itDepartment.Id,
+            purchasedDate: new DateTime(2024, 8, 15),
+            description: "Router used for internal office network");
+
         await context.SaveChangesAsync();
+    }
+
+    private static async Task EnsureEquipmentAsync(
+        AppDbContext context,
+        string code,
+        string name,
+        int departmentId,
+        DateTime purchasedDate,
+        string description)
+    {
+        var exists = await context.Equipment
+            .AnyAsync(equipment => equipment.Code == code);
+
+        if (exists)
+        {
+            return;
         }
+
+        context.Equipment.Add(new Equipment
+        {
+            Code = code,
+            Name = name,
+            DepartmentId = departmentId,
+            Status = "Active",
+            PurchasedDate = purchasedDate,
+            Description = description
+        });
+    }
 
     public static async Task SeedAuthUsersAsync (AppDbContext context)
     {
