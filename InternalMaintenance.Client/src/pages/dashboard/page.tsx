@@ -14,6 +14,7 @@ const formatDateTime = (value: string) =>
 export function DashboardPage() {
   const session = useAuthStore((state) => state.session);
   const signOut = useAuthStore((state) => state.signOut);
+
   const navigate = useNavigate();
   const openTickets = wireframeData.tickets.filter(
     (ticket) => !["Closed", "Cancelled"].includes(ticket.status),
@@ -78,7 +79,7 @@ export function DashboardPage() {
           </Badge>
 
           <button type="button" className="button secondary" onClick={handleLogout}>
-            Logout
+            Đăng xuất
           </button>
         </div>
       </header>

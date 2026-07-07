@@ -370,6 +370,10 @@ a {
 }
 
 .banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   padding: 14px 16px;
   border-radius: 18px;
   border: 1px solid var(--border);
@@ -385,6 +389,24 @@ a {
 
 .banner.error {
   background: rgba(251, 113, 133, 0.1);
+}
+
+.banner.warning {
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.banner-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.8;
+}
+
+.banner-close:hover {
+  opacity: 1;
 }
 
 .layout {

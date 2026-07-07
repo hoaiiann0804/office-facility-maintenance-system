@@ -1,12 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import axios from "axios";
 import { wireframeData } from "../../../shared/mock/wireframe-data";
-import { Badge, Panel } from "../../../shared/ui";
+import { Banner, Badge, Panel } from "../../../shared/ui";
 import { useNavigate } from "react-router-dom";
 import { appRoutes } from "../../../shared/config/routes";
 import { useLoginMutation } from "../api/use-login-mutation";
+import { useBanner } from "../../../shared/hooks/use-banner";
 
 const loginSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
@@ -18,13 +19,14 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const navigate = useNavigate();
   const loginMutation = useLoginMutation();
+  const { banner, showBanner, hideBanner } = useBanner();
   const isDev = import.meta.env.DEV;
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
-    setError,
+    // setError,
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -33,18 +35,33 @@ export function LoginForm() {
     },
   });
 
-  const onSubmit = handleSubmit(async (values: LoginFormValues) => {
+  const onSubmit = async (values: LoginFormValues) => {
+    hideBanner();
     try {
-      await loginMutation.mutateAsync(values);
-      navigate(appRoutes.dashboard);
+      const response = await loginMutation.mutateAsync(values);
+
+      navigate(appRoutes.dashboard, {
+        state: {
+          banner: {
+            type: "success",
+            message: `Chào mừng ${response.user.fullName}. Đang mở dashboard theo vai trò ${response.user.roleName}.`,
+          },
+        },
+      });
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        const message = error?.response?.data?.message || "Email hoặc mật khẩu không đúng.";
-        setError("root", { type: "manual", message });
+        if ([401, 403].includes(error.response?.status ?? 0)) {
+          showBanner("error", "Email hoặc mật khẩu không đúng.");
+          return;
+        }
+
+        showBanner("error", "Không thể đăng nhập. Vui lòng thử lại.");
         return;
       }
+
+      showBanner("error", "Không thể đăng nhập. Vui lòng thử lại.");
     }
-  });
+  };
 
   return (
     <>
@@ -102,7 +119,11 @@ export function LoginForm() {
           Sử dụng tài khoản được cấp để truy cập hệ thống quản lý bảo trì nội bộ.
         </p>
 
-        <form className="auth-form" onSubmit={onSubmit}>
+        {banner ? (
+          <Banner type={banner.type} message={banner.message} onClose={hideBanner} />
+        ) : null}
+
+        <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
           <label className="field">
             <span>Email</span>
             <input className="input" type="email" {...register("email")} />
@@ -116,8 +137,6 @@ export function LoginForm() {
               <small className="field-error">{errors.password.message}</small>
             ) : null}
           </label>
-
-          {errors.root ? <div className="banner error">{errors.root.message}</div> : null}
 
           <button
             type="submit"

@@ -1,4 +1,5 @@
 import type { PropsWithChildren, ReactNode } from "react";
+export { Banner } from "./banner";
 
 type PanelProps = PropsWithChildren<{
   className?: string;
