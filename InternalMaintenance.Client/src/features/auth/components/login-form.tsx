@@ -1,11 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { wireframeData } from "../../../shared/mock/wireframe-data";
 import { Badge, Panel } from "../../../shared/ui";
-import { useAuthStore } from "../model/auth-store";
 import { useNavigate } from "react-router-dom";
 import { appRoutes } from "../../../shared/config/routes";
+import { useLoginMutation } from "../api/use-login-mutation";
 
 const loginSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
@@ -16,7 +17,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const navigate = useNavigate();
-  const setSession = useAuthStore((state) => state.setSession);
+  const loginMutation = useLoginMutation();
   const isDev = import.meta.env.DEV;
   const {
     register,
@@ -33,31 +34,16 @@ export function LoginForm() {
   });
 
   const onSubmit = handleSubmit(async (values: LoginFormValues) => {
-    const quickUser = wireframeData.users.find(
-      (user) => user.email.toLowerCase() === values.email.toLowerCase(),
-    );
-
-    if (!quickUser || quickUser.password !== values.password) {
-      setError("root", { type: "manual", message: "Email hoặc mật khẩu không đúng." });
-      return;
+    try {
+      await loginMutation.mutateAsync(values);
+      navigate(appRoutes.dashboard);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const message = error?.response?.data?.message || "Email hoặc mật khẩu không đúng.";
+        setError("root", { type: "manual", message });
+        return;
+      }
     }
-
-    setSession({
-      accessToken: "demo-access-token",
-      refreshToken: "demo-refresh-token",
-      user: {
-        id: quickUser.id,
-        fullName: quickUser.fullName,
-        email: quickUser.email,
-        roleName: quickUser.roleName,
-        departmentId: quickUser.departmentId,
-        departmentName: quickUser.departmentName,
-        isActive: quickUser.isActive,
-        mustChangePassword: quickUser.mustChangePassword,
-      },
-    });
-
-    navigate(appRoutes.dashboard);
   });
 
   return (
@@ -133,8 +119,12 @@ export function LoginForm() {
 
           {errors.root ? <div className="banner error">{errors.root.message}</div> : null}
 
-          <button type="submit" className="button primary" disabled={isSubmitting}>
-            {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
+          <button
+            type="submit"
+            className="button primary"
+            disabled={isSubmitting || loginMutation.isPending}
+          >
+            {isSubmitting || loginMutation.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
       </section>

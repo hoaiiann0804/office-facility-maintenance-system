@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { wireframeData } from "../../shared/mock/wireframe-data";
 import { Badge, Panel, StatCard } from "../../shared/ui";
 import { useAuthStore } from "../../features/auth/model/auth-store";
 import { appRoutes } from "../../shared/config/routes";
+import { logout } from "../../shared/api/auth";
 
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("vi-VN", {
@@ -12,12 +13,25 @@ const formatDateTime = (value: string) =>
 
 export function DashboardPage() {
   const session = useAuthStore((state) => state.session);
-
+  const signOut = useAuthStore((state) => state.signOut);
+  const navigate = useNavigate();
   const openTickets = wireframeData.tickets.filter(
     (ticket) => !["Closed", "Cancelled"].includes(ticket.status),
   ).length;
   const activeEquipment = wireframeData.equipment.filter((item) => item.status === "Active").length;
 
+  const handleLogout = async (): Promise<void> => {
+    const refreshToken = session?.refreshToken;
+
+    try {
+      if (refreshToken) {
+        await logout(refreshToken);
+      }
+    } finally {
+      signOut();
+      navigate(appRoutes.login);
+    }
+  };
   const recentActivity = [
     ...wireframeData.tickets.flatMap((ticket) =>
       ticket.history.map((item) => ({
@@ -62,6 +76,10 @@ export function DashboardPage() {
           <Badge tone={session?.user.roleName === "Admin" ? "primary" : "default"}>
             {session?.user.roleName ?? "Guest"}
           </Badge>
+
+          <button type="button" className="button secondary" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </header>
 

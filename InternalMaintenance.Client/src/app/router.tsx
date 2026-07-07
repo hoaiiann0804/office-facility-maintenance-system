@@ -5,6 +5,7 @@ import { LoginPage } from "../pages/login/page";
 import { DashboardPage } from "../pages/dashboard/page";
 import { TicketsPage } from "../pages/tickets/page";
 import { AppLayout } from "./layouts/app-layout";
+import { PublicOnlyRoute } from "./guard/public-only-route";
 import type { ReactElement } from "react";
 
 function RequireAuth({ children }: { children: ReactElement }) {
@@ -25,7 +26,14 @@ export function AppRouter() {
           path="/"
           element={<Navigate to={session ? appRoutes.dashboard : appRoutes.login} replace />}
         />
-        <Route path={appRoutes.login} element={<LoginPage />} />
+        <Route
+          path={appRoutes.login}
+          element={
+            <PublicOnlyRoute>
+              <LoginPage />
+            </PublicOnlyRoute>
+          }
+        />
         <Route
           path={appRoutes.dashboard}
           element={
