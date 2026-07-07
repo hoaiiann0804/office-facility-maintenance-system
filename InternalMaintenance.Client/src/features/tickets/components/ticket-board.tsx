@@ -6,15 +6,15 @@ import {
 } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { Badge, EmptyState, Panel } from "../../../shared/ui";
-import type { MaintenanceTicketDetail } from "../../../entities/ticket/model/types";
+import type { MaintenanceTicket } from "../../../entities/ticket/model/types";
 
 type TicketBoardProps = {
-  tickets: MaintenanceTicketDetail[];
+  tickets: MaintenanceTicket[];
   selectedTicketId: number | null;
   onSelectTicket: (ticketId: number) => void;
 };
 
-const columnHelper = createColumnHelper<MaintenanceTicketDetail>();
+const columnHelper = createColumnHelper<MaintenanceTicket>();
 
 export function TicketBoard({ tickets, selectedTicketId, onSelectTicket }: TicketBoardProps) {
   const columns = useMemo(

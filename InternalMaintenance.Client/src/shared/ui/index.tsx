@@ -46,3 +46,7 @@ export function EmptyState({ title, description }: EmptyStateProps) {
     </div>
   );
 }
+
+export function Spinner() {
+  return <div className="spinner" />;
+}
