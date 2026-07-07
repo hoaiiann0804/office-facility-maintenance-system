@@ -1,10 +1,17 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { wireframeData } from "../../shared/mock/wireframe-data";
-import { Badge, EmptyState, Panel } from "../../shared/ui";
+import { Badge, EmptyState, Panel, Spinner } from "../../shared/ui";
 import { TicketBoard } from "../../features/tickets/components/ticket-board";
 import { appRoutes } from "../../shared/config/routes";
-import type { TicketPriority, TicketStatus } from "../../entities/ticket/model/types";
+import type {
+  TicketHistoryItem,
+  TicketComment,
+  TicketPriority,
+  TicketStatus,
+} from "../../entities/ticket/model/types";
+import { useTicketsQuery } from "../../features/tickets/api/use-tickets-query";
+import { useTicketDetailQuery } from "../../features/tickets/api/use-ticket-detail-query";
 
 const formatDateTime = (value: string | null | undefined) => {
   if (!value) return "N/A";
@@ -17,31 +24,38 @@ export function TicketsPage() {
   const [search, setSearch] = useState("");
   const [ticketStatus, setTicketStatus] = useState<"All" | TicketStatus>("All");
   const [ticketPriority, setTicketPriority] = useState<"All" | TicketPriority>("All");
-  const [selectedTicketId, setSelectedTicketId] = useState<number>(
-    wireframeData.tickets[0]?.id ?? 0,
-  );
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [assignTechnicianId, setAssignTechnicianId] = useState<string>("");
   const [assignmentNote, setAssignmentNote] = useState("");
   const [resolutionNote, setResolutionNote] = useState("");
   const [commentDraft, setCommentDraft] = useState("");
 
-  const selectedTicket =
-    wireframeData.tickets.find((ticket) => ticket.id === selectedTicketId) ?? null;
+  const {
+    data: ticketsPage,
+    isLoading,
+    isError,
+  } = useTicketsQuery({
+    // keyword: search, // API chưa hỗ trợ, tạm thời vô hiệu hóa
+    status: ticketStatus === "All" ? undefined : ticketStatus,
+    priority: ticketPriority === "All" ? undefined : ticketPriority,
+  });
 
-  const filteredTickets = useMemo(
-    () =>
-      wireframeData.tickets.filter((ticket) => {
-        const matchesSearch =
-          !search ||
-          `${ticket.ticketCode} ${ticket.title} ${ticket.description} ${ticket.equipmentName}`
-            .toLowerCase()
-            .includes(search.toLowerCase());
-        const matchesStatus = ticketStatus === "All" || ticket.status === ticketStatus;
-        const matchesPriority = ticketPriority === "All" || ticket.priority === ticketPriority;
-        return matchesSearch && matchesStatus && matchesPriority;
-      }),
-    [search, ticketPriority, ticketStatus],
-  );
+  // Bọc trong useMemo để tránh thay đổi tham chiếu trên mỗi lần render
+  const tickets = useMemo(() => ticketsPage?.items ?? [], [ticketsPage?.items]);
+
+  // Tính toán ID ticket đang hoạt động để tránh cascading renders từ useEffect
+  const activeTicketId = useMemo(() => {
+    if (selectedTicketId && tickets.some((t) => t.id === selectedTicketId)) {
+      return selectedTicketId;
+    }
+    return tickets[0]?.id ?? null;
+  }, [selectedTicketId, tickets]);
+
+  const {
+    data: selectedTicket,
+    isLoading: isSelectedTicketLoading,
+    isError: isSelectedTicketError,
+  } = useTicketDetailQuery(activeTicketId);
 
   return (
     <div className="dashboard">
@@ -120,62 +134,81 @@ export function TicketsPage() {
               </div>
 
               <div className="list">
-                {filteredTickets.map((ticket) => (
-                  <button
-                    key={ticket.id}
-                    type="button"
-                    className={`list-item ${ticket.id === selectedTicket?.id ? "selected" : ""}`}
-                    onClick={() => setSelectedTicketId(ticket.id)}
-                  >
-                    <div className="list-item-header">
-                      <div>
-                        <strong>{ticket.ticketCode}</strong>
-                        <span>{ticket.title}</span>
-                      </div>
-                      <div className="badge-row">
-                        <Badge
-                          tone={
-                            ticket.status === "Resolved" || ticket.status === "Closed"
-                              ? "good"
-                              : ticket.status === "Cancelled"
+                {isLoading ? (
+                  <div className="centered-content">
+                    <Spinner />
+                  </div>
+                ) : isError ? (
+                  <EmptyState
+                    title="Đã có lỗi xảy ra"
+                    description="Không thể tải danh sách ticket. Vui lòng thử lại sau."
+                  />
+                ) : tickets.length > 0 ? (
+                  tickets.map((ticket) => (
+                    <button
+                      key={ticket.id}
+                      type="button"
+                      className={`list-item ${ticket.id === activeTicketId ? "selected" : ""}`}
+                      onClick={() => setSelectedTicketId(ticket.id)}
+                    >
+                      <div className="list-item-header">
+                        <div>
+                          <strong>{ticket.ticketCode}</strong>
+                          <span>{ticket.title}</span>
+                        </div>
+                        <div className="badge-row">
+                          <Badge
+                            tone={
+                              ticket.status === "Resolved" || ticket.status === "Closed"
+                                ? "good"
+                                : ticket.status === "Cancelled"
+                                  ? "bad"
+                                  : "warn"
+                            }
+                          >
+                            {ticket.status}
+                          </Badge>
+                          <Badge
+                            tone={
+                              ticket.priority === "Critical"
                                 ? "bad"
-                                : "warn"
-                          }
-                        >
-                          {ticket.status}
-                        </Badge>
-                        <Badge
-                          tone={
-                            ticket.priority === "Critical"
-                              ? "bad"
-                              : ticket.priority === "High"
-                                ? "warn"
-                                : ticket.priority === "Medium"
-                                  ? "primary"
-                                  : "default"
-                          }
-                        >
-                          {ticket.priority}
-                        </Badge>
+                                : ticket.priority === "High"
+                                  ? "warn"
+                                  : ticket.priority === "Medium"
+                                    ? "primary"
+                                    : "default"
+                            }
+                          >
+                            {ticket.priority}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                    <span className="muted-line">
-                      {ticket.equipmentName} · {ticket.createdByUserName} ·{" "}
-                      {formatDateTime(ticket.createdAt)}
-                    </span>
-                  </button>
-                ))}
-                {!filteredTickets.length ? (
+                      <span className="muted-line">
+                        {ticket.equipmentName} · {ticket.createdByUserName} ·{" "}
+                        {formatDateTime(ticket.createdAt)}
+                      </span>
+                    </button>
+                  ))
+                ) : (
                   <EmptyState
                     title="Không có ticket phù hợp"
                     description="Thử đổi từ khóa hoặc reset bộ lọc hiện tại."
                   />
-                ) : null}
+                )}
               </div>
             </Panel>
 
             <Panel>
-              {selectedTicket ? (
+              {isSelectedTicketLoading ? (
+                <div className="centered-content">
+                  <Spinner />
+                </div>
+              ) : isSelectedTicketError ? (
+                <EmptyState
+                  title="Không thể tải chi tiết"
+                  description="Đã có lỗi xảy ra khi tải dữ liệu ticket."
+                />
+              ) : selectedTicket ? (
                 <>
                   <span className="eyebrow">Detail</span>
                   <h2>{selectedTicket.ticketCode}</h2>
@@ -296,7 +329,7 @@ export function TicketsPage() {
                     <div className="mini-card">
                       <strong>Timeline</strong>
                       <div className="stack">
-                        {selectedTicket.history.map((item) => (
+                        {selectedTicket.history.map((item: TicketHistoryItem) => (
                           <div key={item.id} className="timeline-item compact">
                             <strong>{item.status}</strong>
                             <span>
@@ -310,7 +343,7 @@ export function TicketsPage() {
                       <strong>Comments</strong>
                       <div className="stack">
                         {selectedTicket.comments.length ? (
-                          selectedTicket.comments.map((comment) => (
+                          selectedTicket.comments.map((comment: TicketComment) => (
                             <div key={comment.id} className="comment-item">
                               <strong>{comment.userName}</strong>
                               <span>{comment.content}</span>
@@ -349,8 +382,8 @@ export function TicketsPage() {
       </div>
 
       <TicketBoard
-        tickets={filteredTickets}
-        selectedTicketId={selectedTicketId}
+        tickets={tickets}
+        selectedTicketId={activeTicketId}
         onSelectTicket={setSelectedTicketId}
       />
     </div>

@@ -4,6 +4,7 @@ import type {
   ChangeTicketStatusRequest,
   CreateTicketCommentRequest,
   MaintenanceTicket,
+  MaintenanceTicketDetail,
   PagedResponse,
   TicketComment,
   TicketHistoryItem,
@@ -18,6 +19,22 @@ export async function getTickets(query: TicketQuery = {}) {
 export async function getTicketById(id: number) {
   const { data } = await http.get<MaintenanceTicket>(`/tickets/${id}`);
   return data;
+}
+
+export async function getTicketDetailById(id: number) {
+  const [ticket, comments, history] = await Promise.all([
+    getTicketById(id),
+    getTicketComments(id),
+    getTicketHistory(id),
+  ]);
+
+  const detail: MaintenanceTicketDetail = {
+    ...ticket,
+    comments,
+    history,
+  };
+
+  return detail;
 }
 
 export async function createTicket(payload: {
