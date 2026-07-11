@@ -1,13 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { z } from "zod";
 import axios from "axios";
-import { wireframeData } from "../../../shared/mock/wireframe-data";
-import { Banner, Badge, Panel } from "../../../shared/ui";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { wireframeData } from "../../../shared/mock/wireframe-data";
 import { appRoutes } from "../../../shared/config/routes";
 import { useLoginMutation } from "../api/use-login-mutation";
-import { useBanner } from "../../../shared/hooks/use-banner";
+import { Badge, Panel } from "../../../shared/ui";
 
 const loginSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
@@ -17,16 +18,15 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const loginMutation = useLoginMutation();
-  const { banner, showBanner, hideBanner } = useBanner();
   const isDev = import.meta.env.DEV;
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
-    // setError,
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -36,35 +36,55 @@ export function LoginForm() {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
-    hideBanner();
     try {
       const response = await loginMutation.mutateAsync(values);
 
-      navigate(appRoutes.dashboard, {
-        state: {
-          banner: {
-            type: "success",
-            message: `Chào mừng ${response.user.fullName}. Đang mở dashboard theo vai trò ${response.user.roleName}.`,
-          },
-        },
-      });
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        if ([401, 403].includes(error.response?.status ?? 0)) {
-          showBanner("error", "Email hoặc mật khẩu không đúng.");
-          return;
-        }
+      toast.success(
+        `Chào mừng ${response.user.fullName}. Đang mở dashboard theo vai trò ${response.user.roleName}.`,
+      );
 
-        showBanner("error", "Không thể đăng nhập. Vui lòng thử lại.");
+      navigate(appRoutes.dashboard, { replace: true });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && [401, 403].includes(error.response?.status ?? 0)) {
+        toast.error("Email hoặc mật khẩu không đúng.");
         return;
       }
 
-      showBanner("error", "Không thể đăng nhập. Vui lòng thử lại.");
+      toast.error("Không thể đăng nhập. Vui lòng thử lại.");
     }
   };
 
   return (
     <>
+      <style>
+        {`
+          .password-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+          }
+
+          .password-input-wrapper .input {
+            padding-right: 40px;
+          }
+
+          .password-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+          }
+        `}
+      </style>
+
       <section className="auth-hero panel">
         <span className="eyebrow">Office Facility Maintenance Management System</span>
         <h1>Điều phối bảo trì nội bộ, gọn, rõ, dễ mở rộng.</h1>
@@ -114,14 +134,10 @@ export function LoginForm() {
 
       <section className="auth-card panel panel-light">
         <span className="eyebrow eyebrow-dark">Đăng nhập</span>
-        <h2>Vào Hệ thống</h2>
+        <h2>Vào hệ thống</h2>
         <p className="section-lead">
           Sử dụng tài khoản được cấp để truy cập hệ thống quản lý bảo trì nội bộ.
         </p>
-
-        {banner ? (
-          <Banner type={banner.type} message={banner.message} onClose={hideBanner} />
-        ) : null}
 
         <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
           <label className="field">
@@ -132,7 +148,51 @@ export function LoginForm() {
 
           <label className="field">
             <span>Password</span>
-            <input className="input" type="password" {...register("password")} />
+            <div className="password-input-wrapper">
+              <input
+                className="input"
+                type={showPassword ? "text" : "password"}
+                {...register("password")}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+              >
+                {showPassword ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                )}
+              </button>
+            </div>
             {errors.password ? (
               <small className="field-error">{errors.password.message}</small>
             ) : null}

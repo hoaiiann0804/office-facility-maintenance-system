@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { wireframeData } from "../../shared/mock/wireframe-data";
 import { Badge, EmptyState, Panel, Spinner } from "../../shared/ui";
 import { TicketBoard } from "../../features/tickets/components/ticket-board";
@@ -10,8 +11,9 @@ import type {
   TicketPriority,
   TicketStatus,
 } from "../../entities/ticket/model/types";
-import { useTicketsQuery } from "../../features/tickets/api/use-tickets-query";
 import { useTicketDetailQuery } from "../../features/tickets/api/use-ticket-detail-query";
+import { useCreateTicketCommentMutation } from "../../features/tickets/api/use-create-ticket-comment-mutation";
+import { useTicketsQuery } from "../../features/tickets/api/use-tickets-query";
 
 const formatDateTime = (value: string | null | undefined) => {
   if (!value) return "N/A";
@@ -40,22 +42,63 @@ export function TicketsPage() {
     priority: ticketPriority === "All" ? undefined : ticketPriority,
   });
 
-  // Bọc trong useMemo để tránh thay đổi tham chiếu trên mỗi lần render
   const tickets = useMemo(() => ticketsPage?.items ?? [], [ticketsPage?.items]);
+  const filteredTickets = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
 
-  // Tính toán ID ticket đang hoạt động để tránh cascading renders từ useEffect
+    if (!keyword) {
+      return tickets;
+    }
+
+    return tickets.filter((ticket) =>
+      [
+        ticket.ticketCode,
+        ticket.title,
+        ticket.description,
+        ticket.equipmentName,
+        ticket.equipmentCode,
+        ticket.createdByUserName,
+      ]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(keyword)),
+    );
+  }, [search, tickets]);
+
   const activeTicketId = useMemo(() => {
-    if (selectedTicketId && tickets.some((t) => t.id === selectedTicketId)) {
+    if (selectedTicketId && filteredTickets.some((ticket) => ticket.id === selectedTicketId)) {
       return selectedTicketId;
     }
-    return tickets[0]?.id ?? null;
-  }, [selectedTicketId, tickets]);
+
+    return filteredTickets[0]?.id ?? null;
+  }, [selectedTicketId, filteredTickets]);
 
   const {
     data: selectedTicket,
     isLoading: isSelectedTicketLoading,
     isError: isSelectedTicketError,
   } = useTicketDetailQuery(activeTicketId);
+  const createCommentMutation = useCreateTicketCommentMutation(activeTicketId);
+
+  const handleAddComment = async () => {
+    if (!activeTicketId) {
+      toast.error("Chưa có ticket nào được chọn.");
+      return;
+    }
+
+    const content = commentDraft.trim();
+    if (!content) {
+      toast.error("Nội dung comment không được để trống.");
+      return;
+    }
+
+    try {
+      await createCommentMutation.mutateAsync({ content });
+      setCommentDraft("");
+      toast.success("Comment đã được thêm.");
+    } catch {
+      toast.error("Không thể thêm comment.");
+    }
+  };
 
   return (
     <div className="dashboard">
@@ -143,8 +186,8 @@ export function TicketsPage() {
                     title="Đã có lỗi xảy ra"
                     description="Không thể tải danh sách ticket. Vui lòng thử lại sau."
                   />
-                ) : tickets.length > 0 ? (
-                  tickets.map((ticket) => (
+                ) : filteredTickets.length > 0 ? (
+                  filteredTickets.map((ticket) => (
                     <button
                       key={ticket.id}
                       type="button"
@@ -320,8 +363,13 @@ export function TicketsPage() {
                         onChange={(event) => setCommentDraft(event.target.value)}
                       />
                     </label>
-                    <button type="button" className="button primary">
-                      Add comment
+                    <button
+                      type="button"
+                      className="button primary"
+                      onClick={handleAddComment}
+                      disabled={createCommentMutation.isPending}
+                    >
+                      {createCommentMutation.isPending ? "Đang thêm..." : "Add comment"}
                     </button>
                   </div>
 
@@ -382,7 +430,7 @@ export function TicketsPage() {
       </div>
 
       <TicketBoard
-        tickets={tickets}
+        tickets={filteredTickets}
         selectedTicketId={activeTicketId}
         onSelectTicket={setSelectedTicketId}
       />
