@@ -1,10 +1,9 @@
-using Azure.Core.GeoJson;
+using InternalMaintenance.Api.Common;
 using InternalMaintenance.Api.DTOs.Common;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.MaintenanceTicket;
 using InternalMaintenance.Api.DTOs.TicketComment;
-using InternalMaintenance.Api.DTOs.Users;
 using InternalMaintenance.Api.Models;
 using InternalMaintenance.Api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -118,8 +117,7 @@ public class MaintenanceTicketsController : ControllerBase
         .OrderByDescending(ticket => ticket.CreatedAt)
         .ThenBy(ticket => ticket.Id);
 
-        ticketQuery = ticketQuery.Skip((query.Page - 1) * query.PageSize)
-        .Take(query.PageSize);
+        ticketQuery = ticketQuery.ApplyPaging(query);
 
         var tickets = await ticketQuery.Select(
             ticket => new MaintenanceTicketResponse
@@ -144,21 +142,12 @@ public class MaintenanceTicketsController : ControllerBase
                 ClosedAt = ticket.ClosedAt,
             }
         ).ToListAsync();
-        return Ok(
-            new PagedResponse<MaintenanceTicketResponse>
-            {
-                Items = tickets,
-                Page = query.Page,
-                PageSize = query.PageSize,
-                TotalItems = totalItems,
-                TotalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize)
-            }
-        );
+        return Ok(tickets.ToPagedResponse(query, totalItems));
     }
 
     [Authorize]
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<MaintenanceTicketResponse>> GetGetMaintenanceTicketById(int id)
+    public async Task<ActionResult<MaintenanceTicketResponse>> GetMaintenanceTicketById(int id)
     {
         // Khởi tạo truy vấn và áp dụng phân quyền theo role 
         var ticketQuery = _context.MaintenanceTickets
@@ -339,7 +328,7 @@ public class MaintenanceTicketsController : ControllerBase
         ).FirstOrDefaultAsync();
 
         return CreatedAtAction(
-            nameof(GetGetMaintenanceTicketById),
+            nameof(GetMaintenanceTicketById),
             new { id = ticket.Id },
             response
         );
@@ -957,7 +946,7 @@ public class MaintenanceTicketsController : ControllerBase
     }
     [Authorize]
     [HttpGet("{id:int}/history")]
-    public async Task<ActionResult<TicketStatusHistoryResponse>> GetTicketHistory(int id)
+    public async Task<ActionResult<List<TicketStatusHistoryResponse>>> GetTicketHistory(int id)
     {
         var ticketQuery = _context.MaintenanceTickets.AsQueryable();
         ticketQuery = ApplyTicketAccessControl(ticketQuery);

@@ -1,9 +1,9 @@
 
+using InternalMaintenance.Api.Common;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.Common;
 using InternalMaintenance.Api.DTOs.Departments;
-using InternalMaintenance.Api.DTOs.MaintenanceTicket;
 using InternalMaintenance.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,8 +44,7 @@ public class DepartmentsController : ControllerBase
         .OrderByDescending(department => department.CreatedAt)
         .ThenBy(department => department.Id);
 
-        departmentQuery = departmentQuery.Skip((query.Page - 1) * query.PageSize)
-        .Take(query.PageSize);
+        departmentQuery = departmentQuery.ApplyPaging(query);
 
 
         var departments = await departmentQuery
@@ -57,16 +56,7 @@ public class DepartmentsController : ControllerBase
             CreatedAt = department.CreatedAt
 
         }).ToListAsync();
-        return Ok(
-            new PagedResponse<DepartmentResponse>
-            {
-                Items = departments,
-                Page = query.Page,
-                PageSize = query.PageSize,
-                TotalItems = totalItems,
-                TotalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize)
-            }
-        );
+        return Ok(departments.ToPagedResponse(query, totalItems));
     }
 
     [Authorize]
@@ -188,7 +178,7 @@ public class DepartmentsController : ControllerBase
     }
     [Authorize(Roles = UserRoles.Admin)]
     [HttpDelete("{id:int}")]
-    public async Task<ActionResult<Department>> DeletePartment(int id)
+    public async Task<ActionResult<Department>> DeleteDepartment(int id)
     {
         var department = await _context.Departments.FirstOrDefaultAsync(d => d.Id == id);
 

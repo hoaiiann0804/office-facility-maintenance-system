@@ -141,9 +141,11 @@ This workflow keeps ownership clear at each stage and makes the maintenance proc
 InternalMaintenanceManagement.slnx
 |-- InternalMaintenance.Api/      # ASP.NET Core Web API
 |   |-- Controllers/              # Auth, Department, Equipment, Ticket, and User APIs
+|   |-- Common/                   # Shared query/pagination helpers
 |   |-- Constants/                # Shared status and role constants
 |   |-- Data/                     # DbContext and seed data
 |   |-- DTOs/                     # Request and response models
+|   |-- Extensions/               # Startup and pipeline wiring
 |   |-- Migrations/               # EF Core migrations
 |   |-- Models/                   # Domain entities
 |   `-- Services/                 # JWT and current user helpers
@@ -162,15 +164,19 @@ flowchart LR
 
 The API applies database initialization and seed data on startup, which makes local development predictable and repeatable.
 
+The backend is intentionally kept as a modular monolith style API instead of a full Clean Architecture split. That keeps the feature boundaries clear while avoiding extra project ceremony before the domain grows further.
+
 ## Project Structure
 
 ```text
 InternalMaintenanceManagement.slnx
 |-- InternalMaintenance.Api/
 |   |-- Controllers/
+|   |-- Common/
 |   |-- Constants/
 |   |-- Data/
 |   |-- DTOs/
+|   |-- Extensions/
 |   |-- Migrations/
 |   |-- Models/
 |   `-- Services/

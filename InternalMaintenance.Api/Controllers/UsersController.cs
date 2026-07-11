@@ -1,4 +1,5 @@
 
+using InternalMaintenance.Api.Common;
 using InternalMaintenance.Api.DTOs.Common;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
@@ -72,8 +73,7 @@ public class UsersController : ControllerBase
             .OrderByDescending(user => user.CreatedAt)
             .ThenBy(user => user.Id);
 
-        usersQuery = usersQuery.Skip((query.Page - 1) * query.PageSize)
-        .Take(query.PageSize);
+        usersQuery = usersQuery.ApplyPaging(query);
 
         var users = await usersQuery.Select(
             user => new UserResponse
@@ -92,14 +92,7 @@ public class UsersController : ControllerBase
                 UpdatedAt = user.UpdatedAt
             }
         ).ToListAsync();
-        return Ok(new PagedResponse<UserResponse>
-        {
-            Items = users,
-            Page = query.Page,
-            PageSize = query.PageSize,
-            TotalItems = totalItems,
-            TotalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize)
-        });
+        return Ok(users.ToPagedResponse(query, totalItems));
     }
 
     [Authorize(Roles = UserRoles.Admin)]

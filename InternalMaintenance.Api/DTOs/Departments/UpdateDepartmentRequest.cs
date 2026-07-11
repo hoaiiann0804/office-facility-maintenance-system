@@ -1,4 +1,4 @@
-using InternalMaintenance.Api.DTOs.Departments;
+namespace InternalMaintenance.Api.DTOs.Departments;
 
 public class UpdateDepartmentRequest : CreateDepartmentRequest
 {
