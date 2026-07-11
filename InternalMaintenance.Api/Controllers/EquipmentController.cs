@@ -1,9 +1,8 @@
+using InternalMaintenance.Api.Common;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.Common;
-using InternalMaintenance.Api.DTOs.Departments;
 using InternalMaintenance.Api.DTOs.Equipment;
-using InternalMaintenance.Api.DTOs.TicketComment;
 using InternalMaintenance.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -58,8 +57,7 @@ public class EquipmentController : ControllerBase
         .OrderByDescending(equipment => equipment.CreatedAt)
         .ThenBy(equipment => equipment.Id);
 
-        equipmentQuery = equipmentQuery.Skip((query.Page - 1) * query.PageSize)
-        .Take(query.PageSize);
+        equipmentQuery = equipmentQuery.ApplyPaging(query);
 
         var equipment = await equipmentQuery
             .Select(e => new EquipmentResponse
@@ -77,16 +75,7 @@ public class EquipmentController : ControllerBase
                 UpdatedAt = e.UpdatedAt,
             }
             ).ToListAsync();
-        return Ok(
-            new PagedResponse<EquipmentResponse>
-            {
-                Items = equipment,
-                Page = query.Page,
-                PageSize = query.PageSize,
-                TotalItems = totalItems,
-                TotalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize)
-            }
-        );
+        return Ok(equipment.ToPagedResponse(query, totalItems));
     }
 
     [Authorize]

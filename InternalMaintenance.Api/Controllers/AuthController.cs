@@ -13,7 +13,6 @@ using Microsoft.EntityFrameworkCore;
 public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
-    private readonly IConfiguration _configuration;
 
     private readonly CurrentUserService _currentUserService;
 
@@ -21,13 +20,11 @@ public class AuthController : ControllerBase
 
     public AuthController(
         AppDbContext context,
-        IConfiguration configuration,
         CurrentUserService currentUserService,
         JwtTokenService jwtTokenService
     )
     {
         _context = context;
-        _configuration = configuration;
         _currentUserService = currentUserService;
         _jwtTokenService = jwtTokenService;
     }
