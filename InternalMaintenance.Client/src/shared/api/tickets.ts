@@ -9,6 +9,7 @@ import type {
   TicketComment,
   TicketHistoryItem,
   TicketQuery,
+  UpdateTicketRequest,
 } from "../../entities/ticket/model/types";
 
 export async function getTickets(query: TicketQuery = {}) {
@@ -49,6 +50,11 @@ export async function createTicket(payload: {
 
 export async function assignTicket(id: number, payload: AssignTicketRequest) {
   const { data } = await http.patch<MaintenanceTicket>(`/tickets/${id}/assign`, payload);
+  return data;
+}
+
+export async function updateTicket(id: number, payload: UpdateTicketRequest) {
+  const { data } = await http.put<MaintenanceTicket>(`/tickets/${id}`, payload);
   return data;
 }
 
