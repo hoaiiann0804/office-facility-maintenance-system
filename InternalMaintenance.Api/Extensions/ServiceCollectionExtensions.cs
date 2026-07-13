@@ -1,4 +1,5 @@
 using InternalMaintenance.Api.Data;
+using InternalMaintenance.Api.Modules.Auth;
 using InternalMaintenance.Api.Services;
 using InternalMaintenance.Api.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -69,6 +70,7 @@ public static class ServiceCollectionExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<JwtTokenService>();
         services.AddScoped<CurrentUserService>();
         services.AddScoped<ITicketCodeGenerator, TicketCodeGenerator>();
