@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import axios from "axios";
 import { wireframeData } from "../../../shared/mock/wireframe-data";
 import { useCreateTicketMutation } from "../api/use-create-ticket-mutation";
 import type { TicketPriority } from "../../../entities/ticket/model/types";
@@ -42,8 +43,12 @@ export function CreateTicketModal({
       setEquipmentId("");
       setPriority("");
       onClose();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Không thể tạo ticket.");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Không thể tạo ticket.");
+      } else {
+        toast.error("Không thể tạo ticket.");
+      }
     }
   };
 
