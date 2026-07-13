@@ -102,9 +102,7 @@ export function TicketBoard({ tickets, selectedTicketId, onSelectTicket }: Ticke
                 key={row.id}
                 style={{
                   background:
-                    row.original.id === selectedTicketId
-                      ? "rgba(125, 211, 252, 0.08)"
-                      : "transparent",
+                    row.original.id === selectedTicketId ? "var(--selected-bg)" : "transparent",
                 }}
                 onClick={() => onSelectTicket(row.original.id)}
               >

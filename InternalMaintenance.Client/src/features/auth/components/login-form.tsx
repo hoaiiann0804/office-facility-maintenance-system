@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { wireframeData } from "../../../shared/mock/wireframe-data";
 import { appRoutes } from "../../../shared/config/routes";
 import { useLoginMutation } from "../api/use-login-mutation";
-import { Badge, Panel } from "../../../shared/ui";
+import { Badge, Panel, ThemeToggle } from "../../../shared/ui";
 
 const loginSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
@@ -132,8 +132,11 @@ export function LoginForm() {
         ) : null}
       </section>
 
-      <section className="auth-card panel panel-light">
-        <span className="eyebrow eyebrow-dark">Đăng nhập</span>
+      <section className="auth-card panel">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span className="eyebrow">Đăng nhập</span>
+          <ThemeToggle />
+        </div>
         <h2>Vào hệ thống</h2>
         <p className="section-lead">
           Sử dụng tài khoản được cấp để truy cập hệ thống quản lý bảo trì nội bộ.

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { wireframeData } from "../../shared/mock/wireframe-data";
-import { Badge, Panel, StatCard } from "../../shared/ui";
+import { Badge, Panel, StatCard, ThemeToggle } from "../../shared/ui";
 import { useAuthStore } from "../../features/auth/model/auth-store";
 import { appRoutes } from "../../shared/config/routes";
 import { logout } from "../../shared/api/auth";
@@ -73,6 +73,7 @@ export function DashboardPage() {
         </nav>
 
         <div className="badge-row">
+          <ThemeToggle />
           <Badge tone="default">{session?.user.fullName ?? "Guest"}</Badge>
           <Badge tone={session?.user.roleName === "Admin" ? "primary" : "default"}>
             {session?.user.roleName ?? "Guest"}
