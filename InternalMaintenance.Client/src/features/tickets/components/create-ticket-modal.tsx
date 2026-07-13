@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import axios from "axios";
-import { wireframeData } from "../../../shared/mock/wireframe-data";
 import { useCreateTicketMutation } from "../api/use-create-ticket-mutation";
+import { useEquipmentQuery } from "../api/use-equipment-query";
 import type { TicketPriority } from "../../../entities/ticket/model/types";
+
+const PRIORITIES: TicketPriority[] = ["Low", "Medium", "High", "Critical"];
 
 export function CreateTicketModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [title, setTitle] = useState("");
@@ -12,6 +14,12 @@ export function CreateTicketModal({ isOpen, onClose }: { isOpen: boolean; onClos
   const [priority, setPriority] = useState<TicketPriority | "">("");
 
   const createTicketMutation = useCreateTicketMutation();
+  // Chỉ fetch khi modal đang mở để tránh gọi API thừa
+  const { data: equipmentPage, isLoading: isEquipmentLoading } = useEquipmentQuery(
+    isOpen ? { pageSize: 500 } : {},
+  );
+
+  const availableEquipment = (equipmentPage?.items ?? []).filter((eq) => eq.status !== "Retired");
 
   if (!isOpen) return null;
 
@@ -86,15 +94,16 @@ export function CreateTicketModal({ isOpen, onClose }: { isOpen: boolean; onClos
               value={equipmentId}
               onChange={(e) => setEquipmentId(e.target.value === "" ? "" : Number(e.target.value))}
               required
+              disabled={isEquipmentLoading}
             >
-              <option value="">-- Chọn thiết bị --</option>
-              {wireframeData.equipment
-                .filter((eq) => eq.status !== "Retired")
-                .map((eq) => (
-                  <option key={eq.id} value={eq.id}>
-                    {eq.code} - {eq.name} ({eq.departmentName})
-                  </option>
-                ))}
+              <option value="">
+                {isEquipmentLoading ? "Đang tải danh sách..." : "-- Chọn thiết bị --"}
+              </option>
+              {availableEquipment.map((eq) => (
+                <option key={eq.id} value={eq.id}>
+                  {eq.code} - {eq.name} ({eq.departmentName})
+                </option>
+              ))}
             </select>
           </label>
 
@@ -106,7 +115,7 @@ export function CreateTicketModal({ isOpen, onClose }: { isOpen: boolean; onClos
               onChange={(e) => setPriority(e.target.value as TicketPriority | "")}
             >
               <option value="">-- Mặc định (Medium) --</option>
-              {wireframeData.priorities.map((p) => (
+              {PRIORITIES.map((p) => (
                 <option key={p} value={p}>
                   {p}
                 </option>
@@ -118,7 +127,7 @@ export function CreateTicketModal({ isOpen, onClose }: { isOpen: boolean; onClos
             <button
               type="submit"
               className="button primary"
-              disabled={createTicketMutation.isPending}
+              disabled={createTicketMutation.isPending || isEquipmentLoading}
             >
               {createTicketMutation.isPending ? "Đang xử lý..." : "Tạo mới"}
             </button>
