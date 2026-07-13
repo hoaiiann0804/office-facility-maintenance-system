@@ -8,7 +8,7 @@ using InternalMaintenance.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-namespace InternalMaintenance.Api.Controllers;
+namespace InternalMaintenance.Api.Modules.Departments;
 
 [ApiController]
 [Route("api/departments")]

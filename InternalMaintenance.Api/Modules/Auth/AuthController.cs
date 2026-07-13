@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+namespace InternalMaintenance.Api.Modules.Auth;
+
 [ApiController]
 [Route("api/auth")]
 public class AuthController : ControllerBase

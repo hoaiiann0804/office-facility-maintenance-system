@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InternalMaintenance.Api.Services.Interface;
-namespace InternalMaintenance.Api.Controllers;
+
+namespace InternalMaintenance.Api.Modules.Tickets;
 
 [ApiController]
 [Route("api/tickets")]
@@ -88,7 +89,7 @@ public class MaintenanceTicketsController : ControllerBase
        .AsNoTracking()
        .AsQueryable();
 
-        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        ticketQuery = TicketAccessPolicy.Apply(ticketQuery, _currentUserService);
         var status = query.Status?.Trim();
         if (!string.IsNullOrWhiteSpace(status))
         {
@@ -154,7 +155,7 @@ public class MaintenanceTicketsController : ControllerBase
         .AsNoTracking()
         .AsQueryable();
 
-        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        ticketQuery = TicketAccessPolicy.Apply(ticketQuery, _currentUserService);
         var ticket = await ticketQuery.Where(
             ticket => ticket.Id == id
         ).Select(
@@ -241,17 +242,9 @@ public class MaintenanceTicketsController : ControllerBase
         // Nếu Equipment này đã có ticket Pending/Assgined/InProgress
         // Nghĩa là sự cố cũ chưa xử lý xong, nên chặn để tránh tạo ticket trùng
 
-        var openStatuses = new[]
-        {
-            TicketStatuses.Pending,
-            TicketStatuses.Assigned,
-            TicketStatuses.InProgress,
-            TicketStatuses.Resolved
-        };
-
         var hasOpenTicket = await _context.MaintenanceTickets
         .AnyAsync(ticket => ticket.EquipmentId == request.EquipmentId
-        && openStatuses.Contains(ticket.Status));
+        && TicketWorkflowRules.IsOpenTicketStatus(ticket.Status));
 
         if (hasOpenTicket)
         {
@@ -266,15 +259,7 @@ public class MaintenanceTicketsController : ControllerBase
         var priority = string.IsNullOrWhiteSpace(request.Priority)
         ? TicketPriorities.Medium : request.Priority.Trim();
 
-        var allowedPriorities = new[]
-        {
-            TicketPriorities.Low,
-            TicketPriorities.Medium,
-            TicketPriorities.High,
-            TicketPriorities.Critical
-        };
-
-        if (!allowedPriorities.Contains(priority))
+        if (!TicketWorkflowRules.IsAllowedPriority(priority))
         {
             return BadRequest(
                 new
@@ -382,15 +367,7 @@ public class MaintenanceTicketsController : ControllerBase
             }
         }
 
-        var allowedPriorities = new[]
-        {
-            TicketPriorities.Low,
-            TicketPriorities.Medium,
-            TicketPriorities.High,
-            TicketPriorities.Critical
-        };
-
-        if (!allowedPriorities.Contains(request.Priority))
+        if (!TicketWorkflowRules.IsAllowedPriority(request.Priority))
         {
             return BadRequest("Invalid priority");
         }
@@ -468,12 +445,7 @@ public class MaintenanceTicketsController : ControllerBase
         //Pending = assign lần đầu
         //Assigned= đổi technician nếu cần
 
-        var assignableStatuses = new[]
-        {
-            TicketStatuses.Pending,
-            TicketStatuses.Assigned
-        };
-        if (!assignableStatuses.Contains(ticket.Status))
+        if (!TicketWorkflowRules.IsAssignableStatus(ticket.Status))
         {
             return BadRequest(
                   new
@@ -627,14 +599,14 @@ public class MaintenanceTicketsController : ControllerBase
         var newStatus = request.Status.Trim();
         //Chỉ cho phép những status có trong workflow xử lý
         // KHông cho client gửi status tùy ý
-        var allowedStatuses = new[] {
-            TicketStatuses.InProgress,
-            TicketStatuses.Resolved,
-            TicketStatuses.Closed,
-            TicketStatuses.Cancelled
-             };
-
-        if (!allowedStatuses.Contains(newStatus))
+        if (!new[]
+            {
+                TicketStatuses.InProgress,
+                TicketStatuses.Resolved,
+                TicketStatuses.Closed,
+                TicketStatuses.Cancelled
+            }
+            .Contains(newStatus))
         {
             return BadRequest(
                 new
@@ -660,14 +632,7 @@ public class MaintenanceTicketsController : ControllerBase
         //Kiểm tra chuyển trạng thái có đúng workflow không 
         // Chỉ cho đi từng bước , không cho nhảy cóc
 
-        var isValidTransition =
-            (ticket.Status == TicketStatuses.Pending && newStatus == TicketStatuses.Cancelled) ||
-            (ticket.Status == TicketStatuses.Assigned && newStatus == TicketStatuses.Cancelled) ||
-            (ticket.Status == TicketStatuses.Assigned && newStatus == TicketStatuses.InProgress) ||
-            (ticket.Status == TicketStatuses.InProgress && newStatus == TicketStatuses.Resolved) ||
-            (ticket.Status == TicketStatuses.Resolved && newStatus == TicketStatuses.Closed);
-
-        if (!isValidTransition)
+        if (!TicketWorkflowRules.CanTransition(ticket.Status, newStatus))
         {
             return BadRequest(
                 new
@@ -917,7 +882,7 @@ public class MaintenanceTicketsController : ControllerBase
         .AsNoTracking()
         .AsQueryable();
 
-        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        ticketQuery = TicketAccessPolicy.Apply(ticketQuery, _currentUserService);
         var ticketExists = await ticketQuery.AnyAsync(
             ticket => ticket.Id == id
         );
@@ -949,7 +914,7 @@ public class MaintenanceTicketsController : ControllerBase
     public async Task<ActionResult<List<TicketStatusHistoryResponse>>> GetTicketHistory(int id)
     {
         var ticketQuery = _context.MaintenanceTickets.AsQueryable();
-        ticketQuery = ApplyTicketAccessControl(ticketQuery);
+        ticketQuery = TicketAccessPolicy.Apply(ticketQuery, _currentUserService);
         var ticketExists = await ticketQuery.AnyAsync(t => t.Id == id);
         if (!ticketExists)
         {
