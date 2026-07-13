@@ -39,10 +39,13 @@ export interface TicketComment {
 
 export interface TicketHistoryItem {
   id: number;
-  status: TicketStatus;
-  note: string;
-  changedBy: string;
+  maintenanceTicketId: number;
+  oldStatus: string;
+  newStatus: string;
+  changedByUserId: number;
+  changedByUserName: string;
   changedAt: string;
+  note: string | null;
 }
 
 export interface TicketQuery {

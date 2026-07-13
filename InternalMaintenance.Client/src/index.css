@@ -596,6 +596,21 @@ a {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.control-label {
+  display: block;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.ticket-action-panel {
+  display: grid;
+  gap: 0;
+}
+
 .button-row {
   display: flex;
   flex-wrap: wrap;
