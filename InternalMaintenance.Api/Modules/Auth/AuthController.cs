@@ -1,7 +1,7 @@
 
 using InternalMaintenance.Api.Data;
-using InternalMaintenance.Api.DTOs.Auth;
-using InternalMaintenance.Api.DTOs.Users;
+using InternalMaintenance.Api.Modules.Auth.Contracts;
+using InternalMaintenance.Api.Modules.Users.Contracts;
 using InternalMaintenance.Api.Models;
 using InternalMaintenance.Api.Services;
 using Microsoft.AspNetCore.Authorization;
