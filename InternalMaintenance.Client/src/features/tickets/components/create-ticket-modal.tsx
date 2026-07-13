@@ -5,13 +5,7 @@ import { wireframeData } from "../../../shared/mock/wireframe-data";
 import { useCreateTicketMutation } from "../api/use-create-ticket-mutation";
 import type { TicketPriority } from "../../../entities/ticket/model/types";
 
-export function CreateTicketModal({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
+export function CreateTicketModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [equipmentId, setEquipmentId] = useState<number | "">("");
@@ -36,7 +30,7 @@ export function CreateTicketModal({
         priority: priority === "" ? undefined : priority,
       });
       toast.success("Tạo ticket thành công!");
-      
+
       // Reset form and close
       setTitle("");
       setDescription("");
@@ -56,8 +50,10 @@ export function CreateTicketModal({
     <div className="modal-overlay">
       <div className="modal-content">
         <h2>Tạo Ticket Mới</h2>
-        <p className="section-lead">Điền thông tin để báo cáo sự cố hoặc yêu cầu bảo trì thiết bị.</p>
-        
+        <p className="section-lead">
+          Điền thông tin để báo cáo sự cố hoặc yêu cầu bảo trì thiết bị.
+        </p>
+
         <form onSubmit={handleSubmit} className="stack spaced">
           <label className="field">
             <span>Tiêu đề</span>
@@ -93,12 +89,12 @@ export function CreateTicketModal({
             >
               <option value="">-- Chọn thiết bị --</option>
               {wireframeData.equipment
-                .filter(eq => eq.status !== "Retired")
+                .filter((eq) => eq.status !== "Retired")
                 .map((eq) => (
-                <option key={eq.id} value={eq.id}>
-                  {eq.code} - {eq.name} ({eq.departmentName})
-                </option>
-              ))}
+                  <option key={eq.id} value={eq.id}>
+                    {eq.code} - {eq.name} ({eq.departmentName})
+                  </option>
+                ))}
             </select>
           </label>
 
