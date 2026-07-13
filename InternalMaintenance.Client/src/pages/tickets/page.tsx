@@ -325,8 +325,7 @@ export function TicketsPage() {
                           <div key={item.id} className="timeline-item compact">
                             <strong>{item.status}</strong>
                             <span>
-                              {item.note} · {item.changedBy} ·{" "}
-                              {formatDateTime(item.changedAt)}
+                              {item.note} · {item.changedBy} · {formatDateTime(item.changedAt)}
                             </span>
                           </div>
                         ))}
