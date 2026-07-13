@@ -1,13 +1,14 @@
 using InternalMaintenance.Api.Common;
 using InternalMaintenance.Api.Constants;
+using InternalMaintenance.Api.Models;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.DTOs.Common;
 using InternalMaintenance.Api.DTOs.Equipment;
-using InternalMaintenance.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-namespace InternalMaintenance.Api.Controllers;
+
+namespace InternalMaintenance.Api.Modules.Equipments;
 
 [ApiController]
 [Route("api/equipment")]
@@ -419,4 +420,3 @@ public class EquipmentController : ControllerBase
         return NoContent();
     }
 }
-

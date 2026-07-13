@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+namespace InternalMaintenance.Api.Modules.Users;
+
 [ApiController]
 [Route("api/users")]
 public class UsersController : ControllerBase

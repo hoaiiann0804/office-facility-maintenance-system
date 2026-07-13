@@ -140,7 +140,12 @@ This workflow keeps ownership clear at each stage and makes the maintenance proc
 ```text
 InternalMaintenanceManagement.slnx
 |-- InternalMaintenance.Api/      # ASP.NET Core Web API
-|   |-- Controllers/              # Auth, Department, Equipment, Ticket, and User APIs
+|   |-- Modules/                  # Feature modules
+|   |   |-- Auth/
+|   |   |-- Departments/
+|   |   |-- Equipment/
+|   |   |-- Tickets/              # Access policy, workflow rules, controller
+|   |   `-- Users/
 |   |-- Common/                   # Shared query/pagination helpers
 |   |-- Constants/                # Shared status and role constants
 |   |-- Data/                     # DbContext and seed data
@@ -171,7 +176,7 @@ The backend is intentionally kept as a modular monolith style API instead of a f
 ```text
 InternalMaintenanceManagement.slnx
 |-- InternalMaintenance.Api/
-|   |-- Controllers/
+|   |-- Modules/
 |   |-- Common/
 |   |-- Constants/
 |   |-- Data/
