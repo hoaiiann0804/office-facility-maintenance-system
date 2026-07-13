@@ -670,6 +670,35 @@ a {
   margin-top: 18px;
 }
 
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.72);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+/* Modal Content Box */
+.modal-content {
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
 @media (max-width: 1240px) {
   .auth-screen,
   .layout,

@@ -17,17 +17,17 @@ public static class TicketWorkflowRules
         return allowedPriorities.Contains(priority);
     }
 
+    public static readonly string[] OpenStatuses = new[]
+    {
+        TicketStatuses.Pending,
+        TicketStatuses.Assigned,
+        TicketStatuses.InProgress,
+        TicketStatuses.Resolved
+    };
+
     public static bool IsOpenTicketStatus(string status)
     {
-        var openStatuses = new[]
-        {
-            TicketStatuses.Pending,
-            TicketStatuses.Assigned,
-            TicketStatuses.InProgress,
-            TicketStatuses.Resolved
-        };
-
-        return openStatuses.Contains(status);
+        return OpenStatuses.Contains(status);
     }
 
     public static bool IsAssignableStatus(string status)

@@ -243,7 +243,7 @@ public class MaintenanceTicketsController : ControllerBase
 
         var hasOpenTicket = await _context.MaintenanceTickets
         .AnyAsync(ticket => ticket.EquipmentId == request.EquipmentId
-        && TicketWorkflowRules.IsOpenTicketStatus(ticket.Status));
+        && TicketWorkflowRules.OpenStatuses.Contains(ticket.Status));
 
         if (hasOpenTicket)
         {

@@ -14,6 +14,7 @@ import type {
 import { useTicketDetailQuery } from "../../features/tickets/api/use-ticket-detail-query";
 import { useCreateTicketCommentMutation } from "../../features/tickets/api/use-create-ticket-comment-mutation";
 import { useTicketsQuery } from "../../features/tickets/api/use-tickets-query";
+import { CreateTicketModal } from "../../features/tickets/components/create-ticket-modal";
 
 const formatDateTime = (value: string | null | undefined) => {
   if (!value) return "N/A";
@@ -31,6 +32,7 @@ export function TicketsPage() {
   const [assignmentNote, setAssignmentNote] = useState("");
   const [resolutionNote, setResolutionNote] = useState("");
   const [commentDraft, setCommentDraft] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const {
     data: ticketsPage,
@@ -125,8 +127,25 @@ export function TicketsPage() {
         <main className="main-panel">
           <div className="view-grid tickets-grid">
             <Panel>
-              <span className="eyebrow">Tickets</span>
-              <h2>Ticket queue</h2>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                }}
+              >
+                <div>
+                  <span className="eyebrow">Tickets</span>
+                  <h2>Ticket queue</h2>
+                </div>
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  + Create Ticket
+                </button>
+              </div>
               <p className="section-lead">
                 Chỗ này đã tách thành page riêng để sau này gắn react-query, filter, table,
                 pagination dễ hơn.
@@ -434,6 +453,8 @@ export function TicketsPage() {
         selectedTicketId={activeTicketId}
         onSelectTicket={setSelectedTicketId}
       />
+
+      <CreateTicketModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </div>
   );
 }
