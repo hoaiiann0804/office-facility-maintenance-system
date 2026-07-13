@@ -2,13 +2,14 @@ using InternalMaintenance.Api.Common;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Models;
 using InternalMaintenance.Api.Data;
-using InternalMaintenance.Api.DTOs.Common;
-using InternalMaintenance.Api.DTOs.Equipment;
+using InternalMaintenance.Api.Common.Pagination;
+using InternalMaintenance.Api.Modules.Equipment.Contracts;
+using EquipmentEntity = InternalMaintenance.Api.Models.Equipment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace InternalMaintenance.Api.Modules.Equipments;
+namespace InternalMaintenance.Api.Modules.Equipment;
 
 [ApiController]
 [Route("api/equipment")]
@@ -186,7 +187,7 @@ public class EquipmentController : ControllerBase
             );
         }
 
-        var equipment = new Equipment
+        var equipment = new EquipmentEntity
         {
             Code = code,
             Name = name,
@@ -384,7 +385,7 @@ public class EquipmentController : ControllerBase
 
     [Authorize(Roles = UserRoles.Admin)]
     [HttpDelete("{id:int}")]
-    public async Task<ActionResult<Equipment>> DeleteEquipment(int id)
+    public async Task<ActionResult<EquipmentEntity>> DeleteEquipment(int id)
     {
 
         var equipment = await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id);

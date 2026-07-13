@@ -1,9 +1,8 @@
 using InternalMaintenance.Api.Common;
-using InternalMaintenance.Api.DTOs.Common;
+using InternalMaintenance.Api.Common.Pagination;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
-using InternalMaintenance.Api.DTOs.MaintenanceTicket;
-using InternalMaintenance.Api.DTOs.TicketComment;
+using InternalMaintenance.Api.Modules.Tickets.Contracts;
 using InternalMaintenance.Api.Models;
 using InternalMaintenance.Api.Services;
 using Microsoft.AspNetCore.Authorization;

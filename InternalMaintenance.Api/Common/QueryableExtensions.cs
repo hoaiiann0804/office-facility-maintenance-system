@@ -1,4 +1,4 @@
-    using InternalMaintenance.Api.DTOs.Common;
+using InternalMaintenance.Api.Common.Pagination;
 
 namespace InternalMaintenance.Api.Common;
 

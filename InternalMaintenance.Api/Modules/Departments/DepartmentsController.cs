@@ -2,9 +2,9 @@
 using InternalMaintenance.Api.Common;
 using InternalMaintenance.Api.Constants;
 using InternalMaintenance.Api.Data;
-using InternalMaintenance.Api.DTOs.Common;
-using InternalMaintenance.Api.DTOs.Departments;
+using InternalMaintenance.Api.Common.Pagination;
 using InternalMaintenance.Api.Models;
+using InternalMaintenance.Api.Modules.Departments.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
