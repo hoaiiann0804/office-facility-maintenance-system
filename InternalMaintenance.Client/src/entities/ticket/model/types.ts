@@ -39,9 +39,17 @@ export interface TicketComment {
 
 export interface TicketHistoryItem {
   id: number;
+  status: TicketStatus;
+  note: string;
+  changedBy: string;
+  changedAt: string;
+}
+
+export interface TicketStatusHistoryResponse {
+  id: number;
   maintenanceTicketId: number;
-  oldStatus: string;
-  newStatus: string;
+  oldStatus: TicketStatus;
+  newStatus: TicketStatus;
   changedByUserId: number;
   changedByUserName: string;
   changedAt: string;

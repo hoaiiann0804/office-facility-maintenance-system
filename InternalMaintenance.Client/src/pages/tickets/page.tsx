@@ -323,9 +323,9 @@ export function TicketsPage() {
                       <div className="stack">
                         {selectedTicket.history.map((item: TicketHistoryItem) => (
                           <div key={item.id} className="timeline-item compact">
-                            <strong>{item.newStatus}</strong>
+                            <strong>{item.status}</strong>
                             <span>
-                              {item.note} · {item.changedByUserName} ·{" "}
+                              {item.note} · {item.changedBy} ·{" "}
                               {formatDateTime(item.changedAt)}
                             </span>
                           </div>
