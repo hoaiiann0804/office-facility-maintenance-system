@@ -10,6 +10,7 @@ import type {
   TicketHistoryItem,
   TicketQuery,
   UpdateTicketRequest,
+  TicketStatusHistoryResponse,
 } from "../../entities/ticket/model/types";
 
 export async function getTickets(query: TicketQuery = {}) {
@@ -73,7 +74,13 @@ export async function getTicketComments(id: number) {
   return data;
 }
 
-export async function getTicketHistory(id: number) {
-  const { data } = await http.get<TicketHistoryItem[]>(`/tickets/${id}/history`);
-  return data;
+export async function getTicketHistory(id: number): Promise<TicketHistoryItem[]> {
+  const { data } = await http.get<TicketStatusHistoryResponse[]>(`/tickets/${id}/history`);
+  return data.map((item) => ({
+    id: item.id,
+    status: item.newStatus,
+    note: item.note ?? "",
+    changedBy: item.changedByUserName,
+    changedAt: item.changedAt,
+  }));
 }

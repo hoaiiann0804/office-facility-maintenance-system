@@ -1,21 +1,20 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
 import { wireframeData } from "../../shared/mock/wireframe-data";
 import { Badge, EmptyState, Panel, Spinner } from "../../shared/ui";
 import { TicketBoard } from "../../features/tickets/components/ticket-board";
 import { appRoutes } from "../../shared/config/routes";
 import type {
-  TicketHistoryItem,
   TicketComment,
+  TicketHistoryItem,
   TicketPriority,
   TicketStatus,
 } from "../../entities/ticket/model/types";
 import { useTicketDetailQuery } from "../../features/tickets/api/use-ticket-detail-query";
-import { useCreateTicketCommentMutation } from "../../features/tickets/api/use-create-ticket-comment-mutation";
 import { useTicketsQuery } from "../../features/tickets/api/use-tickets-query";
 import { CreateTicketModal } from "../../features/tickets/components/create-ticket-modal";
 import { EditTicketModal } from "../../features/tickets/components/edit-ticket-modal";
+import { TicketActionPanel } from "../../features/tickets/components/ticket-action-panel";
 
 const formatDateTime = (value: string | null | undefined) => {
   if (!value) return "N/A";
@@ -29,10 +28,6 @@ export function TicketsPage() {
   const [ticketStatus, setTicketStatus] = useState<"All" | TicketStatus>("All");
   const [ticketPriority, setTicketPriority] = useState<"All" | TicketPriority>("All");
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const [assignTechnicianId, setAssignTechnicianId] = useState<string>("");
-  const [assignmentNote, setAssignmentNote] = useState("");
-  const [resolutionNote, setResolutionNote] = useState("");
-  const [commentDraft, setCommentDraft] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -81,28 +76,6 @@ export function TicketsPage() {
     isLoading: isSelectedTicketLoading,
     isError: isSelectedTicketError,
   } = useTicketDetailQuery(activeTicketId);
-  const createCommentMutation = useCreateTicketCommentMutation(activeTicketId);
-
-  const handleAddComment = async () => {
-    if (!activeTicketId) {
-      toast.error("Chưa có ticket nào được chọn.");
-      return;
-    }
-
-    const content = commentDraft.trim();
-    if (!content) {
-      toast.error("Nội dung comment không được để trống.");
-      return;
-    }
-
-    try {
-      await createCommentMutation.mutateAsync({ content });
-      setCommentDraft("");
-      toast.success("Comment đã được thêm.");
-    } catch {
-      toast.error("Không thể thêm comment.");
-    }
-  };
 
   return (
     <div className="dashboard">
@@ -342,77 +315,7 @@ export function TicketsPage() {
                     </div>
                   </div>
 
-                  <div className="control-card">
-                    <label className="field">
-                      <span>Assign technician</span>
-                      <select
-                        className="select"
-                        value={assignTechnicianId}
-                        onChange={(event) => setAssignTechnicianId(event.target.value)}
-                      >
-                        <option value="">Select technician</option>
-                        {wireframeData.users
-                          .filter((user) => user.roleName === "Technician" && user.isActive)
-                          .map((tech) => (
-                            <option key={tech.id} value={tech.id}>
-                              {tech.fullName}
-                            </option>
-                          ))}
-                      </select>
-                    </label>
-                    <label className="field">
-                      <span>Assignment note</span>
-                      <textarea
-                        className="textarea"
-                        value={assignmentNote}
-                        onChange={(event) => setAssignmentNote(event.target.value)}
-                      />
-                    </label>
-                    <div className="button-row">
-                      <button type="button" className="button primary">
-                        Assign
-                      </button>
-                      <button type="button" className="button secondary">
-                        Mark In Progress
-                      </button>
-                      <button type="button" className="button secondary">
-                        Resolve
-                      </button>
-                      <button type="button" className="button secondary">
-                        Close
-                      </button>
-                      <button type="button" className="button danger">
-                        Cancel
-                      </button>
-                    </div>
-                    <label className="field">
-                      <span>Resolution note</span>
-                      <textarea
-                        className="textarea"
-                        value={resolutionNote}
-                        onChange={(event) => setResolutionNote(event.target.value)}
-                      />
-                    </label>
-                  </div>
-
-                  <div className="control-card">
-                    <label className="field">
-                      <span>Add comment</span>
-                      <textarea
-                        className="textarea"
-                        value={commentDraft}
-                        onChange={(event) => setCommentDraft(event.target.value)}
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      className="button primary"
-                      onClick={handleAddComment}
-                      disabled={createCommentMutation.isPending}
-                    >
-                      {createCommentMutation.isPending ? "Đang thêm..." : "Add comment"}
-                    </button>
-                  </div>
+                  <TicketActionPanel ticket={selectedTicket} />
 
                   <div className="mini-grid">
                     <div className="mini-card">

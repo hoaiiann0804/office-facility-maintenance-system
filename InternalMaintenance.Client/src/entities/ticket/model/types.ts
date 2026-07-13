@@ -45,6 +45,17 @@ export interface TicketHistoryItem {
   changedAt: string;
 }
 
+export interface TicketStatusHistoryResponse {
+  id: number;
+  maintenanceTicketId: number;
+  oldStatus: TicketStatus;
+  newStatus: TicketStatus;
+  changedByUserId: number;
+  changedByUserName: string;
+  changedAt: string;
+  note: string | null;
+}
+
 export interface TicketQuery {
   status?: TicketStatus;
   priority?: TicketPriority;
