@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 import { useUpdateTicketMutation } from "../api/use-update-ticket-mutation";
@@ -13,20 +13,11 @@ type Props = {
 };
 
 export function EditTicketModal({ ticket, isOpen, onClose }: Props) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState<TicketPriority>("Medium");
+  const [title, setTitle] = useState(ticket?.title ?? "");
+  const [description, setDescription] = useState(ticket?.description ?? "");
+  const [priority, setPriority] = useState<TicketPriority>(ticket?.priority ?? "Medium");
 
   const updateTicketMutation = useUpdateTicketMutation(ticket?.id ?? null);
-
-  // Điền sẵn dữ liệu hiện tại của ticket khi modal mở
-  useEffect(() => {
-    if (ticket && isOpen) {
-      setTitle(ticket.title);
-      setDescription(ticket.description);
-      setPriority(ticket.priority);
-    }
-  }, [ticket, isOpen]);
 
   if (!isOpen || !ticket) return null;
 

@@ -477,11 +477,14 @@ export function TicketsPage() {
       />
 
       <CreateTicketModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
-      <EditTicketModal
-        ticket={selectedTicket ?? null}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-      />
+      {isEditModalOpen && selectedTicket && (
+        <EditTicketModal
+          key={selectedTicket.id}
+          ticket={selectedTicket}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
