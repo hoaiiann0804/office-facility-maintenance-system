@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { wireframeData } from "../../shared/mock/wireframe-data";
-import { Badge, EmptyState, Panel, Spinner } from "../../shared/ui";
+import { Badge, EmptyState, Panel, Spinner, ThemeToggle } from "../../shared/ui";
 import { TicketBoard } from "../../features/tickets/components/ticket-board";
 import { appRoutes } from "../../shared/config/routes";
+import { useAuthStore } from "../../features/auth/model/auth-store";
+import { logout } from "../../shared/api/auth";
 import type {
   TicketComment,
   TicketHistoryItem,
@@ -24,6 +26,23 @@ const formatDateTime = (value: string | null | undefined) => {
 };
 
 export function TicketsPage() {
+  const session = useAuthStore((state) => state.session);
+  const signOut = useAuthStore((state) => state.signOut);
+  const navigate = useNavigate();
+
+  const handleLogout = async (): Promise<void> => {
+    const refreshToken = session?.refreshToken;
+
+    try {
+      if (refreshToken) {
+        await logout(refreshToken);
+      }
+    } finally {
+      signOut();
+      navigate(appRoutes.login);
+    }
+  };
+
   const [search, setSearch] = useState("");
   const [ticketStatus, setTicketStatus] = useState<"All" | TicketStatus>("All");
   const [ticketPriority, setTicketPriority] = useState<"All" | TicketPriority>("All");
@@ -96,6 +115,18 @@ export function TicketsPage() {
             Tickets
           </Link>
         </nav>
+
+        <div className="badge-row">
+          <ThemeToggle />
+          <Badge tone="default">{session?.user.fullName ?? "Guest"}</Badge>
+          <Badge tone={session?.user.roleName === "Admin" ? "primary" : "default"}>
+            {session?.user.roleName ?? "Guest"}
+          </Badge>
+
+          <button type="button" className="button secondary" onClick={handleLogout}>
+            Đăng xuất
+          </button>
+        </div>
       </header>
 
       <div className="layout">

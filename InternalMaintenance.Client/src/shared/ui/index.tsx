@@ -1,5 +1,6 @@
 import type { PropsWithChildren, ReactNode } from "react";
 export { Banner } from "./banner";
+export { ThemeToggle } from "./theme-toggle";
 
 type PanelProps = PropsWithChildren<{
   className?: string;

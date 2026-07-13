@@ -103,7 +103,7 @@ export function TicketBoard({ tickets, selectedTicketId, onSelectTicket }: Ticke
                 style={{
                   background:
                     row.original.id === selectedTicketId
-                      ? "rgba(125, 211, 252, 0.08)"
+                      ? "var(--selected-bg)"
                       : "transparent",
                 }}
                 onClick={() => onSelectTicket(row.original.id)}
