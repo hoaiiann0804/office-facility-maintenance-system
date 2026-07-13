@@ -15,6 +15,7 @@ import { useTicketDetailQuery } from "../../features/tickets/api/use-ticket-deta
 import { useCreateTicketCommentMutation } from "../../features/tickets/api/use-create-ticket-comment-mutation";
 import { useTicketsQuery } from "../../features/tickets/api/use-tickets-query";
 import { CreateTicketModal } from "../../features/tickets/components/create-ticket-modal";
+import { EditTicketModal } from "../../features/tickets/components/edit-ticket-modal";
 
 const formatDateTime = (value: string | null | undefined) => {
   if (!value) return "N/A";
@@ -33,6 +34,7 @@ export function TicketsPage() {
   const [resolutionNote, setResolutionNote] = useState("");
   const [commentDraft, setCommentDraft] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const {
     data: ticketsPage,
@@ -272,9 +274,29 @@ export function TicketsPage() {
                 />
               ) : selectedTicket ? (
                 <>
-                  <span className="eyebrow">Detail</span>
-                  <h2>{selectedTicket.ticketCode}</h2>
-                  <p className="section-lead">{selectedTicket.title}</p>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <div>
+                      <span className="eyebrow">Detail</span>
+                      <h2>{selectedTicket.ticketCode}</h2>
+                      <p className="section-lead">{selectedTicket.title}</p>
+                    </div>
+                    {(selectedTicket.status === "Pending" ||
+                      selectedTicket.status === "Assigned") && (
+                      <button
+                        type="button"
+                        className="button secondary"
+                        onClick={() => setIsEditModalOpen(true)}
+                      >
+                        Chỉnh sửa
+                      </button>
+                    )}
+                  </div>
                   <div className="badge-row">
                     <Badge
                       tone={
@@ -455,6 +477,11 @@ export function TicketsPage() {
       />
 
       <CreateTicketModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      <EditTicketModal
+        ticket={selectedTicket ?? null}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+      />
     </div>
   );
 }

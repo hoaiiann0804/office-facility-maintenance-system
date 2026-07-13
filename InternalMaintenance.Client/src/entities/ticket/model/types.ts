@@ -76,6 +76,12 @@ export interface CreateTicketCommentRequest {
   content: string;
 }
 
+export interface UpdateTicketRequest {
+  title: string;
+  description: string;
+  priority: string;
+}
+
 export interface TicketQuickSummary {
   status: TicketStatus;
   priority: TicketPriority;
