@@ -174,7 +174,7 @@ export function DepartmentsPage() {
                 />
               ) : departments.length > 0 ? (
                 <>
-                  <table className="data-table">
+                  <table className="table">
                     <thead>
                       <tr>
                         <th>ID</th>
@@ -220,7 +220,7 @@ export function DepartmentsPage() {
                     </tbody>
                   </table>
 
-                  <div className="pagination-row">
+                  <div className="pagination-row" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginTop: "20px" }}>
                     <button
                       type="button"
                       className="button secondary"
