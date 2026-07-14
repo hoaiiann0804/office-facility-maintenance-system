@@ -6,7 +6,7 @@ import {
   useUpdateEquipmentMutation,
 } from "../api/use-equipment-mutations";
 import { useDepartmentsQuery } from "../api/use-departments-query";
-import type { Equipment } from "../../../entities/equipment/model/types";
+import type { Equipment, EquipmentStatus } from "../../../entities/equipment/model/types";
 
 type Props = {
   equipment: Equipment | null; // null if creating
@@ -19,7 +19,7 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
   const [code, setCode] = useState(equipment?.code ?? "");
   const [name, setName] = useState(equipment?.name ?? "");
   const [departmentId, setDepartmentId] = useState<number | "">(equipment?.departmentId ?? "");
-  const [status, setStatus] = useState(equipment?.status ?? "Active");
+  const [status, setStatus] = useState<EquipmentStatus>(equipment?.status ?? "Active");
   const [purchasedDate, setPurchasedDate] = useState(
     equipment?.purchasedDate ? equipment.purchasedDate.split("T")[0] : "",
   );
@@ -128,7 +128,7 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
             <select
               className="select"
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => setStatus(e.target.value as EquipmentStatus)}
               disabled={isPending}
             >
               <option value="Active">Hoạt động (Active)</option>
