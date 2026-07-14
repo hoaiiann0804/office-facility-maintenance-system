@@ -1,162 +1,166 @@
 # Office Facility Maintenance Management System
 
-> A web-based internal platform for ABC Technology to manage office equipment maintenance across 300 employees, 8 departments, and 400+ office assets. It replaces fragmented reporting channels with one auditable workflow from request creation to closure.
+> A web-based internal platform for managing office equipment maintenance across departments, technicians, and staff. It centralizes requests, assignment, status tracking, comments, and history into one auditable workflow.
 
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)]()
 [![React 19](https://img.shields.io/badge/React-19-61DAFB)]()
 [![SQL Server 2022](https://img.shields.io/badge/SQL%20Server-2022-D83B01)]()
 [![Status](https://img.shields.io/badge/status-active-success)]()
 
-## Hero Description
+## About
 
-Office Facility Maintenance Management System is designed for a modern office environment, not a factory, hospital, or residential building. It centralizes maintenance requests for office equipment such as printers, projectors, air conditioners, CCTV, meeting room TVs, attendance machines, and network devices into a single operational system.
+Office Facility Maintenance Management System is an internal maintenance platform built for an office environment. It is designed for office assets such as printers, routers, air conditioners, meeting-room devices, and other shared equipment that need structured maintenance handling.
 
-The goal is simple: give staff a clear way to report issues, help managers assign work efficiently, and give technicians a structured process for resolving tickets with full traceability.
+The system helps:
 
-## Overview
+- staff report issues in one place
+- managers assign work with better visibility
+- technicians update progress in a controlled workflow
+- administrators maintain users, departments, and equipment
+- the organization keep a clear history of every ticket
 
-ABC Technology previously handled maintenance requests through phone calls, email, Microsoft Teams, and Zalo. Those channels were convenient, but they created operational blind spots:
+## Business Context
 
-- requests were easy to miss
-- the same issue could be reported multiple times
-- maintenance history was scattered
-- workload tracking was difficult
-- managers had limited visibility into day-to-day operations
+Before this system, maintenance requests were typically handled through scattered channels such as phone calls, email, chat tools, or direct messages. That approach makes it easy to miss requests, duplicate work, and lose operational history.
 
-This system replaces that fragmented process with a centralized ticketing workflow. Every request is captured in one place, every status change is recorded, and every asset is linked to its department and maintenance history.
+This project replaces that fragmented process with a centralized workflow so the team can:
 
-## Business Problem
+- capture every request consistently
+- track who created, assigned, and resolved each ticket
+- connect each maintenance request to a department and an equipment item
+- review ticket history and comments later for audit and reporting
 
-In a growing office environment, maintenance work becomes hard to control when reporting is informal and spread across multiple communication channels.
+## Current Scope
 
-At ABC Technology, staff used:
+The repository currently contains:
 
-- Phone Call
-- Email
-- Microsoft Teams
-- Zalo
+- an ASP.NET Core Web API backend
+- a React + Vite frontend
+- JWT authentication with refresh tokens
+- role-based access control
+- department, equipment, user, and maintenance ticket modules
+- seeded demo data for local development
 
-This caused several business problems:
+The frontend currently includes:
 
-- Lost maintenance requests
-- Duplicate repairs
-- No maintenance history
-- Difficult workload tracking
-- Poor operational visibility
+- `Login`
+- `Dashboard`
+- `Tickets`
 
-Without a structured system, the facility team and IT support team cannot easily answer basic questions such as which asset is under maintenance, who is responsible for it, or how long a request has been pending.
+The UI is prepared to grow into a fuller operational console, with API hooks already organized for auth, tickets, equipment, users, and related flows.
 
-## Solution
-
-This platform solves the problem by turning maintenance into a controlled, role-based workflow.
-
-- Staff create tickets from a single system instead of sending ad hoc messages.
-- Managers assign the right technician based on department and workload.
-- Technicians update ticket progress in a controlled status flow.
-- Every change is tracked so the full maintenance history is preserved.
-- Equipment, departments, users, and tickets are connected, which improves visibility and accountability.
-
-The result is a more predictable maintenance process, better reporting, and a cleaner audit trail for internal operations.
-
-## Demo
-
-This repository does not include a public live deployment yet.
-
-- Backend Swagger UI is available in development mode at `http://localhost:5253/swagger`
-- The frontend is included as a React + Vite scaffold and can be extended into the main UI
-- Add screenshots or a short GIF in `docs/` when the interface is ready for presentation
-
-## Core Features
+## Key Features
 
 ### Authentication
 
-- JWT-based login
-- Current user profile lookup
-- Password change flow
-- Refresh-token rotation
-- Logout via refresh-token revocation
+- JWT login
+- current user profile lookup
+- password change
+- refresh token rotation
+- logout via refresh-token revocation
 
 ### User Management
 
-- Admin-only user directory
-- Role-aware user access
-- Department-aware user assignment
-- Active status and password reset support
+- admin-only user directory
+- role-aware access
+- department assignment
+- active/inactive status control
+- reset password support
 
 ### Department Management
 
-- Department CRUD
-- Uniqueness protection for department names
-- Dependency checks before deletion
+- create, update, read, delete departments
+- unique department name protection
+- dependency checks before deletion
 
 ### Equipment Management
 
-- Office asset CRUD
-- Department ownership for each asset
-- Immutable equipment code
-- Support for equipment categories such as printers, projectors, air conditioners, CCTV, meeting room TVs, attendance machines, and network devices
+- create, update, read, delete equipment
+- equipment assigned to a department
+- immutable equipment code after creation
+- support for office asset tracking
 
-### Maintenance Workflow
+### Maintenance Tickets
 
-- Ticket creation and update flow
-- Manager assignment step
-- Technician execution step
-- Ticket comments
-- Ticket history tracking
-- Controlled status transitions
-
-### Administration
-
-- Role-based access control
-- Seeded master data for local development
-- Operational data structure suitable for reporting and oversight
+- create maintenance requests
+- view ticket queue and detail
+- assign technicians
+- change ticket status through workflow rules
+- add comments
+- track status history
+- store resolution notes and timestamps
 
 ## Business Workflow
 
 ```mermaid
 flowchart TB
-    A[Staff] --> B[Create Maintenance Ticket]
+    A[Staff] --> B[Create Ticket]
     B --> C[Pending]
     C --> D[Manager Assign]
     D --> E[Assigned]
-    E --> F[Technician]
+    E --> F[Technician Works]
     F --> G[In Progress]
     G --> H[Resolved]
     H --> I[Staff Confirm]
     I --> J[Closed]
 ```
 
-This workflow keeps ownership clear at each stage and makes the maintenance process easy to audit.
+## Access Model
+
+The backend uses role-based access control:
+
+- `Admin`
+- `Manager`
+- `Staff`
+- `Technician`
+
+Ticket visibility is filtered by role:
+
+- `Admin` can access all tickets
+- `Manager` can access tickets in their department
+- `Staff` can access tickets they created
+- `Technician` can access tickets assigned to them
 
 ## Tech Stack
 
-**Frontend:** React 19, TypeScript, Vite  
+**Frontend:** React 19, TypeScript, Vite, TanStack Query, React Router, Zustand, React Hook Form, Zod  
 **Backend:** ASP.NET Core 10, Entity Framework Core, JWT Authentication, BCrypt.Net-Next, Swagger/OpenAPI  
 **Database:** Microsoft SQL Server 2022  
-**DevOps & Tooling:** Docker Compose, pnpm, ESLint
+**Tooling:** Docker Compose, pnpm, ESLint, Vitest
 
-## System Architecture
+## Repository Structure
 
 ```text
 InternalMaintenanceManagement.slnx
-|-- InternalMaintenance.Api/      # ASP.NET Core Web API
-|   |-- Modules/                  # Feature modules
+|-- InternalMaintenance.Api/           # ASP.NET Core Web API
+|   |-- Common/                         # Query and pagination helpers
+|   |-- Constants/                      # Shared role, status, and priority constants
+|   |-- Data/                           # DbContext and seed data
+|   |-- Extensions/                     # Startup and pipeline wiring
+|   |-- Migrations/                     # EF Core migrations
+|   |-- Models/                         # Domain entities
+|   |-- Modules/                        # Feature modules
 |   |   |-- Auth/
 |   |   |-- Departments/
 |   |   |-- Equipment/
-|   |   |-- Tickets/              # Access policy, workflow rules, controller
+|   |   |-- Tickets/
 |   |   `-- Users/
-|   |-- Common/                   # Shared query/pagination helpers
-|   |-- Constants/                # Shared status and role constants
-|   |-- Data/                     # DbContext and seed data
-|   |-- DTOs/                     # Request and response models
-|   |-- Extensions/               # Startup and pipeline wiring
-|   |-- Migrations/               # EF Core migrations
-|   |-- Models/                   # Domain entities
-|   `-- Services/                 # JWT and current user helpers
-|-- InternalMaintenance.Client/   # React + Vite frontend scaffold
-`-- docker-compose.yml            # SQL Server development container
+|   `-- Services/                       # JWT, current user, ticket code generation
+|-- InternalMaintenance.Client/         # React + Vite frontend
+|   |-- src/
+|   |   |-- app/
+|   |   |-- features/
+|   |   |-- entities/
+|   |   |-- pages/
+|   |   |-- shared/
+|   |   `-- main.tsx
+|   `-- public/
+|-- docker-compose.yml                  # SQL Server development container
+|-- .env.example
+`-- README.md
 ```
+
+## System Architecture
 
 ```mermaid
 flowchart LR
@@ -167,34 +171,9 @@ flowchart LR
     B --> F[Seeded Roles, Users, Departments, Equipment]
 ```
 
-The API applies database initialization and seed data on startup, which makes local development predictable and repeatable.
-
-The backend is intentionally kept as a modular monolith style API instead of a full Clean Architecture split. That keeps the feature boundaries clear while avoiding extra project ceremony before the domain grows further.
-
-## Project Structure
-
-```text
-InternalMaintenanceManagement.slnx
-|-- InternalMaintenance.Api/
-|   |-- Modules/
-|   |-- Common/
-|   |-- Constants/
-|   |-- Data/
-|   |-- DTOs/
-|   |-- Extensions/
-|   |-- Migrations/
-|   |-- Models/
-|   `-- Services/
-|-- InternalMaintenance.Client/
-|   |-- src/
-|   |-- public/
-|   `-- vite.config.ts
-`-- docker-compose.yml
-```
+The backend is organized as a modular monolith, which keeps feature boundaries clear without splitting the system into many separate services too early.
 
 ## API Modules
-
-### API Endpoint List
 
 ### Authentication
 
@@ -211,9 +190,9 @@ InternalMaintenanceManagement.slnx
 - `POST /api/users`
 - `PUT /api/users/{id}`
 - `PATCH /api/users/{id}/status`
-- `POST /api/users/{id}/reset-password`
+- `PATCH /api/users/{id}/reset-password`
 
-`GET /api/users` supports these query parameters:
+Supported query parameters for `GET /api/users`:
 
 - `keyword`
 - `role`
@@ -221,10 +200,6 @@ InternalMaintenanceManagement.slnx
 - `isActive`
 - `page`
 - `pageSize`
-
-`PATCH /api/users/{id}/status` accepts:
-
-- `isActive`
 
 ### Departments
 
@@ -234,7 +209,7 @@ InternalMaintenanceManagement.slnx
 - `PUT /api/departments/{id}`
 - `DELETE /api/departments/{id}`
 
-`GET /api/departments` supports:
+Supported query parameters for `GET /api/departments`:
 
 - `keyword`
 - `page`
@@ -248,7 +223,7 @@ InternalMaintenanceManagement.slnx
 - `PUT /api/equipment/{id}`
 - `DELETE /api/equipment/{id}`
 
-`GET /api/equipment` supports:
+Supported query parameters for `GET /api/equipment`:
 
 - `keyword`
 - `status`
@@ -268,7 +243,7 @@ InternalMaintenanceManagement.slnx
 - `GET /api/tickets/{id}/comments`
 - `GET /api/tickets/{id}/history`
 
-`GET /api/tickets` supports:
+Supported query parameters for `GET /api/tickets`:
 
 - `status`
 - `priority`
@@ -276,7 +251,7 @@ InternalMaintenanceManagement.slnx
 - `page`
 - `pageSize`
 
-Ticket status flow uses these values:
+Ticket statuses:
 
 - `Pending`
 - `Assigned`
@@ -285,118 +260,51 @@ Ticket status flow uses these values:
 - `Closed`
 - `Cancelled`
 
-Priority values:
+Ticket priorities:
 
 - `Low`
 - `Medium`
 - `High`
 - `Critical`
 
-### Example Requests
+## Ticket Workflow Rules
 
-```bash
-curl -X POST http://localhost:5253/api/auth/login ^
-  -H "Content-Type: application/json" ^
-  -d "{\"email\":\"admin@test.com\",\"password\":\"Temp@123456\"}"
-```
+- A ticket can be cancelled from `Pending` or `Assigned`
+- A ticket can move from `Assigned` to `InProgress`
+- A ticket can move from `InProgress` to `Resolved`
+- A ticket can move from `Resolved` to `Closed`
+- A resolution note is required before resolving a ticket
+- Closed tickets should not be modified
+- Every status change is stored in history
 
-```bash
-curl -X POST http://localhost:5253/api/departments ^
-  -H "Content-Type: application/json" ^
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" ^
-  -d "{\"name\":\"Facilities\",\"description\":\"Facilities and building maintenance\"}"
-```
+## Seeded Demo Data
 
-```bash
-curl -X POST http://localhost:5253/api/tickets ^
-  -H "Content-Type: application/json" ^
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" ^
-  -d "{\"title\":\"Printer jam\",\"description\":\"Paper keeps getting stuck\",\"equipmentId\":1,\"createdByUserId\":3,\"priority\":\"Medium\"}"
-```
+The API seeds local data on startup so the project can be explored immediately.
 
-```bash
-curl -X POST http://localhost:5253/api/tickets/1/comments ^
-  -H "Content-Type: application/json" ^
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" ^
-  -d "{\"content\":\"Technician arrived on site and is checking the issue.\"}"
-```
+Seeded roles:
 
-## Getting Started
+- `Admin`
+- `Manager`
+- `Staff`
+- `Technician`
 
-### Installation Guide
+Seeded departments:
 
-#### Prerequisites
+- `IT`
+- `Accounting`
+- `HR`
 
-- .NET 10 SDK
-- Node.js LTS
-- pnpm
-- Docker Desktop
-- Microsoft SQL Server 2022, or the provided Docker Compose setup
+Seeded users:
 
-#### Configuration
+- `admin@test.com`
+- `manager@test.com`
+- `staff@test.com`
+- `technician@test.com`
 
-Create a local `.env` file from the example:
+Seeded equipment includes:
 
-```bash
-Copy-Item .env.example .env
-```
-
-The backend reads its connection string from `ConnectionStrings__DefaultConnection`, so you can keep secrets out of `appsettings.json`.
-
-#### Start the Database
-
-```bash
-docker compose up -d
-```
-
-#### Start the API
-
-```bash
-dotnet restore InternalMaintenance.Api/InternalMaintenance.Api.csproj
-dotnet run --project InternalMaintenance.Api
-```
-
-The API runs at:
-
-- `http://localhost:5253`
-- `https://localhost:7237`
-
-Swagger is available in Development mode at:
-
-- `http://localhost:5253/swagger`
-
-#### Start the Frontend
-
-```bash
-cd InternalMaintenance.Client
-pnpm install
-pnpm dev
-```
-
-The Vite app typically runs on `http://localhost:5173`.
-
-### Docker Commands
-
-```bash
-docker compose up -d
-docker compose down
-```
-
-## Environment Variables
-
-| Variable | Purpose | Example |
-| --- | --- | --- |
-| `ConnectionStrings__DefaultConnection` | SQL Server connection string used by the API | `Server=localhost,1433;Database=InternalMaintenanceDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False` |
-| `Jwt__Key` | Secret key used to sign JWT access tokens | `replace-with-a-long-random-secret` |
-| `Jwt__Issuer` | JWT issuer claim | `InternalMaintenance.Api` |
-| `Jwt__Audience` | JWT audience claim | `InternalMaintenance.Client` |
-| `Jwt__ExpiresInMinutes` | Token lifetime in minutes | `60` |
-| `MSSQL_SA_PASSWORD` | SQL Server SA password for Docker Compose | `YourStrong!Passw0rd` |
-| `SQLSERVER_PORT` | Local port exposed by the SQL Server container | `1433` |
-
-## Demo Accounts
-
-ABC Technology demo data is seeded on startup so the application can be explored immediately in a local environment.
+- `PRN-ACC-001` - Canon Printer - Accounting Room
+- `RTR-IT-001` - Main Office Router
 
 Temporary password for seeded accounts:
 
@@ -404,67 +312,128 @@ Temporary password for seeded accounts:
 Temp@123456
 ```
 
-Seeded demo users:
+Seeded users are marked `MustChangePassword = true` on first login.
 
-- `admin@test.com`
-- `manager@test.com`
-- `technician@test.com`
-- `staff@test.com`
+## Getting Started
 
-All seeded users are marked as `MustChangePassword = true` on first login.
+### Prerequisites
+
+- .NET 10 SDK
+- Node.js LTS
+- pnpm
+- Docker Desktop
+- Microsoft SQL Server 2022, or Docker Compose
+
+### Configuration
+
+Create a local `.env` file from the example:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### Environment Variables
+
+| Variable | Purpose | Example |
+| --- | --- | --- |
+| `ConnectionStrings__DefaultConnection` | SQL Server connection string used by the API | `Server=localhost,1433;Database=InternalMaintenanceDb;User Id=sa;Password=YourStrongPassword;TrustServerCertificate=True;Encrypt=False` |
+| `Jwt__Key` | Secret key used to sign JWT access tokens | `replace-with-a-long-random-secret` |
+| `Jwt__Issuer` | JWT issuer claim | `InternalMaintenance.Api` |
+| `Jwt__Audience` | JWT audience claim | `InternalMaintenance.Client` |
+| `Jwt__ExpiresInMinutes` | Token lifetime in minutes | `60` |
+| `MSSQL_SA_PASSWORD` | SQL Server SA password for Docker Compose | `YourStrongPassword` |
+| `SQLSERVER_PORT` | Local port exposed by the SQL Server container | `1433` |
+
+### Start the Database
+
+```powershell
+docker compose up -d
+```
+
+### Start the API
+
+```powershell
+dotnet restore InternalMaintenance.Api/InternalMaintenance.Api.csproj
+dotnet run --project InternalMaintenance.Api
+```
+
+API URLs:
+
+- `http://localhost:5253`
+- `https://localhost:7237`
+
+Swagger:
+
+- `http://localhost:5253/swagger`
+
+### Start the Frontend
+
+```powershell
+cd InternalMaintenance.Client
+pnpm install
+pnpm dev
+```
+
+Vite dev server:
+
+- `http://localhost:5173`
+
+## Frontend Notes
+
+The client app is built with React + Vite and is structured with feature-oriented folders:
+
+- `app/` for routing, layouts, providers, and guards
+- `features/` for auth and ticket-related UI logic
+- `entities/` for shared domain types
+- `pages/` for route-level screens
+- `shared/` for API clients, UI primitives, config, and helpers
+
+The API proxy in `vite.config.ts` forwards:
+
+- `/api` to `http://localhost:5253`
+- `/swagger` to `http://localhost:5253`
+
+Useful scripts in `InternalMaintenance.Client/package.json`:
+
+- `pnpm dev`
+- `pnpm build`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:run`
+- `pnpm format`
+- `pnpm format:check`
+- `pnpm generate:api`
 
 ## Business Rules
 
-- One equipment item cannot have multiple active maintenance tickets.
-- Closed tickets cannot be modified.
-- Equipment code is immutable after creation.
-- A department cannot be deleted if users or equipment still exist.
-- Every ticket status change is recorded in history.
-- A resolution note is required before resolving a ticket.
+- One equipment item cannot have multiple active maintenance tickets
+- Equipment code is immutable after creation
+- A department cannot be deleted if related users or equipment still exist
+- Every ticket status change is recorded
+- A resolution note is required before a ticket can be resolved
+- Ticket visibility depends on role and department
 
 ## Roadmap
 
-### v1.0
+### Next Improvements
 
-- Authentication
-- RBAC
-- Department
-- Equipment
-- Maintenance Ticket
-- Ticket History
+- QR code for equipment
+- attachment upload for tickets
+- email notification
+- preventive maintenance scheduling
+- SLA dashboard
+- richer analytics
 
-### v1.1
+### Longer-Term Ideas
 
-- QR Code
-- Attachment Upload
-- Email Notification
-
-### v1.2
-
-- Preventive Maintenance
-- Maintenance Schedule
-- SLA Dashboard
-
-### v2.0
-
-- Multi Building
-- Multi Tenant
-- Subscription
-- Analytics
-
-## Future Enhancements
-
-- QR Code per Equipment
-- Preventive Maintenance
-- Email Notification
-- Attachment Upload
-- SLA Monitoring
-- Multi-building Support
-- Multi-tenant SaaS
+- multi-building support
+- multi-tenant support
+- subscription model
+- reporting and forecasting
 
 ## Contributing
 
-Pull requests are welcome. For larger changes, please open an issue first so we can align on scope and direction.
+Pull requests are welcome. For larger changes, please open an issue first so scope and direction can be aligned.
 
 ## License
 
