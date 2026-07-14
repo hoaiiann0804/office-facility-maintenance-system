@@ -6,6 +6,7 @@ import { DashboardPage } from "../pages/dashboard/page";
 import { TicketsPage } from "../pages/tickets/page";
 import { EquipmentPage } from "../pages/equipment/page";
 import { UsersPage } from "../pages/users/page";
+import { DepartmentsPage } from "../pages/departments/page";
 import { AppLayout } from "./layouts/app-layout";
 import { PublicOnlyRoute } from "./guard/public-only-route";
 import type { ReactElement } from "react";
@@ -74,6 +75,16 @@ export function AppRouter() {
             <RequireAuth>
               <RequireAdmin>
                 <UsersPage />
+              </RequireAdmin>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path={appRoutes.departments}
+          element={
+            <RequireAuth>
+              <RequireAdmin>
+                <DepartmentsPage />
               </RequireAdmin>
             </RequireAuth>
           }
