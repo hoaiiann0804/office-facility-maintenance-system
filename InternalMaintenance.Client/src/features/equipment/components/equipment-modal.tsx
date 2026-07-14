@@ -14,6 +14,14 @@ type Props = {
   onClose: () => void;
 };
 
+const getTodayDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
   const isEdit = !!equipment;
   const [code, setCode] = useState(equipment?.code ?? "");
@@ -21,9 +29,27 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
   const [departmentId, setDepartmentId] = useState<number | "">(equipment?.departmentId ?? "");
   const [status, setStatus] = useState<EquipmentStatus>(equipment?.status ?? "Active");
   const [purchasedDate, setPurchasedDate] = useState(
-    equipment?.purchasedDate ? equipment.purchasedDate.split("T")[0] : "",
+    equipment?.purchasedDate ? equipment.purchasedDate.split("T")[0] : getTodayDateString(),
   );
   const [description, setDescription] = useState(equipment?.description ?? "");
+
+  const [prevEquipment, setPrevEquipment] = useState(equipment);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (equipment !== prevEquipment || isOpen !== prevIsOpen) {
+    setPrevEquipment(equipment);
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setCode(equipment?.code ?? "");
+      setName(equipment?.name ?? "");
+      setDepartmentId(equipment?.departmentId ?? "");
+      setStatus(equipment?.status ?? "Active");
+      setPurchasedDate(
+        equipment?.purchasedDate ? equipment.purchasedDate.split("T")[0] : getTodayDateString(),
+      );
+      setDescription(equipment?.description ?? "");
+    }
+  }
 
   const { data: deptsPage, isLoading: isDeptsLoading } = useDepartmentsQuery({ pageSize: 100 });
   const createMutation = useCreateEquipmentMutation();
