@@ -3,4 +3,5 @@ export const appRoutes = {
   dashboard: "/dashboard",
   tickets: "/tickets",
   equipment: "/equipment",
+  users: "/users",
 };
