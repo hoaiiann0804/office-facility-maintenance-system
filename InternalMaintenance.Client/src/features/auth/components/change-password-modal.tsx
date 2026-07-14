@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 import { useChangePasswordMutation } from "../api/use-change-password-mutation";
@@ -12,16 +12,18 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-  const changePasswordMutation = useChangePasswordMutation();
-
-  useEffect(() => {
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     }
-  }, [isOpen]);
+  }
+
+  const changePasswordMutation = useChangePasswordMutation();
 
   if (!isOpen) return null;
 
