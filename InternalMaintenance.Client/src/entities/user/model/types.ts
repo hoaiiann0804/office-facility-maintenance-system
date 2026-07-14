@@ -23,3 +23,21 @@ export interface UserQuery {
   page?: number;
   pageSize?: number;
 }
+
+export interface CreateUserRequest {
+  fullName: string;
+  email: string;
+  temporaryPassword?: string;
+  roleId: number;
+  departmentId: number | null;
+}
+
+export interface UpdateUserRequest {
+  fullName: string;
+  roleId: number;
+  departmentId: number | null;
+}
+
+export interface ResetUserPasswordRequest {
+  temporaryPassword: string;
+}

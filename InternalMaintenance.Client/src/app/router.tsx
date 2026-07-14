@@ -5,6 +5,7 @@ import { LoginPage } from "../pages/login/page";
 import { DashboardPage } from "../pages/dashboard/page";
 import { TicketsPage } from "../pages/tickets/page";
 import { EquipmentPage } from "../pages/equipment/page";
+import { UsersPage } from "../pages/users/page";
 import { AppLayout } from "./layouts/app-layout";
 import { PublicOnlyRoute } from "./guard/public-only-route";
 import type { ReactElement } from "react";
@@ -13,6 +14,14 @@ function RequireAuth({ children }: { children: ReactElement }) {
   const session = useAuthStore((state) => state.session);
   if (!session) {
     return <Navigate to={appRoutes.login} replace />;
+  }
+  return children;
+}
+
+function RequireAdmin({ children }: { children: ReactElement }) {
+  const session = useAuthStore((state) => state.session);
+  if (!session || session.user.roleName !== "Admin") {
+    return <Navigate to={appRoutes.dashboard} replace />;
   }
   return children;
 }
@@ -56,6 +65,16 @@ export function AppRouter() {
           element={
             <RequireAuth>
               <EquipmentPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path={appRoutes.users}
+          element={
+            <RequireAuth>
+              <RequireAdmin>
+                <UsersPage />
+              </RequireAdmin>
             </RequireAuth>
           }
         />
