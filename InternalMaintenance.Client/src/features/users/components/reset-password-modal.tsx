@@ -12,6 +12,15 @@ type Props = {
 
 export function ResetPasswordModal({ user, isOpen, onClose }: Props) {
   const [temporaryPassword, setTemporaryPassword] = useState("");
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setTemporaryPassword("");
+    }
+  }
+
   const resetMutation = useResetUserPasswordMutation(user?.id ?? 0);
 
   if (!isOpen || !user) return null;

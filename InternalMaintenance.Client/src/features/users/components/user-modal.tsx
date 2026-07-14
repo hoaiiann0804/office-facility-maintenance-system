@@ -26,6 +26,21 @@ export function UserModal({ user, isOpen, onClose }: Props) {
   const [departmentId, setDepartmentId] = useState<number | "">(user?.departmentId ?? "");
   const [temporaryPassword, setTemporaryPassword] = useState("");
 
+  const [prevUser, setPrevUser] = useState(user);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (user !== prevUser || isOpen !== prevIsOpen) {
+    setPrevUser(user);
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setFullName(user?.fullName ?? "");
+      setEmail(user?.email ?? "");
+      setRoleId(user?.roleId ?? "");
+      setDepartmentId(user?.departmentId ?? "");
+      setTemporaryPassword("");
+    }
+  }
+
   const { data: deptsPage, isLoading: isDeptsLoading } = useDepartmentsQuery({ pageSize: 100 });
   const createMutation = useCreateUserMutation();
   const updateMutation = useUpdateUserMutation(user?.id ?? 0);
@@ -33,7 +48,8 @@ export function UserModal({ user, isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   const departments = deptsPage?.items ?? [];
-
+  const availableRoles =
+    isEdit && user?.roleName === "Admin" ? ROLES : ROLES.filter((role) => role.name !== "Admin");
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || roleId === "") {
@@ -137,7 +153,7 @@ export function UserModal({ user, isOpen, onClose }: Props) {
               disabled={isPending}
             >
               <option value="">-- Chọn vai trò --</option>
-              {ROLES.map((r) => (
+              {availableRoles.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
                 </option>
