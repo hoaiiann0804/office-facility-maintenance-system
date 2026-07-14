@@ -4,6 +4,7 @@ import { useAuthStore } from "../features/auth/model/auth-store";
 import { LoginPage } from "../pages/login/page";
 import { DashboardPage } from "../pages/dashboard/page";
 import { TicketsPage } from "../pages/tickets/page";
+import { EquipmentPage } from "../pages/equipment/page";
 import { AppLayout } from "./layouts/app-layout";
 import { PublicOnlyRoute } from "./guard/public-only-route";
 import type { ReactElement } from "react";
@@ -50,8 +51,17 @@ export function AppRouter() {
             </RequireAuth>
           }
         />
+        <Route
+          path={appRoutes.equipment}
+          element={
+            <RequireAuth>
+              <EquipmentPage />
+            </RequireAuth>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   );
 }
+

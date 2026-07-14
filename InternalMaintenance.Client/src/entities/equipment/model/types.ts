@@ -20,3 +20,21 @@ export interface EquipmentQuery {
   page?: number;
   pageSize?: number;
 }
+
+export interface CreateEquipmentRequest {
+  code: string;
+  name: string;
+  departmentId: number;
+  status: string;
+  purchasedDate: string | null;
+  description: string | null;
+}
+
+export interface UpdateEquipmentRequest {
+  code: string;
+  name: string;
+  departmentId: number;
+  status: string;
+  purchasedDate: string | null;
+  description: string | null;
+}
