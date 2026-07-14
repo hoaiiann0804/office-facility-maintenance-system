@@ -32,7 +32,6 @@ export function UserModal({ user, isOpen, onClose }: Props) {
 
   if (!isOpen) return null;
 
-
   const departments = deptsPage?.items ?? [];
 
   const handleSubmit = async (e: React.FormEvent) => {
