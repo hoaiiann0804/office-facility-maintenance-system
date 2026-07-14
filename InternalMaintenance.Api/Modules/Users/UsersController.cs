@@ -163,6 +163,19 @@ public class UsersController : ControllerBase
                     message = "Role not found"
                 });
         }
+
+        var adminRole = await _context.Roles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(role => role.Name == UserRoles.Admin);
+        if (adminRole is not null && request.RoleId == adminRole.Id)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Creating a new Admin account is not allowed."
+                });
+        }
+
         var departmentExists = await _context.Departments
         .AnyAsync(d => d.Id == request.DepartmentId);
 
@@ -242,6 +255,18 @@ public class UsersController : ControllerBase
                 new
                 {
                     message = "Role not found"
+                });
+        }
+
+        var adminRole = await _context.Roles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(role => role.Name == UserRoles.Admin);
+        if (adminRole is not null && request.RoleId == adminRole.Id && user.RoleId != adminRole.Id)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Promoting a user to Admin is not allowed."
                 });
         }
 

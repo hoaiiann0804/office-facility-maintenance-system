@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 import { useCreateUserMutation, useUpdateUserMutation } from "../api/use-user-mutations";
@@ -30,9 +30,21 @@ export function UserModal({ user, isOpen, onClose }: Props) {
   const createMutation = useCreateUserMutation();
   const updateMutation = useUpdateUserMutation(user?.id ?? 0);
 
+  useEffect(() => {
+    if (isOpen) {
+      setFullName(user?.fullName ?? "");
+      setEmail(user?.email ?? "");
+      setRoleId(user?.roleId ?? "");
+      setDepartmentId(user?.departmentId ?? "");
+      setTemporaryPassword("");
+    }
+  }, [user, isOpen]);
+
   if (!isOpen) return null;
 
   const departments = deptsPage?.items ?? [];
+  const availableRoles =
+    isEdit && user?.roleName === "Admin" ? ROLES : ROLES.filter((role) => role.name !== "Admin");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,7 +149,7 @@ export function UserModal({ user, isOpen, onClose }: Props) {
               disabled={isPending}
             >
               <option value="">-- Chọn vai trò --</option>
-              {ROLES.map((r) => (
+              {availableRoles.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
                 </option>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 import { useResetUserPasswordMutation } from "../api/use-user-mutations";
@@ -13,6 +13,12 @@ type Props = {
 export function ResetPasswordModal({ user, isOpen, onClose }: Props) {
   const [temporaryPassword, setTemporaryPassword] = useState("");
   const resetMutation = useResetUserPasswordMutation(user?.id ?? 0);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTemporaryPassword("");
+    }
+  }, [isOpen]);
 
   if (!isOpen || !user) return null;
 

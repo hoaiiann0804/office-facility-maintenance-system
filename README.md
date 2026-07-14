@@ -66,6 +66,7 @@ The UI is prepared to grow into a fuller operational console, with API hooks alr
 - department assignment
 - active/inactive status control
 - reset password support
+- new Admin accounts are not created from the user-management form; existing Admin accounts can still be maintained
 
 ### Department Management
 
