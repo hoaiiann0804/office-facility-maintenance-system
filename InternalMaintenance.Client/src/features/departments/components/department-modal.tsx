@@ -72,9 +72,7 @@ export function DepartmentModal({ department, isOpen, onClose }: Props) {
     <div className="modal-overlay">
       <div className="modal-content">
         <h2>{isEdit ? `Chỉnh sửa: ${department.name}` : "Thêm Phòng Ban Mới"}</h2>
-        <p className="section-lead">
-          Nhập thông tin cơ bản của phòng ban trong tổ chức.
-        </p>
+        <p className="section-lead">Nhập thông tin cơ bản của phòng ban trong tổ chức.</p>
 
         <form onSubmit={handleSubmit} className="stack spaced">
           <label className="field">

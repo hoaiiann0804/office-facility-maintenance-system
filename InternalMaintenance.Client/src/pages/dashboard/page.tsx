@@ -232,8 +232,8 @@ export function DashboardPage() {
             <span className="eyebrow">API layer</span>
             <h3>Kết nối hoàn tất</h3>
             <p className="section-lead">
-              Dashboard đang hiển thị dữ liệu thời gian thực từ backend API — không còn sử dụng
-              mock data.
+              Dashboard đang hiển thị dữ liệu thời gian thực từ backend API — không còn sử dụng mock
+              data.
             </p>
           </Panel>
         </aside>
