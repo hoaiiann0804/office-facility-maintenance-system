@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "axios";
-import { Badge, EmptyState, Panel, Spinner, ThemeToggle } from "../../shared/ui";
+import { Badge, EmptyState, Panel, Spinner, UserProfile } from "../../shared/ui";
 import { appRoutes } from "../../shared/config/routes";
 import { useAuthStore } from "../../features/auth/model/auth-store";
 import { logout } from "../../shared/api/auth";
@@ -125,21 +125,12 @@ export function UsersPage() {
           </Link>
         </nav>
 
-        <div className="badge-row">
-          <ThemeToggle />
-          <button
-            type="button"
-            className="button secondary"
-            onClick={() => setIsChangePasswordOpen(true)}
-          >
-            Đổi mật khẩu
-          </button>
-          <Badge tone="default">{session?.user.fullName ?? "Guest"}</Badge>
-          <Badge tone="primary">{role}</Badge>
-          <button type="button" className="button secondary" onClick={handleLogout}>
-            Đăng xuất
-          </button>
-        </div>
+        <UserProfile
+          fullName={session?.user.fullName}
+          roleName={session?.user.roleName}
+          onLogout={handleLogout}
+          onChangePassword={() => setIsChangePasswordOpen(true)}
+        />
       </header>
 
       <div className="layout" style={{ gridTemplateColumns: "1fr" }}>
