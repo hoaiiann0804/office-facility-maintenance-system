@@ -220,7 +220,16 @@ export function DepartmentsPage() {
                     </tbody>
                   </table>
 
-                  <div className="pagination-row" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginTop: "20px" }}>
+                  <div
+                    className="pagination-row"
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      gap: "16px",
+                      marginTop: "20px",
+                    }}
+                  >
                     <button
                       type="button"
                       className="button secondary"
