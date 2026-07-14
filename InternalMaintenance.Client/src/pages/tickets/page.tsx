@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { wireframeData } from "../../shared/mock/wireframe-data";
-import { Badge, EmptyState, Panel, Spinner, ThemeToggle } from "../../shared/ui";
+import { Badge, EmptyState, Panel, Spinner, UserProfile } from "../../shared/ui";
 import { TicketBoard } from "../../features/tickets/components/ticket-board";
 import { appRoutes } from "../../shared/config/routes";
 import { useAuthStore } from "../../features/auth/model/auth-store";
@@ -133,24 +133,12 @@ export function TicketsPage() {
           )}
         </nav>
 
-        <div className="badge-row">
-          <ThemeToggle />
-          <button
-            type="button"
-            className="button secondary"
-            onClick={() => setIsChangePasswordOpen(true)}
-          >
-            Đổi mật khẩu
-          </button>
-          <Badge tone="default">{session?.user.fullName ?? "Guest"}</Badge>
-          <Badge tone={session?.user.roleName === "Admin" ? "primary" : "default"}>
-            {session?.user.roleName ?? "Guest"}
-          </Badge>
-
-          <button type="button" className="button secondary" onClick={handleLogout}>
-            Đăng xuất
-          </button>
-        </div>
+        <UserProfile
+          fullName={session?.user.fullName}
+          roleName={session?.user.roleName}
+          onLogout={handleLogout}
+          onChangePassword={() => setIsChangePasswordOpen(true)}
+        />
       </header>
 
       <div className="layout">

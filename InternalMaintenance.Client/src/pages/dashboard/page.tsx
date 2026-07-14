@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Badge, Panel, Spinner, StatCard, ThemeToggle } from "../../shared/ui";
+import { Badge, Panel, Spinner, StatCard, UserProfile } from "../../shared/ui";
 import { useAuthStore } from "../../features/auth/model/auth-store";
 import { appRoutes } from "../../shared/config/routes";
 import { logout } from "../../shared/api/auth";
@@ -107,24 +107,12 @@ export function DashboardPage() {
           )}
         </nav>
 
-        <div className="badge-row">
-          <ThemeToggle />
-          <button
-            type="button"
-            className="button secondary"
-            onClick={() => setIsChangePasswordOpen(true)}
-          >
-            Đổi mật khẩu
-          </button>
-          <Badge tone="default">{session?.user.fullName ?? "Guest"}</Badge>
-          <Badge tone={session?.user.roleName === "Admin" ? "primary" : "default"}>
-            {session?.user.roleName ?? "Guest"}
-          </Badge>
-
-          <button type="button" className="button secondary" onClick={handleLogout}>
-            Đăng xuất
-          </button>
-        </div>
+        <UserProfile
+          fullName={session?.user.fullName}
+          roleName={session?.user.roleName}
+          onLogout={handleLogout}
+          onChangePassword={() => setIsChangePasswordOpen(true)}
+        />
       </header>
 
       <div className="layout">
