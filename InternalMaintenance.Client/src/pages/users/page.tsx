@@ -120,6 +120,9 @@ export function UsersPage() {
           <Link className="tab active" to={appRoutes.users}>
             Users
           </Link>
+          <Link className="tab" to={appRoutes.departments}>
+            Departments
+          </Link>
         </nav>
 
         <div className="badge-row">

@@ -110,6 +110,11 @@ export function EquipmentPage() {
               Users
             </Link>
           )}
+          {isAdmin && (
+            <Link className="tab" to={appRoutes.departments}>
+              Departments
+            </Link>
+          )}
         </nav>
 
         <div className="badge-row">
