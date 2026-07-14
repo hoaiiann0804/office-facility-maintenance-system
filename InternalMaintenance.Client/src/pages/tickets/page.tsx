@@ -17,6 +17,7 @@ import { useTicketsQuery } from "../../features/tickets/api/use-tickets-query";
 import { CreateTicketModal } from "../../features/tickets/components/create-ticket-modal";
 import { EditTicketModal } from "../../features/tickets/components/edit-ticket-modal";
 import { TicketActionPanel } from "../../features/tickets/components/ticket-action-panel";
+import { ChangePasswordModal } from "../../features/auth/components/change-password-modal";
 
 const formatDateTime = (value: string | null | undefined) => {
   if (!value) return "N/A";
@@ -29,6 +30,8 @@ export function TicketsPage() {
   const session = useAuthStore((state) => state.session);
   const signOut = useAuthStore((state) => state.signOut);
   const navigate = useNavigate();
+
+  const isAdmin = session?.user.roleName === "Admin";
 
   const handleLogout = async (): Promise<void> => {
     const refreshToken = session?.refreshToken;
@@ -49,6 +52,7 @@ export function TicketsPage() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const {
     data: ticketsPage,
@@ -114,10 +118,25 @@ export function TicketsPage() {
           <Link className="tab active" to={appRoutes.tickets}>
             Tickets
           </Link>
+          <Link className="tab" to={appRoutes.equipment}>
+            Equipment
+          </Link>
+          {isAdmin && (
+            <Link className="tab" to={appRoutes.users}>
+              Users
+            </Link>
+          )}
         </nav>
 
         <div className="badge-row">
           <ThemeToggle />
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => setIsChangePasswordOpen(true)}
+          >
+            Đổi mật khẩu
+          </button>
           <Badge tone="default">{session?.user.fullName ?? "Guest"}</Badge>
           <Badge tone={session?.user.roleName === "Admin" ? "primary" : "default"}>
             {session?.user.roleName ?? "Guest"}
@@ -419,6 +438,11 @@ export function TicketsPage() {
           onClose={() => setIsEditModalOpen(false)}
         />
       )}
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   );
 }

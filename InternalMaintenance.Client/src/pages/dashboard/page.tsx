@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { wireframeData } from "../../shared/mock/wireframe-data";
 import { Badge, Panel, StatCard, ThemeToggle } from "../../shared/ui";
 import { useAuthStore } from "../../features/auth/model/auth-store";
 import { appRoutes } from "../../shared/config/routes";
 import { logout } from "../../shared/api/auth";
+import { ChangePasswordModal } from "../../features/auth/components/change-password-modal";
 
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("vi-VN", {
@@ -14,8 +16,10 @@ const formatDateTime = (value: string) =>
 export function DashboardPage() {
   const session = useAuthStore((state) => state.session);
   const signOut = useAuthStore((state) => state.signOut);
-
   const navigate = useNavigate();
+
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const isAdmin = session?.user.roleName === "Admin";
   const openTickets = wireframeData.tickets.filter(
     (ticket) => !["Closed", "Cancelled"].includes(ticket.status),
   ).length;
@@ -70,10 +74,25 @@ export function DashboardPage() {
           <Link className="tab" to={appRoutes.tickets}>
             Tickets
           </Link>
+          <Link className="tab" to={appRoutes.equipment}>
+            Equipment
+          </Link>
+          {isAdmin && (
+            <Link className="tab" to={appRoutes.users}>
+              Users
+            </Link>
+          )}
         </nav>
 
         <div className="badge-row">
           <ThemeToggle />
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => setIsChangePasswordOpen(true)}
+          >
+            Đổi mật khẩu
+          </button>
           <Badge tone="default">{session?.user.fullName ?? "Guest"}</Badge>
           <Badge tone={session?.user.roleName === "Admin" ? "primary" : "default"}>
             {session?.user.roleName ?? "Guest"}
@@ -178,6 +197,11 @@ export function DashboardPage() {
           </Panel>
         </aside>
       </div>
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   );
 }
