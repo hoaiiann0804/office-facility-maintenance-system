@@ -244,6 +244,71 @@ namespace InternalMaintenance.Api.Migrations
                     b.ToTable("TicketComments");
                 });
 
+            modelBuilder.Entity("InternalMaintenance.Api.Models.TicketAttachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MaintenanceTicketId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("StorageProvider")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UploadedByUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaintenanceTicketId");
+
+                    b.HasIndex("StorageKey")
+                        .IsUnique();
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.ToTable("TicketAttachments");
+                });
+
             modelBuilder.Entity("InternalMaintenance.Api.Models.TicketStatusHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -401,6 +466,25 @@ namespace InternalMaintenance.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("InternalMaintenance.Api.Models.TicketAttachment", b =>
+                {
+                    b.HasOne("InternalMaintenance.Api.Models.MaintenanceTicket", "MaintenanceTicket")
+                        .WithMany("Attachments")
+                        .HasForeignKey("MaintenanceTicketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InternalMaintenance.Api.Models.User", "UploadedByUser")
+                        .WithMany("Attachments")
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MaintenanceTicket");
+
+                    b.Navigation("UploadedByUser");
+                });
+
             modelBuilder.Entity("InternalMaintenance.Api.Models.TicketStatusHistory", b =>
                 {
                     b.HasOne("InternalMaintenance.Api.Models.User", "ChangedByUser")
@@ -454,6 +538,8 @@ namespace InternalMaintenance.Api.Migrations
                 {
                     b.Navigation("Comments");
 
+                    b.Navigation("Attachments");
+
                     b.Navigation("StatusHistories");
                 });
 
@@ -465,6 +551,8 @@ namespace InternalMaintenance.Api.Migrations
             modelBuilder.Entity("InternalMaintenance.Api.Models.User", b =>
                 {
                     b.Navigation("AssignedTickets");
+
+                    b.Navigation("Attachments");
 
                     b.Navigation("Comments");
 

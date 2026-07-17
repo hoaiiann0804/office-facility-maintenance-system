@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<MaintenanceTicket> MaintenanceTickets => Set<MaintenanceTicket>();
     public DbSet<TicketStatusHistory> TicketStatusHistories => Set<TicketStatusHistory>();
     public DbSet<TicketComment> TicketComments => Set<TicketComment>();
+    public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -91,6 +92,28 @@ public class AppDbContext : DbContext
         .WithMany(user => user.Comments)
         .HasForeignKey(comment => comment.UserId)
         .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<TicketAttachment>()
+        .HasOne(attachment => attachment.MaintenanceTicket)
+        .WithMany(ticket => ticket.Attachments)
+        .HasForeignKey(attachment => attachment.MaintenanceTicketId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<TicketAttachment>()
+        .HasOne(attachment => attachment.UploadedByUser)
+        .WithMany(user => user.Attachments)
+        .HasForeignKey(attachment => attachment.UploadedByUserId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<TicketAttachment>()
+        .HasIndex(attachment => attachment.MaintenanceTicketId);
+
+        modelBuilder.Entity<TicketAttachment>()
+        .HasIndex(attachment => attachment.UploadedByUserId);
+
+        modelBuilder.Entity<TicketAttachment>()
+        .HasIndex(attachment => attachment.StorageKey)
+        .IsUnique();
 
         modelBuilder.Entity<RefreshToken>()
         .HasOne(rt => rt.User)
