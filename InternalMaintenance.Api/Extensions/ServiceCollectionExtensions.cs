@@ -1,5 +1,7 @@
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.Modules.Auth;
+using InternalMaintenance.Api.Modules.TicketAttachments;
+using InternalMaintenance.Api.Modules.TicketAttachments.Storage;
 using InternalMaintenance.Api.Services;
 using InternalMaintenance.Api.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -69,8 +71,12 @@ public static class ServiceCollectionExtensions
         services.AddControllers();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
+        services.AddHttpClient();
         services.AddHttpContextAccessor();
+        services.Configure<R2AttachmentStorageOptions>(configuration.GetSection("R2"));
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ITicketAttachmentsService, TicketAttachmentsService>();
+        services.AddScoped<IAttachmentStorageService, R2AttachmentStorageService>();
         services.AddScoped<JwtTokenService>();
         services.AddScoped<CurrentUserService>();
         services.AddScoped<ITicketCodeGenerator, TicketCodeGenerator>();
