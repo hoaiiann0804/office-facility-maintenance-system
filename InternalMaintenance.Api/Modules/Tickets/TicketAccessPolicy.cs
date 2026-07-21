@@ -36,4 +36,33 @@ public static class TicketAccessPolicy
 
         return query.Where(ticket => false);
     }
+
+    public static bool CanAccess(
+        MaintenanceTicket ticket,
+        CurrentUserService currentUserService)
+    {
+        var role = currentUserService.Role;
+
+        if (role == UserRoles.Admin)
+        {
+            return true;
+        }
+
+        if (role == UserRoles.Manager)
+        {
+            return ticket.Equipment?.DepartmentId == currentUserService.DepartmentId;
+        }
+
+        if (role == UserRoles.Staff)
+        {
+            return ticket.CreatedByUserId == currentUserService.UserId;
+        }
+
+        if (role == UserRoles.Technician)
+        {
+            return ticket.AssignedTechnicianId == currentUserService.UserId;
+        }
+
+        return false;
+    }
 }
