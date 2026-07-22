@@ -1,4 +1,5 @@
 using InternalMaintenance.Api.Data;
+using InternalMaintenance.Api.Common.Results;
 using InternalMaintenance.Api.Models;
 using InternalMaintenance.Api.Modules.Auth.Contracts;
 using InternalMaintenance.Api.Services;
@@ -18,7 +19,7 @@ public class AuthService : IAuthService
         _jwtTokenService = jwtTokenService;
     }
 
-    public async Task<AuthServiceResult<LoginResponse>> LoginAsync(LoginRequest request)
+    public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request)
     {
         var email = request.Email.Trim().ToLower();
 
@@ -29,7 +30,7 @@ public class AuthService : IAuthService
 
         if (user is null)
         {
-            return AuthServiceResult<LoginResponse>.Fail(
+            return ServiceResult<LoginResponse>.Fail(
                 StatusCodes.Status401Unauthorized,
                 "Invalid email or password"
             );
@@ -37,7 +38,7 @@ public class AuthService : IAuthService
 
         if (!user.IsActive)
         {
-            return AuthServiceResult<LoginResponse>.Fail(
+            return ServiceResult<LoginResponse>.Fail(
                 StatusCodes.Status403Forbidden,
                 "Your account has been deactivated. Please contact the administrator."
             );
@@ -46,7 +47,7 @@ public class AuthService : IAuthService
         var passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
         if (!passwordValid)
         {
-            return AuthServiceResult<LoginResponse>.Fail(
+            return ServiceResult<LoginResponse>.Fail(
                 StatusCodes.Status401Unauthorized,
                 "Invalid email or password"
             );
@@ -68,7 +69,7 @@ public class AuthService : IAuthService
         _context.RefreshTokens.Add(refreshTokenEntity);
         await _context.SaveChangesAsync();
 
-        return AuthServiceResult<LoginResponse>.Success(
+        return ServiceResult<LoginResponse>.Success(
             new LoginResponse
             {
                 AccessToken = token,
@@ -81,7 +82,7 @@ public class AuthService : IAuthService
         );
     }
 
-    public async Task<AuthServiceResult<AuthUserResponse>> GetCurrentUserAsync(int userId)
+    public async Task<ServiceResult<AuthUserResponse>> GetCurrentUserAsync(int userId)
     {
         var user = await _context.Users
             .Include(u => u.Role)
@@ -90,7 +91,7 @@ public class AuthService : IAuthService
 
         if (user is null)
         {
-            return AuthServiceResult<AuthUserResponse>.Fail(
+            return ServiceResult<AuthUserResponse>.Fail(
                 StatusCodes.Status404NotFound,
                 "User not found"
             );
@@ -98,22 +99,22 @@ public class AuthService : IAuthService
 
         if (!user.IsActive)
         {
-            return AuthServiceResult<AuthUserResponse>.Fail(
+            return ServiceResult<AuthUserResponse>.Fail(
                 StatusCodes.Status403Forbidden,
                 "Your account has been deactivated. Please contact the administrator."
             );
         }
 
-        return AuthServiceResult<AuthUserResponse>.Success(BuildAuthUserResponse(user));
+        return ServiceResult<AuthUserResponse>.Success(BuildAuthUserResponse(user));
     }
 
-    public async Task<AuthServiceResult> ChangePasswordAsync(int userId, ChangePasswordRequest request)
+    public async Task<ServiceResult> ChangePasswordAsync(int userId, ChangePasswordRequest request)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user is null)
         {
-            return AuthServiceResult.Fail(
+            return ServiceResult.Fail(
                 StatusCodes.Status401Unauthorized,
                 "User not found"
             );
@@ -121,7 +122,7 @@ public class AuthService : IAuthService
 
         if (!user.IsActive)
         {
-            return AuthServiceResult.Fail(
+            return ServiceResult.Fail(
                 StatusCodes.Status403Forbidden,
                 "Your account has been deactivated. Please contact the administrator."
             );
@@ -130,7 +131,7 @@ public class AuthService : IAuthService
         var currentPasswordValid = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash);
         if (!currentPasswordValid)
         {
-            return AuthServiceResult.Fail(
+            return ServiceResult.Fail(
                 StatusCodes.Status400BadRequest,
                 "Current password is incorrect"
             );
@@ -139,7 +140,7 @@ public class AuthService : IAuthService
         var isSamePassword = BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash);
         if (isSamePassword)
         {
-            return AuthServiceResult.Fail(
+            return ServiceResult.Fail(
                 StatusCodes.Status400BadRequest,
                 "New password must be different from current password"
             );
@@ -150,10 +151,10 @@ public class AuthService : IAuthService
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return AuthServiceResult.Success(StatusCodes.Status200OK);
+        return ServiceResult.Success(StatusCodes.Status200OK);
     }
 
-    public async Task<AuthServiceResult<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request)
+    public async Task<ServiceResult<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request)
     {
         var storedRefreshToken = await _context.RefreshTokens
             .Include(rt => rt.User)
@@ -162,7 +163,7 @@ public class AuthService : IAuthService
 
         if (storedRefreshToken is null)
         {
-            return AuthServiceResult<RefreshTokenResponse>.Fail(
+            return ServiceResult<RefreshTokenResponse>.Fail(
                 StatusCodes.Status401Unauthorized,
                 "Refresh token not found"
             );
@@ -170,7 +171,7 @@ public class AuthService : IAuthService
 
         if (storedRefreshToken.IsRevoked)
         {
-            return AuthServiceResult<RefreshTokenResponse>.Fail(
+            return ServiceResult<RefreshTokenResponse>.Fail(
                 StatusCodes.Status401Unauthorized,
                 "Refresh token revoked"
             );
@@ -178,7 +179,7 @@ public class AuthService : IAuthService
 
         if (storedRefreshToken.ExpiresAt <= DateTime.UtcNow)
         {
-            return AuthServiceResult<RefreshTokenResponse>.Fail(
+            return ServiceResult<RefreshTokenResponse>.Fail(
                 StatusCodes.Status401Unauthorized,
                 "Refresh token expired"
             );
@@ -187,7 +188,7 @@ public class AuthService : IAuthService
         var user = storedRefreshToken.User;
         if (!user.IsActive)
         {
-            return AuthServiceResult<RefreshTokenResponse>.Fail(
+            return ServiceResult<RefreshTokenResponse>.Fail(
                 StatusCodes.Status403Forbidden,
                 "Your account has been deactivated."
             );
@@ -208,7 +209,7 @@ public class AuthService : IAuthService
         _context.RefreshTokens.Add(refreshTokenEntity);
         await _context.SaveChangesAsync();
 
-        return AuthServiceResult<RefreshTokenResponse>.Success(
+        return ServiceResult<RefreshTokenResponse>.Success(
             new RefreshTokenResponse
             {
                 AccessToken = accessToken,
@@ -219,14 +220,14 @@ public class AuthService : IAuthService
         );
     }
 
-    public async Task<AuthServiceResult> LogoutAsync(LogoutRequest request)
+    public async Task<ServiceResult> LogoutAsync(LogoutRequest request)
     {
         var storedRefreshToken = await _context.RefreshTokens
             .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
 
         if (storedRefreshToken is null)
         {
-            return AuthServiceResult.Fail(
+            return ServiceResult.Fail(
                 StatusCodes.Status401Unauthorized,
                 "Refresh token not found"
             );
@@ -234,14 +235,14 @@ public class AuthService : IAuthService
 
         if (storedRefreshToken.IsRevoked)
         {
-            return AuthServiceResult.Success(StatusCodes.Status204NoContent);
+            return ServiceResult.Success(StatusCodes.Status204NoContent);
         }
 
         storedRefreshToken.IsRevoked = true;
         storedRefreshToken.RevokedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return AuthServiceResult.Success(StatusCodes.Status204NoContent);
+        return ServiceResult.Success(StatusCodes.Status204NoContent);
     }
 
     private static AuthUserResponse BuildAuthUserResponse(User user)
