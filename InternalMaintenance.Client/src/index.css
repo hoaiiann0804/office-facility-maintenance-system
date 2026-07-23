@@ -1059,7 +1059,9 @@ a {
   padding: 20px 16px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
   background: var(--panel-soft);
   display: flex;
   flex-direction: column;
@@ -1227,7 +1229,9 @@ a {
   border-radius: var(--radius-md);
   background: var(--panel-soft);
   border: 1px solid var(--border);
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .attachment-item:hover {

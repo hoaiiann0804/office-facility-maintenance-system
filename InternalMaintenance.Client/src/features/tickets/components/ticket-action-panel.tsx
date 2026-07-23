@@ -343,8 +343,7 @@ function AttachmentsSection({
 
   // 403 = token hợp lệ nhưng không có quyền xem attachment của ticket này
   // (ví dụ: Technician xem ticket chưa assign cho họ, hoặc Staff xem ticket người khác)
-  const isForbidden =
-    axios.isAxiosError(error) && error.response?.status === 403;
+  const isForbidden = axios.isAxiosError(error) && error.response?.status === 403;
 
   return (
     <div className="control-card">
@@ -362,9 +361,7 @@ function AttachmentsSection({
 
         {/* Danh sách file đã lưu trong DB */}
         {isLoading ? (
-          <p style={{ fontSize: "0.82rem", color: "var(--muted)", margin: 0 }}>
-            Đang tải...
-          </p>
+          <p style={{ fontSize: "0.82rem", color: "var(--muted)", margin: 0 }}>Đang tải...</p>
         ) : isForbidden ? (
           <p style={{ fontSize: "0.82rem", color: "var(--muted)", margin: 0 }}>
             Không có quyền xem file đính kèm của ticket này.

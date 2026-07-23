@@ -19,8 +19,12 @@ import type { FileUploadItem } from "../../../entities/ticket/model/types";
 // Các hằng số này mirror TicketAttachmentRules.cs từ Backend
 const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 const ALLOWED_TYPES = [
-  "image/jpeg", "image/jpg", "image/png", "image/webp",
-  "video/mp4", "video/webm",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/webm",
   "application/pdf",
 ];
 
@@ -32,11 +36,16 @@ function formatBytes(bytes: number): string {
 
 function getStatusLabel(status: FileUploadItem["status"]): string {
   switch (status) {
-    case "pending":    return "Đang chờ...";
-    case "uploading":  return "Đang tải lên...";
-    case "confirming": return "Đang xác nhận...";
-    case "done":       return "Hoàn thành ✓";
-    case "error":      return "Lỗi";
+    case "pending":
+      return "Đang chờ...";
+    case "uploading":
+      return "Đang tải lên...";
+    case "confirming":
+      return "Đang xác nhận...";
+    case "done":
+      return "Hoàn thành ✓";
+    case "error":
+      return "Lỗi";
   }
 }
 
@@ -53,7 +62,12 @@ type Props = {
   disabled?: boolean;
 };
 
-export function AttachmentUploadZone({ uploadItems, onFilesSelected, onRemoveItem, disabled }: Props) {
+export function AttachmentUploadZone({
+  uploadItems,
+  onFilesSelected,
+  onRemoveItem,
+  disabled,
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -133,7 +147,9 @@ export function AttachmentUploadZone({ uploadItems, onFilesSelected, onRemoveIte
         />
         <span className="upload-icon">📎</span>
         <p className="upload-hint-primary">
-          {disabled ? "Ticket đã đóng — không thể đính kèm file" : "Kéo thả file vào đây hoặc click để chọn"}
+          {disabled
+            ? "Ticket đã đóng — không thể đính kèm file"
+            : "Kéo thả file vào đây hoặc click để chọn"}
         </p>
         <p className="upload-hint-secondary">
           Hỗ trợ: JPG, PNG, WEBP, MP4, WEBM, PDF · Tối đa 100MB mỗi file
@@ -161,10 +177,7 @@ export function AttachmentUploadZone({ uploadItems, onFilesSelected, onRemoveIte
                 {/* Progress bar — chỉ hiện khi đang uploading */}
                 {(item.status === "uploading" || item.status === "confirming") && (
                   <div className="upload-progress-track">
-                    <div
-                      className="upload-progress-fill"
-                      style={{ width: `${item.progress}%` }}
-                    />
+                    <div className="upload-progress-fill" style={{ width: `${item.progress}%` }} />
                   </div>
                 )}
               </div>

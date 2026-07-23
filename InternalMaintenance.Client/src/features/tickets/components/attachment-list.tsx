@@ -36,10 +36,14 @@ function formatDate(dateStr: string): string {
 
 function getFileIcon(fileType: TicketAttachment["fileType"]): string {
   switch (fileType) {
-    case "Image":    return "🖼️";
-    case "Video":    return "🎬";
-    case "Document": return "📄";
-    default:         return "📄";
+    case "Image":
+      return "🖼️";
+    case "Video":
+      return "🎬";
+    case "Document":
+      return "📄";
+    default:
+      return "📄";
   }
 }
 
@@ -66,10 +70,9 @@ export function AttachmentList({ ticketId, attachments, canDelete, currentUserId
       const url = await getAttachmentDownloadUrl(ticketId, attachment.id);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      const msg =
-        axios.isAxiosError(err)
-          ? (err.response?.data?.message as string | undefined) ?? "Không thể mở file."
-          : "Không thể mở file.";
+      const msg = axios.isAxiosError(err)
+        ? ((err.response?.data?.message as string | undefined) ?? "Không thể mở file.")
+        : "Không thể mở file.";
       toast.error(msg);
     } finally {
       setOpeningId(null);
@@ -83,10 +86,9 @@ export function AttachmentList({ ticketId, attachments, canDelete, currentUserId
       await deleteMutation.mutateAsync(attachment.id);
       toast.success("Đã xóa file đính kèm.");
     } catch (err) {
-      const msg =
-        axios.isAxiosError(err)
-          ? (err.response?.data?.message as string | undefined) ?? "Không thể xóa file."
-          : "Không thể xóa file.";
+      const msg = axios.isAxiosError(err)
+        ? ((err.response?.data?.message as string | undefined) ?? "Không thể xóa file.")
+        : "Không thể xóa file.";
       toast.error(msg);
     } finally {
       setDeletingId(null);
@@ -94,15 +96,13 @@ export function AttachmentList({ ticketId, attachments, canDelete, currentUserId
   };
 
   if (attachments.length === 0) {
-    return (
-      <p className="attachment-empty">Chưa có file đính kèm nào.</p>
-    );
+    return <p className="attachment-empty">Chưa có file đính kèm nào.</p>;
   }
 
   return (
     <ul className="attachment-list">
       {attachments.map((att) => {
-        const isOpening  = openingId  === att.id;
+        const isOpening = openingId === att.id;
         const isDeleting = deletingId === att.id;
         // Chỉ người upload mới được xóa file của mình
         const canDeleteThis = canDelete && att.uploadedByUserId === currentUserId;

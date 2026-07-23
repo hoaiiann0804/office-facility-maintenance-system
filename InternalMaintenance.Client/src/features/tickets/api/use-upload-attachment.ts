@@ -14,12 +14,13 @@
 
 import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { presignAttachment, uploadToStorage, confirmAttachment } from "../../../shared/api/attachments";
+import {
+  presignAttachment,
+  uploadToStorage,
+  confirmAttachment,
+} from "../../../shared/api/attachments";
 import { attachmentsQueryKey } from "./use-ticket-attachments-query";
-import type {
-  FileUploadItem,
-  AttachmentFileType,
-} from "../../../entities/ticket/model/types";
+import type { FileUploadItem, AttachmentFileType } from "../../../entities/ticket/model/types";
 
 // Ánh xạ contentType sang FileType (mirror logic C# TicketAttachmentRules.ResolveFileType)
 function resolveFileType(contentType: string): AttachmentFileType {
@@ -109,8 +110,7 @@ export function useUploadAttachment(ticketId: number) {
         });
       } catch (err) {
         // Một trong 3 bước thất bại — hiển thị lỗi trên file item đó
-        const message =
-          err instanceof Error ? err.message : "Upload thất bại, vui lòng thử lại.";
+        const message = err instanceof Error ? err.message : "Upload thất bại, vui lòng thử lại.";
         patchItem(uid, { status: "error", error: message });
       }
     },
@@ -134,8 +134,8 @@ export function useUploadAttachment(ticketId: number) {
   );
 
   return {
-    uploadItems,    // danh sách FileUploadItem để UI render progress
-    uploadFiles,    // gọi hàm này khi user chọn file
-    removeItem,     // xóa item khỏi queue hiển thị
+    uploadItems, // danh sách FileUploadItem để UI render progress
+    uploadFiles, // gọi hàm này khi user chọn file
+    removeItem, // xóa item khỏi queue hiển thị
   };
 }
