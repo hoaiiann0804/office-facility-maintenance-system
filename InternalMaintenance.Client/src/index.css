@@ -1025,3 +1025,297 @@ a {
   font-size: 0.8rem;
   color: var(--muted);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TICKET ATTACHMENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Section wrapper trong TicketActionPanel ─────────────────────────────── */
+.attachment-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attachment-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+/* ─── Upload Drop Zone ────────────────────────────────────────────────────── */
+.upload-zone-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upload-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: var(--panel-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.upload-dropzone:hover:not(.disabled) {
+  border-color: var(--primary);
+  background: rgba(125, 211, 252, 0.05);
+}
+
+.upload-dropzone.drag-over {
+  border-color: var(--primary-strong);
+  background: rgba(125, 211, 252, 0.1);
+  transform: scale(1.01);
+}
+
+.upload-dropzone.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.upload-input-hidden {
+  display: none;
+}
+
+.upload-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.upload-hint-primary {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.upload-hint-secondary {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* ─── Upload Queue (danh sách đang upload) ────────────────────────────────── */
+.upload-queue {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.upload-queue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  transition: border-color 0.2s;
+}
+
+.upload-queue-item.status-done {
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.upload-queue-item.status-error {
+  border-color: rgba(251, 113, 133, 0.3);
+  background: rgba(251, 113, 133, 0.05);
+}
+
+.upload-file-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.upload-file-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0; /* để truncate hoạt động */
+}
+
+.upload-file-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-file-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.upload-error-msg {
+  color: var(--bad);
+}
+
+/* Progress bar */
+.upload-progress-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.upload-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-strong));
+  transition: width 0.15s ease;
+}
+
+.upload-queue-dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 1.1rem;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+  margin-top: 1px;
+}
+
+.upload-queue-dismiss:hover {
+  color: var(--bad);
+}
+
+.upload-active-notice {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--warn);
+  text-align: center;
+}
+
+/* ─── Attachment List (file đã lưu trong DB) ──────────────────────────────── */
+.attachment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.attachment-item:hover {
+  border-color: var(--hover-border);
+  background: rgba(125, 211, 252, 0.03);
+}
+
+.attachment-open-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  min-width: 0;
+}
+
+.attachment-open-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.attachment-file-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.attachment-file-name {
+  font-size: 0.85rem;
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 2px;
+  transition: text-decoration-color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.attachment-open-btn:hover .attachment-file-name {
+  text-decoration-color: var(--primary);
+}
+
+.attachment-opening-spinner {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.attachment-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.attachment-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.attachment-delete-btn:hover {
+  background: rgba(251, 113, 133, 0.15);
+  opacity: 1;
+}
+
+.attachment-delete-btn:disabled {
+  cursor: wait;
+}
+
+.attachment-empty {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 12px 0;
+}
