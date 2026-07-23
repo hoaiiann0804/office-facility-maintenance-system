@@ -98,3 +98,63 @@ export interface TicketQuickSummary {
   priority: TicketPriority;
   roleName?: RoleName;
 }
+
+// ─── Ticket Attachments ───────────────────────────────────────────────────────
+
+// Nhãn nghiệp vụ mà Backend dùng để phân loại file (xem TicketAttachmentRules.ResolveFileType)
+export type AttachmentFileType = "Image" | "Video" | "Document";
+
+// Mirror C# TicketAttachmentResponse — metadata của file đã được confirm vào DB
+export interface TicketAttachment {
+  id: number;
+  maintenanceTicketId: number;
+  uploadedByUserId: number;
+  uploadedByUserName: string;
+  originalFileName: string;
+  storedFileName: string;
+  contentType: string;
+  fileSize: number;
+  storageKey: string;
+  fileType: AttachmentFileType;
+  createdAt: string;
+  isDeleted: boolean;
+}
+
+// Mirror C# PresignAttachmentRequest — Frontend gửi lên để xin Presigned URL
+export interface PresignAttachmentRequest {
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+}
+
+// Mirror C# PresignAttachmentResponse — Backend trả về URL tạm thời để upload lên Storage
+export interface PresignAttachmentResponse {
+  uploadUrl: string;
+  storageKey: string;
+  storedFileName: string;
+}
+
+// Mirror C# ConfirmAttachmentRequest — Frontend gửi lên sau khi upload Storage xong
+export interface ConfirmAttachmentRequest {
+  storageKey: string;
+  originalFileName: string;
+  storedFileName: string;
+  contentType: string;
+  fileSize: number;
+  fileType: AttachmentFileType;
+  fileHash?: string;
+}
+
+// Trạng thái upload của từng file trong UI (không liên quan đến Backend, chỉ là UI state)
+export type UploadStatus = "pending" | "uploading" | "confirming" | "done" | "error";
+
+export interface FileUploadItem {
+  // id tạm thời chỉ dùng trong UI để track từng file
+  uid: string;
+  file: File;
+  status: UploadStatus;
+  progress: number;
+  error?: string;
+  // Kết quả sau khi confirm thành công — undefined khi chưa xong
+  result?: TicketAttachment;
+}

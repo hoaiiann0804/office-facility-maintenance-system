@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import axios from "axios";
-import type { MaintenanceTicketDetail } from "../../../entities/ticket/model/types";
+import type { MaintenanceTicketDetail, TicketStatus } from "../../../entities/ticket/model/types";
+import type { RoleName } from "../../../entities/auth/model/types";
 import { useAuthStore } from "../../auth/model/auth-store";
 import { useAssignTicketMutation } from "../api/use-assign-ticket-mutation";
 import { useChangeTicketStatusMutation } from "../api/use-change-ticket-status-mutation";
 import { useCreateTicketCommentMutation } from "../api/use-create-ticket-comment-mutation";
 import { useUsersQuery } from "../api/use-users-query";
+import { useTicketAttachmentsQuery } from "../api/use-ticket-attachments-query";
+import { useUploadAttachment } from "../api/use-upload-attachment";
+import { AttachmentUploadZone } from "./attachment-upload-zone";
+import { AttachmentList } from "./attachment-list";
 import { Spinner } from "../../../shared/ui";
 
 function toastApiError(error: unknown, fallback: string) {
@@ -241,6 +246,16 @@ export function TicketActionPanel({ ticket }: Props) {
       )}
 
       {/* ── COMMENT ──────────────────────────────────────────── */}
+      {/* ── ATTACHMENTS ───────────────────────────────────────── */}
+      <AttachmentsSection
+        ticketId={ticket.id}
+        ticketStatus={ticket.status}
+        isFinalized={isFinalized}
+        currentUserId={userId ?? 0}
+        role={role}
+        isAssignedTech={isAssignedTech}
+      />
+
       {!isFinalized && (
         <div className="control-card">
           <strong className="control-label">Thêm comment</strong>
@@ -265,6 +280,101 @@ export function TicketActionPanel({ ticket }: Props) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── AttachmentsSection ──────────────────────────────────────────────────
+//
+// NGHIỆP VỤ UPLOAD FILE:
+// - Admin / Manager : được upload ở mọi trạng thái chưa Closed/Cancelled
+// - Staff           : được upload khi ticket của họ ở trạng thái Pending/Assigned
+//                    (khi ticket đưa vào InProgress/Resolved, staff tạm không upload thêm)
+// - Technician      : được upload khi ticket được assign cho họ và đang InProgress/Resolved
+//                    (để attach bằng chứng xử lý, kết quả sửa chữa)
+//
+// XEM FILE: Tất cả roles có quyền truy cập ticket đều thấy danh sách file.
+// Nếu API trả 403 (ticket ngoài quyền hạn) → ẩn upload zone, hiện danh sách rỗng.
+type AttachmentsSectionProps = {
+  ticketId: number;
+  ticketStatus: TicketStatus;
+  isFinalized: boolean;
+  currentUserId: number;
+  role: RoleName | undefined;
+  isAssignedTech: boolean;
+};
+
+// Kiểm tra role này có được phép upload theo nghiệp vụ không
+function canUploadByRole(
+  role: RoleName | undefined,
+  ticketStatus: TicketStatus,
+  isFinalized: boolean,
+  isAssignedTech: boolean,
+): boolean {
+  if (isFinalized) return false;
+
+  if (role === "Admin" || role === "Manager") return true;
+
+  if (role === "Staff") {
+    // Staff upload khi ticket còn ở giai đoạn đầu
+    return ticketStatus === "Pending" || ticketStatus === "Assigned";
+  }
+
+  if (role === "Technician") {
+    // Technician upload khi được assign và đang làm việc
+    return isAssignedTech && (ticketStatus === "InProgress" || ticketStatus === "Resolved");
+  }
+
+  return false;
+}
+
+function AttachmentsSection({
+  ticketId,
+  ticketStatus,
+  isFinalized,
+  currentUserId,
+  role,
+  isAssignedTech,
+}: AttachmentsSectionProps) {
+  const { data: attachments = [], isLoading, error } = useTicketAttachmentsQuery(ticketId);
+  const { uploadItems, uploadFiles, removeItem } = useUploadAttachment(ticketId);
+
+  const canUpload = canUploadByRole(role, ticketStatus, isFinalized, isAssignedTech);
+
+  // 403 = token hợp lệ nhưng không có quyền xem attachment của ticket này
+  // (ví dụ: Technician xem ticket chưa assign cho họ, hoặc Staff xem ticket người khác)
+  const isForbidden = axios.isAxiosError(error) && error.response?.status === 403;
+
+  return (
+    <div className="control-card">
+      <strong className="control-label">File đính kèm</strong>
+      <div className="attachment-section">
+        {/* Upload zone — chỉ hiện nếu role có quyền upload theo nghiệp vụ */}
+        {canUpload && !isForbidden && (
+          <AttachmentUploadZone
+            uploadItems={uploadItems}
+            onFilesSelected={uploadFiles}
+            onRemoveItem={removeItem}
+            disabled={false}
+          />
+        )}
+
+        {/* Danh sách file đã lưu trong DB */}
+        {isLoading ? (
+          <p style={{ fontSize: "0.82rem", color: "var(--muted)", margin: 0 }}>Đang tải...</p>
+        ) : isForbidden ? (
+          <p style={{ fontSize: "0.82rem", color: "var(--muted)", margin: 0 }}>
+            Không có quyền xem file đính kèm của ticket này.
+          </p>
+        ) : (
+          <AttachmentList
+            ticketId={ticketId}
+            attachments={attachments}
+            canDelete={!isFinalized}
+            currentUserId={currentUserId}
+          />
+        )}
+      </div>
     </div>
   );
 }

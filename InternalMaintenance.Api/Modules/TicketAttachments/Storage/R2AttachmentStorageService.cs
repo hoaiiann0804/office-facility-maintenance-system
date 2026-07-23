@@ -40,10 +40,15 @@ public sealed class R2AttachmentStorageService : IAttachmentStorageService
         string storageKey,
         string contentType)
     {
+        // Tại sao không đưa contentType vào SignedHeaders khi upload?
+        // Vì browser sẽ trigger CORS Preflight (OPTIONS) trước khi PUT.
+        // Preflight không mang Content-Type header, nên chữ ký sẽ không khớp
+        // và R2 trả về 403 SignatureDoesNotMatch → Frontend nhận "network error".
+        // Giải pháp chuẩn cho browser upload: chỉ sign "host", không sign "content-type".
         var result = BuildPresignedUrl(
             httpMethod: HttpMethod.Put.Method,
             storageKey: storageKey,
-            contentType: contentType);
+            contentType: null);
 
         return Task.FromResult(result.IsSuccess
             ? ServiceResult<string>.Success(result.Data!)
