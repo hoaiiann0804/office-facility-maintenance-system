@@ -10,4 +10,6 @@ public class CreateDepartmentRequest
 
     [Required(ErrorMessage ="Description must not exceed 500 characters")]
     public string? Description {get;set;}
+
+    public bool IsMaintenanceTeam { get; set; } = false;
 }

@@ -38,6 +38,13 @@ public class DepartmentsController : ControllerBase
             );
         }
 
+        if (query.IsMaintenanceTeam.HasValue)
+        {
+            departmentQuery = departmentQuery.Where(
+                department => department.IsMaintenanceTeam == query.IsMaintenanceTeam.Value
+            );
+        }
+
         var totalItems = await departmentQuery.CountAsync();
 
         departmentQuery = departmentQuery
@@ -53,6 +60,7 @@ public class DepartmentsController : ControllerBase
             Id = department.Id,
             Name = department.Name,
             Description = department.Description,
+            IsMaintenanceTeam = department.IsMaintenanceTeam,
             CreatedAt = department.CreatedAt
 
         }).ToListAsync();
@@ -73,6 +81,7 @@ public class DepartmentsController : ControllerBase
             Id = department.Id,
             Name = department.Name,
             Description = department.Description,
+            IsMaintenanceTeam = department.IsMaintenanceTeam,
             CreatedAt = department.CreatedAt
         })
         .FirstOrDefaultAsync();
@@ -106,7 +115,8 @@ public class DepartmentsController : ControllerBase
         var department = new Department
         {
             Name = normalizedName,
-            Description = request.Description?.Trim()
+            Description = request.Description?.Trim(),
+            IsMaintenanceTeam = request.IsMaintenanceTeam
         };
         _context.Departments.Add(department);
         //Lưu thay đổi xuống Database
@@ -118,6 +128,7 @@ public class DepartmentsController : ControllerBase
             Id = department.Id,
             Name = department.Name,
             Description = department.Description,
+            IsMaintenanceTeam = department.IsMaintenanceTeam,
             CreatedAt = department.CreatedAt
         };
         //Sau khi tạo xong department, Api sẽ chỉ client biết có thể lấy department vừa tạo bằng action GetDepartmentById.
@@ -164,6 +175,7 @@ public class DepartmentsController : ControllerBase
         }
         department.Name = normalizedName;
         department.Description = request.Description?.Trim();
+        department.IsMaintenanceTeam = request.IsMaintenanceTeam;
         await _context.SaveChangesAsync();
 
         var response = new DepartmentResponse
@@ -171,6 +183,7 @@ public class DepartmentsController : ControllerBase
             Id = department.Id,
             Name = department.Name,
             Description = department.Description,
+            IsMaintenanceTeam = department.IsMaintenanceTeam,
             CreatedAt = department.CreatedAt
         };
 
