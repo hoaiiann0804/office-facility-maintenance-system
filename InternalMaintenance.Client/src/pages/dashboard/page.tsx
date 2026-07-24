@@ -6,9 +6,20 @@ import { appRoutes } from "../../shared/config/routes";
 import { logout } from "../../shared/api/auth";
 import { ChangePasswordModal } from "../../features/auth/components/change-password-modal";
 import { useTicketsQuery } from "../../features/tickets/api/use-tickets-query";
-import { useEquipmentQuery } from "../../features/tickets/api/use-equipment-query";
-import { useUsersQuery } from "../../features/tickets/api/use-users-query";
-import { useDepartmentsQuery } from "../../features/equipment/api/use-departments-query";
+import { useDashboardSummaryQuery } from "../../features/dashboard/api/use-dashboard-summary-query";
+import { useDashboardChartsQuery } from "../../features/dashboard/api/use-dashboard-charts-query";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 
 const STATUS_WORKFLOW: Array<{ status: string; label: string }> = [
   { status: "Pending", label: "Pending — Chờ tiếp nhận" },
@@ -35,31 +46,14 @@ export function DashboardPage() {
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const isAdmin = session?.user.roleName === "Admin";
 
-  // Fetch real data from API
-  const { data: ticketsPage, isLoading: isTicketsLoading } = useTicketsQuery({ pageSize: 100 });
-  const { data: equipmentPage, isLoading: isEquipmentLoading } = useEquipmentQuery({
-    pageSize: 100,
-  });
-  const { data: usersPage, isLoading: isUsersLoading } = useUsersQuery({ pageSize: 100 });
-  const { data: deptsPage, isLoading: isDeptsLoading } = useDepartmentsQuery({ pageSize: 100 });
+  const { data: summary, isLoading: isSummaryLoading } = useDashboardSummaryQuery();
+  const { data: charts, isLoading: isChartsLoading } = useDashboardChartsQuery();
+  const { data: ticketsPage, isLoading: isTicketsLoading } = useTicketsQuery({ pageSize: 5 });
 
-  const tickets = ticketsPage?.items ?? [];
-  const equipmentList = equipmentPage?.items ?? [];
-  const users = usersPage?.items ?? [];
-  const departments = deptsPage?.items ?? [];
+  const recentTickets = ticketsPage?.items ?? [];
+  const isStatsLoading = isSummaryLoading || isChartsLoading || isTicketsLoading;
 
-  const openTickets = tickets.filter(
-    (ticket) => !["Closed", "Cancelled"].includes(ticket.status),
-  ).length;
-  const activeEquipment = equipmentList.filter((item) => item.status === "Active").length;
-  const technicianCount = users.filter((user) => user.roleName === "Technician").length;
-  const departmentCount = departments.length;
-
-  const recentTickets = [...tickets]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
-
-  const isStatsLoading = isTicketsLoading || isEquipmentLoading || isUsersLoading || isDeptsLoading;
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
   const handleLogout = async (): Promise<void> => {
     const refreshToken = session?.refreshToken;
@@ -125,14 +119,62 @@ export function DashboardPage() {
                 Tổng quan dữ liệu hệ thống quản lý bảo trì nội bộ — dữ liệu được cập nhật từ API
                 thời gian thực.
               </p>
-              {isStatsLoading ? (
+              {isStatsLoading || !summary ? (
                 <Spinner />
               ) : (
                 <div className="stats-grid compact">
-                  <StatCard label="Open tickets" value={openTickets} />
-                  <StatCard label="Active equipment" value={activeEquipment} />
-                  <StatCard label="Technicians" value={technicianCount} />
-                  <StatCard label="Departments" value={departmentCount} />
+                  <StatCard label="Open tickets" value={summary.openTickets} />
+                  <StatCard label="Active equipment" value={summary.activeEquipment} />
+                  <StatCard label="Technicians" value={summary.totalTechnicians} />
+                  <StatCard label="Departments" value={summary.totalDepartments} />
+                </div>
+              )}
+            </Panel>
+
+            <Panel>
+              <span className="eyebrow">Analytics</span>
+              <h2>Biểu đồ phân tích</h2>
+              {isStatsLoading || !charts ? (
+                <Spinner />
+              ) : (
+                <div className="filter-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                  <div className="mini-card" style={{ height: "300px", display: "flex", flexDirection: "column" }}>
+                    <strong>Tickets theo trạng thái</strong>
+                    <div style={{ flex: 1, minHeight: 0, marginTop: 12 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={charts.ticketsByStatus}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            label
+                          >
+                            {charts.ticketsByStatus.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <div className="mini-card" style={{ height: "300px", display: "flex", flexDirection: "column" }}>
+                    <strong>Thiết bị theo phòng ban</strong>
+                    <div style={{ flex: 1, minHeight: 0, marginTop: 12 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={charts.equipmentByDepartment} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="value" fill="#8884d8" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </div>
               )}
             </Panel>
