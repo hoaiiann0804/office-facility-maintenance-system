@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { wireframeData } from "../../shared/mock/wireframe-data";
 import { Badge, EmptyState, Panel, Spinner, UserProfile } from "../../shared/ui";
-import { TicketBoard } from "../../features/tickets/components/ticket-board";
 import { appRoutes } from "../../shared/config/routes";
 import { useAuthStore } from "../../features/auth/model/auth-store";
 import { logout } from "../../shared/api/auth";
@@ -140,7 +139,7 @@ export function TicketsPage() {
         />
       </header>
 
-      <div className="layout">
+      <div className="layout" style={{ gridTemplateColumns: "1fr" }}>
         <main className="main-panel">
           <div className="view-grid tickets-grid">
             <Panel>
@@ -359,19 +358,17 @@ export function TicketsPage() {
 
                   <TicketActionPanel ticket={selectedTicket} />
 
-                  <div className="mini-grid">
-                    <div className="mini-card">
-                      <strong>Timeline</strong>
-                      <div className="stack">
-                        {selectedTicket.history.map((item: TicketHistoryItem) => (
-                          <div key={item.id} className="timeline-item compact">
-                            <strong>{item.status}</strong>
-                            <span>
-                              {item.note} · {item.changedBy} · {formatDateTime(item.changedAt)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                  <div className="mini-card">
+                    <strong>Timeline</strong>
+                    <div className="stack">
+                      {selectedTicket.history.map((item: TicketHistoryItem) => (
+                        <div key={item.id} className="timeline-item compact">
+                          <strong>{item.status}</strong>
+                          <span>
+                            {item.note} · {item.changedBy} · {formatDateTime(item.changedAt)}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </>
@@ -385,12 +382,6 @@ export function TicketsPage() {
           </div>
         </main>
       </div>
-
-      <TicketBoard
-        tickets={filteredTickets}
-        selectedTicketId={activeTicketId}
-        onSelectTicket={setSelectedTicketId}
-      />
 
       <CreateTicketModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
       {isEditModalOpen && selectedTicket && (
