@@ -7,7 +7,6 @@ import { appRoutes } from "../../shared/config/routes";
 import { useAuthStore } from "../../features/auth/model/auth-store";
 import { logout } from "../../shared/api/auth";
 import type {
-  TicketComment,
   TicketHistoryItem,
   TicketPriority,
   TicketStatus,
