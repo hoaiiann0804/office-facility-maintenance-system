@@ -16,17 +16,35 @@ const formatDateTime = (value: string | null | undefined) => {
 export function TicketCommentsList({ comments, currentUserId }: Props) {
   if (!comments || comments.length === 0) {
     return (
-      <div style={{ padding: "12px 0", color: "var(--muted)", fontStyle: "italic", fontSize: "0.85rem" }}>
+      <div
+        style={{
+          padding: "12px 0",
+          color: "var(--muted)",
+          fontStyle: "italic",
+          fontSize: "0.85rem",
+        }}
+      >
         Chưa có bình luận nào.
       </div>
     );
   }
 
   return (
-    <div className="comments-thread" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px", maxHeight: "400px", overflowY: "auto", paddingRight: "8px" }}>
+    <div
+      className="comments-thread"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        marginTop: "12px",
+        maxHeight: "400px",
+        overflowY: "auto",
+        paddingRight: "8px",
+      }}
+    >
       {comments.map((comment) => {
         const isMine = comment.userId === currentUserId;
-        
+
         return (
           <div
             key={comment.id}
@@ -45,11 +63,14 @@ export function TicketCommentsList({ comments, currentUserId }: Props) {
                 marginRight: isMine ? "4px" : "0",
               }}
             >
-              <strong>{isMine ? "Bạn" : comment.userName}</strong> • {formatDateTime(comment.createdAt)}
+              <strong>{isMine ? "Bạn" : comment.userName}</strong> •{" "}
+              {formatDateTime(comment.createdAt)}
             </div>
             <div
               style={{
-                backgroundColor: isMine ? "var(--primary-color, #2563eb)" : "var(--surface-sunken, #f1f5f9)",
+                backgroundColor: isMine
+                  ? "var(--primary-color, #2563eb)"
+                  : "var(--surface-sunken, #f1f5f9)",
                 color: isMine ? "#fff" : "inherit",
                 padding: "8px 12px",
                 borderRadius: "16px",
@@ -59,7 +80,7 @@ export function TicketCommentsList({ comments, currentUserId }: Props) {
                 wordBreak: "break-word",
                 whiteSpace: "pre-wrap",
                 fontSize: "0.9rem",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
               }}
             >
               {comment.content}
