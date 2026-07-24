@@ -24,5 +24,6 @@ public class CreateEquipmentRequest
 
     [StringLength(500, ErrorMessage = "Description must not exceed 500 characters")]
     public string? Description { get; set; }
-    
+
+    public int? MaintenanceDepartmentId { get; set; }
 }

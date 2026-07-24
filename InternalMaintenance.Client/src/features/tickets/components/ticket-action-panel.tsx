@@ -46,16 +46,26 @@ export function TicketActionPanel({ ticket }: Props) {
   const statusMutation = useChangeTicketStatusMutation(ticket.id);
   const commentMutation = useCreateTicketCommentMutation(ticket.id);
 
-  // Lấy danh sách technician thật từ API (Admin-only; non-Admin nhận danh sách rỗng)
+  // Lấy danh sách technician thật từ API
+  // Admin lấy toàn bộ, Manager chỉ lấy technician thuộc phòng ban của mình
   const { data: techPage, isLoading: isTechLoading } = useUsersQuery(
-    role === "Admin" || role === "Manager"
+    role === "Admin"
       ? { role: "Technician", isActive: true, pageSize: 200 }
-      : {},
+      : role === "Manager"
+        ? {
+            role: "Technician",
+            isActive: true,
+            pageSize: 200,
+            departmentId: session?.user.departmentId,
+          }
+        : {},
   );
   const technicians = techPage?.items ?? [];
 
   const isFinalized = ticket.status === "Closed" || ticket.status === "Cancelled";
   const isAssignedTech = ticket.assignedTechnicianId === userId;
+
+  const isRequester = ticket.createdByUserId === userId;
 
   // --- HANDLERS ---
   const handleAssign = async () => {
@@ -218,20 +228,21 @@ export function TicketActionPanel({ ticket }: Props) {
               </button>
             )}
 
-            {/* Admin / Manager → Closed */}
-            {(role === "Admin" || role === "Manager") && ticket.status === "Resolved" && (
-              <button
-                type="button"
-                className="button primary"
-                onClick={() => handleStatus("Closed")}
-                disabled={isWorking}
-              >
-                {statusMutation.isPending ? "..." : "Đóng ticket"}
-              </button>
-            )}
+            {/* Requester / Admin / Manager → Closed */}
+            {(isRequester || role === "Admin" || role === "Manager") &&
+              ticket.status === "Resolved" && (
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={() => handleStatus("Closed")}
+                  disabled={isWorking}
+                >
+                  {statusMutation.isPending ? "..." : "Đóng ticket"}
+                </button>
+              )}
 
-            {/* Admin / Manager → Cancelled */}
-            {(role === "Admin" || role === "Manager") && (
+            {/* Requester / Admin / Manager → Cancelled */}
+            {(isRequester || role === "Admin" || role === "Manager") && (
               <button
                 type="button"
                 className="button danger"
@@ -254,6 +265,7 @@ export function TicketActionPanel({ ticket }: Props) {
         currentUserId={userId ?? 0}
         role={role}
         isAssignedTech={isAssignedTech}
+        isRequester={isRequester}
       />
 
       {!isFinalized && (
@@ -310,13 +322,14 @@ function canUploadByRole(
   ticketStatus: TicketStatus,
   isFinalized: boolean,
   isAssignedTech: boolean,
+  isRequester: boolean,
 ): boolean {
   if (isFinalized) return false;
 
   if (role === "Admin" || role === "Manager") return true;
 
-  if (role === "Staff") {
-    // Staff upload khi ticket còn ở giai đoạn đầu
+  // Requester (bất kể là Staff hay Technician) được upload khi ticket còn mới
+  if (isRequester) {
     return ticketStatus === "Pending" || ticketStatus === "Assigned";
   }
 
@@ -335,11 +348,12 @@ function AttachmentsSection({
   currentUserId,
   role,
   isAssignedTech,
-}: AttachmentsSectionProps) {
+  isRequester,
+}: AttachmentsSectionProps & { isRequester: boolean }) {
   const { data: attachments = [], isLoading, error } = useTicketAttachmentsQuery(ticketId);
   const { uploadItems, uploadFiles, removeItem } = useUploadAttachment(ticketId);
 
-  const canUpload = canUploadByRole(role, ticketStatus, isFinalized, isAssignedTech);
+  const canUpload = canUploadByRole(role, ticketStatus, isFinalized, isAssignedTech, isRequester);
 
   // 403 = token hợp lệ nhưng không có quyền xem attachment của ticket này
   // (ví dụ: Technician xem ticket chưa assign cho họ, hoặc Staff xem ticket người khác)

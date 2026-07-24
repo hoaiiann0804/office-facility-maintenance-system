@@ -68,6 +68,12 @@ public class AppDbContext : DbContext
         .HasForeignKey(equipment => equipment.DepartmentId)
         .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Equipment>()
+        .HasOne(equipment => equipment.MaintenanceDepartment)
+        .WithMany()
+        .HasForeignKey(equipment => equipment.MaintenanceDepartmentId)
+        .OnDelete(DeleteBehavior.Restrict);
+
 
         modelBuilder.Entity<User>()
         .HasOne(user => user.Role)

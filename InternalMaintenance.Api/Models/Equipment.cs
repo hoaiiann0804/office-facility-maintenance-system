@@ -10,6 +10,11 @@ public class Equipment
 
     public int DepartmentId {get;set;}
     public Department? Department{get;set;}
+
+    // Phòng ban chịu trách nhiệm bảo trì thiết bị này (VD: Phòng IT, Phòng Hành Chính)
+    public int? MaintenanceDepartmentId {get;set;}
+    public Department? MaintenanceDepartment {get;set;}
+
     public string Status{get;set;} ="Active";
     public DateTime? PurchasedDate {get;set;}
 

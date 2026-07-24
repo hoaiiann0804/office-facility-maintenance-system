@@ -318,12 +318,7 @@ public class MaintenanceTicketsController : ControllerBase
         );
     }
 
-    [Authorize(
-    Roles =
-        $"{UserRoles.Admin}," +
-        $"{UserRoles.Manager}," +
-        $"{UserRoles.Staff}"
-    )]
+    [Authorize]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<MaintenanceTicketResponse>> UpdateTicket(int id, UpdateTicketRequest request)
     {
@@ -347,20 +342,22 @@ public class MaintenanceTicketsController : ControllerBase
         var userId = _currentUserService.UserId;
         var department = _currentUserService.DepartmentId;
 
-        // Staff chỉ sửa ticket của mình chỉ khi Pending 
-        if (role == UserRoles.Staff)
+        // Requester (bất kể role) được sửa ticket của mình chỉ khi Pending
+        if (ticket.CreatedByUserId == userId)
         {
-            if (ticket.CreatedByUserId != userId)
-                return Forbid();
-
             if (ticket.Status != TicketStatuses.Pending)
-                return BadRequest("Ticket already in processing state");
+                return BadRequest(new { message = "Ticket already in processing state" });
         }
-
-        // Manager chỉ sửa được Ticket của phòng ban mình 
-        if (role == UserRoles.Manager)
+        else 
         {
-            if (ticket.Equipment!.DepartmentId != department)
+            // Không phải Requester, thì chỉ có Admin hoặc Manager (thuộc phòng ban) mới được sửa
+            if (role != UserRoles.Admin && role != UserRoles.Manager)
+            {
+                return Forbid();
+            }
+
+            // Manager chỉ sửa được Ticket của phòng ban mình (Owner) 
+            if (role == UserRoles.Manager && ticket.Equipment!.DepartmentId != department)
             {
                 return Forbid();
             }
@@ -422,11 +419,14 @@ public class MaintenanceTicketsController : ControllerBase
             );
         }
 
+        var targetDeptId = ticket.Equipment!.MaintenanceDepartmentId ?? ticket.Equipment.DepartmentId;
+
         // Admin được assign mọi ticket
         if (role == UserRoles.Manager)
         {
-            // Manager chỉ assign ticket thuộc phòng ban mình 
-            if (ticket.Equipment!.DepartmentId != departmentId)
+            // Manager chỉ assign ticket thuộc phòng ban chuyên môn bảo trì của mình 
+            // Nếu thiết bị chưa cấu hình MaintenanceDepartmentId thì fallback về DepartmentId
+            if (targetDeptId != departmentId)
             {
                 return Forbid();
             }
@@ -456,8 +456,6 @@ public class MaintenanceTicketsController : ControllerBase
         }
 
 
-        //Không nên assign ticket cho Staff/Admin/Manager
-        //Ticket bảo trì phải được giao cho technician xử lý
         var technician = await _context.Users.Include(user => user.Role).
         FirstOrDefaultAsync(u => u.Id == request.AssignedTechnicianId);
 
@@ -477,6 +475,16 @@ public class MaintenanceTicketsController : ControllerBase
                 new
                 {
                     message = "Assigned user must be a technician"
+                }
+            );
+        }
+
+        if (technician.DepartmentId != targetDeptId)
+        {
+            return BadRequest(
+                new
+                {
+                    message = "Assigned technician must belong to the maintenance department for this equipment"
                 }
             );
         }
@@ -557,12 +565,7 @@ public class MaintenanceTicketsController : ControllerBase
         return Ok(response);
     }
 
-    [Authorize(
-    Roles =
-    $"{UserRoles.Admin}," +
-    $"{UserRoles.Manager}," +
-    $"{UserRoles.Technician}"
-    )]
+    [Authorize]
     [HttpPatch("{id:int}/status")]
     public async Task<ActionResult<MaintenanceTicketResponse>> TransitionTicketStatus(int id, ChangeTicketStatusRequest request)
     {
@@ -703,12 +706,11 @@ public class MaintenanceTicketsController : ControllerBase
             equipment.Status = EquipmentStatuses.Active;
         }
 
-        // Chỉ Admin hoặc Manager cùng phòng ban thiết bị 
-        // mới được xác nhận hoàn tất và đóng ticket 
-
+        // Requester (người tạo), Admin, hoặc Manager (phòng ban sở hữu thiết bị) được nghiệm thu và đóng ticket
         if (newStatus == TicketStatuses.Closed)
         {
-            var canClose = role == UserRoles.Admin
+            var canClose = ticket.CreatedByUserId == userId
+            || role == UserRoles.Admin
             || (role == UserRoles.Manager && equipment.DepartmentId == departmentId);
 
             if (!canClose)
@@ -717,14 +719,12 @@ public class MaintenanceTicketsController : ControllerBase
             }
         }
 
-        // Chỉ Admin hoặc Manager cùng phòng ban 
-        // Được phép hủy ticket trước khi hoàn tất xử lý
-
+        // Requester, Admin, hoặc Manager được phép hủy ticket 
         if (newStatus == TicketStatuses.Cancelled)
         {
-            var canCancel = role == UserRoles.Admin ||
-            (role == UserRoles.Manager &&
-            equipment.DepartmentId == departmentId);
+            var canCancel = ticket.CreatedByUserId == userId
+            || role == UserRoles.Admin 
+            || (role == UserRoles.Manager && equipment.DepartmentId == departmentId);
 
             if (!canCancel)
             {

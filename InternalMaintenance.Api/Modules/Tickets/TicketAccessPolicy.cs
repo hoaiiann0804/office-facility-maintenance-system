@@ -31,7 +31,7 @@ public static class TicketAccessPolicy
 
         if (role == UserRoles.Technician)
         {
-            return query.Where(ticket => ticket.AssignedTechnicianId == userId);
+            return query.Where(ticket => ticket.AssignedTechnicianId == userId || ticket.CreatedByUserId == userId);
         }
 
         return query.Where(ticket => false);
@@ -60,7 +60,8 @@ public static class TicketAccessPolicy
 
         if (role == UserRoles.Technician)
         {
-            return ticket.AssignedTechnicianId == currentUserService.UserId;
+            return ticket.AssignedTechnicianId == currentUserService.UserId || 
+                   ticket.CreatedByUserId == currentUserService.UserId;
         }
 
         return false;
