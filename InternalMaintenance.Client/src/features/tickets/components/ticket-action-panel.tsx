@@ -52,7 +52,12 @@ export function TicketActionPanel({ ticket }: Props) {
     role === "Admin"
       ? { role: "Technician", isActive: true, pageSize: 200 }
       : role === "Manager"
-        ? { role: "Technician", isActive: true, pageSize: 200, departmentId: session?.user.departmentId }
+        ? {
+            role: "Technician",
+            isActive: true,
+            pageSize: 200,
+            departmentId: session?.user.departmentId,
+          }
         : {},
   );
   const technicians = techPage?.items ?? [];
@@ -224,16 +229,17 @@ export function TicketActionPanel({ ticket }: Props) {
             )}
 
             {/* Requester / Admin / Manager → Closed */}
-            {(isRequester || role === "Admin" || role === "Manager") && ticket.status === "Resolved" && (
-              <button
-                type="button"
-                className="button primary"
-                onClick={() => handleStatus("Closed")}
-                disabled={isWorking}
-              >
-                {statusMutation.isPending ? "..." : "Đóng ticket"}
-              </button>
-            )}
+            {(isRequester || role === "Admin" || role === "Manager") &&
+              ticket.status === "Resolved" && (
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={() => handleStatus("Closed")}
+                  disabled={isWorking}
+                >
+                  {statusMutation.isPending ? "..." : "Đóng ticket"}
+                </button>
+              )}
 
             {/* Requester / Admin / Manager → Cancelled */}
             {(isRequester || role === "Admin" || role === "Manager") && (

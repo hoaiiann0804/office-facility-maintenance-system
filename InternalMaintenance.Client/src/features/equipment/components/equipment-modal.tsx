@@ -74,7 +74,9 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
       code: code.trim(),
       name: name.trim(),
       departmentId: Number(departmentId),
-      maintenanceDepartmentId: maintenanceDepartmentId ? Number(maintenanceDepartmentId) : undefined,
+      maintenanceDepartmentId: maintenanceDepartmentId
+        ? Number(maintenanceDepartmentId)
+        : undefined,
       status,
       purchasedDate: purchasedDate || null,
       description: description.trim() || null,
