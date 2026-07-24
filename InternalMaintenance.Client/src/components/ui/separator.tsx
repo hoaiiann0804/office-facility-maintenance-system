@@ -3,7 +3,10 @@ import { cn } from "@/lib/utils";
 
 const Separator = React.forwardRef<
   React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div"> & { orientation?: "horizontal" | "vertical"; decorative?: boolean }
+  React.ComponentPropsWithoutRef<"div"> & {
+    orientation?: "horizontal" | "vertical";
+    decorative?: boolean;
+  }
 >(({ className, orientation = "horizontal", decorative = true, ...props }, ref) => (
   <div
     ref={ref}

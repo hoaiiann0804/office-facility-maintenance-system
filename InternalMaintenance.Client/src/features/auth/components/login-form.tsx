@@ -23,7 +23,10 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-const ROLE_BADGE: Record<string, "default" | "secondary" | "destructive" | "outline" | "success" | "warning"> = {
+const ROLE_BADGE: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline" | "success" | "warning"
+> = {
   Admin: "destructive",
   Manager: "warning",
   Technician: "success",
@@ -64,10 +67,26 @@ export function LoginForm() {
   };
 
   const features = [
-    { icon: Wrench, title: "Quản lý Ticket", desc: "Tạo và theo dõi yêu cầu bảo trì theo thời gian thực" },
-    { icon: Shield, title: "Phân quyền vai trò", desc: "Admin, Manager, Technician, Employee đầy đủ" },
-    { icon: Bell, title: "Thông báo & Lịch sử", desc: "Comment và lịch sử thay đổi trạng thái ticket" },
-    { icon: BarChart3, title: "Dashboard phân tích", desc: "Biểu đồ trực quan về tình trạng thiết bị & ticket" },
+    {
+      icon: Wrench,
+      title: "Quản lý Ticket",
+      desc: "Tạo và theo dõi yêu cầu bảo trì theo thời gian thực",
+    },
+    {
+      icon: Shield,
+      title: "Phân quyền vai trò",
+      desc: "Admin, Manager, Technician, Employee đầy đủ",
+    },
+    {
+      icon: Bell,
+      title: "Thông báo & Lịch sử",
+      desc: "Comment và lịch sử thay đổi trạng thái ticket",
+    },
+    {
+      icon: BarChart3,
+      title: "Dashboard phân tích",
+      desc: "Biểu đồ trực quan về tình trạng thiết bị & ticket",
+    },
   ];
 
   return (
@@ -170,7 +189,10 @@ export function LoginForm() {
                       <span className="text-xs font-semibold group-hover:text-primary transition-colors truncate">
                         {item.label}
                       </span>
-                      <Badge variant={ROLE_BADGE[item.role] ?? "secondary"} className="text-[10px] px-1.5 shrink-0">
+                      <Badge
+                        variant={ROLE_BADGE[item.role] ?? "secondary"}
+                        className="text-[10px] px-1.5 shrink-0"
+                      >
                         {item.role}
                       </Badge>
                     </div>
@@ -185,7 +207,12 @@ export function LoginForm() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="example@company.com" {...register("email")} />
+              <Input
+                id="email"
+                type="email"
+                placeholder="example@company.com"
+                {...register("email")}
+              />
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
 
@@ -208,7 +235,9 @@ export function LoginForm() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+              {errors.password && (
+                <p className="text-xs text-destructive">{errors.password.message}</p>
+              )}
             </div>
 
             <Button
@@ -228,8 +257,8 @@ export function LoginForm() {
           </form>
 
           <p className="text-center text-xs text-muted-foreground">
-            Bạn cần hỗ trợ? Liên hệ{" "}
-            <span className="text-primary font-medium">bộ phận IT</span> để được cấp tài khoản.
+            Bạn cần hỗ trợ? Liên hệ <span className="text-primary font-medium">bộ phận IT</span> để
+            được cấp tài khoản.
           </p>
         </div>
       </div>
