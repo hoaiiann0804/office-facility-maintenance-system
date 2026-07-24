@@ -137,8 +137,14 @@ export function DashboardPage() {
               {isStatsLoading || !charts ? (
                 <Spinner />
               ) : (
-                <div className="filter-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                  <div className="mini-card" style={{ height: "300px", display: "flex", flexDirection: "column" }}>
+                <div
+                  className="filter-grid"
+                  style={{ gridTemplateColumns: "1fr 1fr", gap: "24px" }}
+                >
+                  <div
+                    className="mini-card"
+                    style={{ height: "300px", display: "flex", flexDirection: "column" }}
+                  >
                     <strong>Tickets theo trạng thái</strong>
                     <div style={{ flex: 1, minHeight: 0, marginTop: 12 }}>
                       <ResponsiveContainer width="100%" height="100%">
@@ -161,11 +167,17 @@ export function DashboardPage() {
                       </ResponsiveContainer>
                     </div>
                   </div>
-                  <div className="mini-card" style={{ height: "300px", display: "flex", flexDirection: "column" }}>
+                  <div
+                    className="mini-card"
+                    style={{ height: "300px", display: "flex", flexDirection: "column" }}
+                  >
                     <strong>Thiết bị theo phòng ban</strong>
                     <div style={{ flex: 1, minHeight: 0, marginTop: 12 }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={charts.equipmentByDepartment} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                        <BarChart
+                          data={charts.equipmentByDepartment}
+                          margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" />
                           <YAxis />
