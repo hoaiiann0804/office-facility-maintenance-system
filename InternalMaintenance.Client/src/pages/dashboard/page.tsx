@@ -137,7 +137,9 @@ export function DashboardPage() {
               {isChartsLoading ? (
                 <Spinner />
               ) : !charts ? (
-                <p style={{ color: "var(--bad)" }}>Không thể tải dữ liệu biểu đồ do lỗi API. Vui lòng kiểm tra lại Backend.</p>
+                <p style={{ color: "var(--bad)" }}>
+                  Không thể tải dữ liệu biểu đồ do lỗi API. Vui lòng kiểm tra lại Backend.
+                </p>
               ) : (
                 <div
                   className="filter-grid"
