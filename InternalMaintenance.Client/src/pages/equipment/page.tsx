@@ -25,7 +25,6 @@ export function EquipmentPage() {
 
   const role = session?.user.roleName;
   const isAdmin = role === "Admin";
-  const isManager = role === "Manager";
   const canEdit = isAdmin;
 
   const [search, setSearch] = useState("");
