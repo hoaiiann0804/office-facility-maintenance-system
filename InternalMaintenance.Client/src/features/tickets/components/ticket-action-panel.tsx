@@ -12,6 +12,7 @@ import { useTicketAttachmentsQuery } from "../api/use-ticket-attachments-query";
 import { useUploadAttachment } from "../api/use-upload-attachment";
 import { AttachmentUploadZone } from "./attachment-upload-zone";
 import { AttachmentList } from "./attachment-list";
+import { TicketCommentsList } from "./ticket-comments-list";
 import { Spinner } from "../../../shared/ui";
 
 function toastApiError(error: unknown, fallback: string) {
@@ -267,6 +268,11 @@ export function TicketActionPanel({ ticket }: Props) {
         isAssignedTech={isAssignedTech}
         isRequester={isRequester}
       />
+
+      <div className="control-card">
+        <strong className="control-label">Bình luận</strong>
+        <TicketCommentsList comments={ticket.comments} currentUserId={userId} />
+      </div>
 
       {!isFinalized && (
         <div className="control-card">

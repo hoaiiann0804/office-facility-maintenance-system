@@ -251,12 +251,14 @@ export const wireframeData: WireframeData = {
       comments: [
         {
           id: 1,
+          userId: 4,
           userName: "Pham Kim Anh",
           content: "The jam started this morning after a toner replacement.",
           createdAt: "2026-07-01T02:20:00Z",
         },
         {
           id: 2,
+          userId: 3,
           userName: "Le Hoang Long",
           content: "I am checking the pickup rollers now.",
           createdAt: "2026-07-01T04:00:00Z",
@@ -307,6 +309,7 @@ export const wireframeData: WireframeData = {
       comments: [
         {
           id: 1,
+          userId: 2,
           userName: "Tran Thu Ha",
           content: "Please inspect before the afternoon meeting.",
           createdAt: "2026-07-02T01:22:00Z",
@@ -379,6 +382,7 @@ export const wireframeData: WireframeData = {
       comments: [
         {
           id: 1,
+          userId: 5,
           userName: "Hoang Gia Bao",
           content: "New remote is working and tested with HDMI input.",
           createdAt: "2026-07-03T09:35:00Z",

@@ -179,6 +179,7 @@ export function DepartmentsPage() {
                       <tr>
                         <th>ID</th>
                         <th>Tên phòng ban</th>
+                        <th>Loại phòng ban</th>
                         <th>Mô tả</th>
                         <th>Ngày tạo</th>
                         <th>Hành động</th>
@@ -190,6 +191,15 @@ export function DepartmentsPage() {
                           <td>{dept.id}</td>
                           <td>
                             <strong>{dept.name}</strong>
+                          </td>
+                          <td>
+                            {dept.isMaintenanceTeam ? (
+                              <span style={{ color: "var(--primary-color)", fontWeight: "bold" }}>
+                                Bảo trì
+                              </span>
+                            ) : (
+                              <span style={{ color: "var(--muted)" }}>Thông thường</span>
+                            )}
                           </td>
                           <td>{dept.description || "—"}</td>
                           <td>{formatDateTime(dept.createdAt)}</td>

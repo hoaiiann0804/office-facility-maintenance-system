@@ -32,6 +32,7 @@ export interface MaintenanceTicketDetail extends MaintenanceTicket {
 
 export interface TicketComment {
   id: number;
+  userId: number;
   userName: string;
   content: string;
   createdAt: string;

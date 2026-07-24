@@ -56,12 +56,18 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
   }
 
   const { data: deptsPage, isLoading: isDeptsLoading } = useDepartmentsQuery({ pageSize: 100 });
+  const { data: maintenanceDeptsPage, isLoading: isMaintenanceDeptsLoading } = useDepartmentsQuery({
+    pageSize: 100,
+    isMaintenanceTeam: true,
+  });
+
   const createMutation = useCreateEquipmentMutation();
   const updateMutation = useUpdateEquipmentMutation(equipment?.id ?? 0);
 
   if (!isOpen) return null;
 
   const departments = deptsPage?.items ?? [];
+  const maintenanceDepartments = maintenanceDeptsPage?.items ?? [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,10 +170,10 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
               onChange={(e) =>
                 setMaintenanceDepartmentId(e.target.value ? Number(e.target.value) : "")
               }
-              disabled={isDeptsLoading || isPending}
+              disabled={isMaintenanceDeptsLoading || isPending}
             >
               <option value="">-- Mặc định (Tự bảo trì) --</option>
-              {departments.map((d) => (
+              {maintenanceDepartments.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
                 </option>

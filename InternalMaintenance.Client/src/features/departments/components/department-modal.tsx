@@ -17,6 +17,9 @@ export function DepartmentModal({ department, isOpen, onClose }: Props) {
   const isEdit = !!department;
   const [name, setName] = useState(department?.name ?? "");
   const [description, setDescription] = useState(department?.description ?? "");
+  const [isMaintenanceTeam, setIsMaintenanceTeam] = useState(
+    department?.isMaintenanceTeam ?? false,
+  );
 
   const [prevDepartment, setPrevDepartment] = useState(department);
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
@@ -27,6 +30,7 @@ export function DepartmentModal({ department, isOpen, onClose }: Props) {
     if (isOpen) {
       setName(department?.name ?? "");
       setDescription(department?.description ?? "");
+      setIsMaintenanceTeam(department?.isMaintenanceTeam ?? false);
     }
   }
 
@@ -45,6 +49,7 @@ export function DepartmentModal({ department, isOpen, onClose }: Props) {
     const payload = {
       name: name.trim(),
       description: description.trim() || null,
+      isMaintenanceTeam,
     };
 
     try {
@@ -98,6 +103,21 @@ export function DepartmentModal({ department, isOpen, onClose }: Props) {
               rows={3}
               disabled={isPending}
             />
+          </label>
+
+          <label
+            className="checkbox-field"
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            <input
+              type="checkbox"
+              checked={isMaintenanceTeam}
+              onChange={(e) => setIsMaintenanceTeam(e.target.checked)}
+              disabled={isPending}
+            />
+            <span style={{ fontWeight: 600 }}>
+              Là bộ phận bảo trì (Sẽ xuất hiện trong danh sách Phòng ban bảo trì thiết bị)
+            </span>
           </label>
 
           <div className="button-row spaced">
