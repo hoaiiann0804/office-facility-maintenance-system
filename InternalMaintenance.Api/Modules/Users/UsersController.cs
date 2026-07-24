@@ -25,7 +25,7 @@ public class UsersController : ControllerBase
         _currentUserService = currentUserService;
     }
 
-    [Authorize(Roles = UserRoles.Admin)]
+    [Authorize(Roles = $"{UserRoles.Admin},{UserRoles.Manager}")]
     [HttpGet]
     public async Task<ActionResult<PagedResponse<UserResponse>>> GetUsers(
         [FromQuery] UserQuery query

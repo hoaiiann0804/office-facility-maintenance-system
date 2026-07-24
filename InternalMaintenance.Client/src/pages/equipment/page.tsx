@@ -26,7 +26,7 @@ export function EquipmentPage() {
   const role = session?.user.roleName;
   const isAdmin = role === "Admin";
   const isManager = role === "Manager";
-  const canEdit = isAdmin || isManager;
+  const canEdit = isAdmin;
 
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState<number | "">("");

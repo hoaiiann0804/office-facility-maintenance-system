@@ -27,6 +27,9 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
   const [code, setCode] = useState(equipment?.code ?? "");
   const [name, setName] = useState(equipment?.name ?? "");
   const [departmentId, setDepartmentId] = useState<number | "">(equipment?.departmentId ?? "");
+  const [maintenanceDepartmentId, setMaintenanceDepartmentId] = useState<number | "">(
+    equipment?.maintenanceDepartmentId ?? "",
+  );
   const [status, setStatus] = useState<EquipmentStatus>(equipment?.status ?? "Active");
   const [purchasedDate, setPurchasedDate] = useState(
     equipment?.purchasedDate ? equipment.purchasedDate.split("T")[0] : getTodayDateString(),
@@ -43,6 +46,7 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
       setCode(equipment?.code ?? "");
       setName(equipment?.name ?? "");
       setDepartmentId(equipment?.departmentId ?? "");
+      setMaintenanceDepartmentId(equipment?.maintenanceDepartmentId ?? "");
       setStatus(equipment?.status ?? "Active");
       setPurchasedDate(
         equipment?.purchasedDate ? equipment.purchasedDate.split("T")[0] : getTodayDateString(),
@@ -70,6 +74,7 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
       code: code.trim(),
       name: name.trim(),
       departmentId: Number(departmentId),
+      maintenanceDepartmentId: maintenanceDepartmentId ? Number(maintenanceDepartmentId) : undefined,
       status,
       purchasedDate: purchasedDate || null,
       description: description.trim() || null,
@@ -141,6 +146,25 @@ export function EquipmentModal({ equipment, isOpen, onClose }: Props) {
               disabled={isDeptsLoading || isPending}
             >
               <option value="">-- Chọn phòng ban --</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Phòng ban bảo trì (Tùy chọn)</span>
+            <select
+              className="select"
+              value={maintenanceDepartmentId}
+              onChange={(e) =>
+                setMaintenanceDepartmentId(e.target.value ? Number(e.target.value) : "")
+              }
+              disabled={isDeptsLoading || isPending}
+            >
+              <option value="">-- Mặc định (Tự bảo trì) --</option>
               {departments.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}

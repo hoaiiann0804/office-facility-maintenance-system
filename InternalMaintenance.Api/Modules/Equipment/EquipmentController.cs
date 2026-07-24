@@ -4,6 +4,7 @@ using InternalMaintenance.Api.Models;
 using InternalMaintenance.Api.Data;
 using InternalMaintenance.Api.Common.Pagination;
 using InternalMaintenance.Api.Modules.Equipment.Contracts;
+using InternalMaintenance.Api.Services;
 using EquipmentEntity = InternalMaintenance.Api.Models.Equipment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,10 +18,12 @@ namespace InternalMaintenance.Api.Modules.Equipment;
 public class EquipmentController : ControllerBase
 {
     private readonly AppDbContext _context;
-    public EquipmentController(AppDbContext context)
+    private readonly CurrentUserService _currentUserService;
+    
+    public EquipmentController(AppDbContext context, CurrentUserService currentUserService)
     {
         _context = context;
-
+        _currentUserService = currentUserService;
     }
 
     [Authorize]
@@ -32,6 +35,19 @@ public class EquipmentController : ControllerBase
         var equipmentQuery = _context.Equipment
         .AsNoTracking()
         .AsQueryable();
+
+        var role = _currentUserService.Role;
+        var userDeptId = _currentUserService.DepartmentId;
+
+        // Chỉ Admin được xem toàn bộ thiết bị. 
+        // Các Role khác chỉ xem thiết bị của phòng ban mình HOẶC thiết bị mà phòng ban mình chịu trách nhiệm bảo trì.
+        if (role != UserRoles.Admin)
+        {
+            equipmentQuery = equipmentQuery.Where(e => 
+                e.DepartmentId == userDeptId || 
+                e.MaintenanceDepartmentId == userDeptId
+            );
+        }
         var keyword = query.Keyword?.Trim();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
@@ -68,8 +84,9 @@ public class EquipmentController : ControllerBase
                 Code = e.Code,
                 Name = e.Name,
                 DepartmentId = e.DepartmentId,
-                // ! : bắt buộc phải có dữ liệu để chạy (sẽ ko null khi chạy)
                 DepartmentName = e.Department!.Name,
+                MaintenanceDepartmentId = e.MaintenanceDepartmentId,
+                MaintenanceDepartmentName = e.MaintenanceDepartment != null ? e.MaintenanceDepartment.Name : null,
                 Status = e.Status,
                 PurchasedDate = e.PurchasedDate,
                 Description = e.Description,
@@ -94,6 +111,8 @@ public class EquipmentController : ControllerBase
                 Name = e.Name,
                 DepartmentId = e.DepartmentId,
                 DepartmentName = e.Department!.Name,
+                MaintenanceDepartmentId = e.MaintenanceDepartmentId,
+                MaintenanceDepartmentName = e.MaintenanceDepartment != null ? e.MaintenanceDepartment.Name : null,
                 Status = e.Status,
                 PurchasedDate = e.PurchasedDate,
                 Description = e.Description,
@@ -109,14 +128,21 @@ public class EquipmentController : ControllerBase
                 message = "Equipment not found"
             });
         }
+
+        var role = _currentUserService.Role;
+        var userDeptId = _currentUserService.DepartmentId;
+
+        if (role != UserRoles.Admin && 
+            equipment.DepartmentId != userDeptId && 
+            equipment.MaintenanceDepartmentId != userDeptId)
+        {
+            return Forbid();
+        }
+
         return Ok(equipment);
     }
 
-    [Authorize(
-        Roles =
-        $"{UserRoles.Admin}," +
-        $"{UserRoles.Manager}"
-    )]
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpPost]
     public async Task<ActionResult<EquipmentResponse>> CreateEquipment(CreateEquipmentRequest request)
     {
@@ -192,6 +218,7 @@ public class EquipmentController : ControllerBase
             Code = code,
             Name = name,
             DepartmentId = request.DepartmentId,
+            MaintenanceDepartmentId = request.MaintenanceDepartmentId,
             Status = status,
             PurchasedDate = request.PurchasedDate,
             Description = request.Description?.Trim()
@@ -213,6 +240,8 @@ public class EquipmentController : ControllerBase
             Name = e.Name,
             DepartmentId = e.DepartmentId,
             DepartmentName = e.Department!.Name, // Tên phòng ban từ bảng liên kết (Join) dưới database 
+            MaintenanceDepartmentId = e.MaintenanceDepartmentId,
+            MaintenanceDepartmentName = e.MaintenanceDepartment != null ? e.MaintenanceDepartment.Name : null,
             Status = e.Status,
             PurchasedDate = e.PurchasedDate,
             Description = e.Description,
@@ -227,11 +256,7 @@ public class EquipmentController : ControllerBase
         );
     }
 
-    [Authorize(
-       Roles =
-       $"{UserRoles.Admin}," +
-       $"{UserRoles.Manager}"
-   )]
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<EquipmentResponse>> UpdateEquipment(int id, UpdateEquipmentRequest request)
     {
@@ -345,6 +370,7 @@ public class EquipmentController : ControllerBase
         equipment.Code = code;
         equipment.Name = name;
         equipment.DepartmentId = request.DepartmentId;
+        equipment.MaintenanceDepartmentId = request.MaintenanceDepartmentId;
         equipment.Status = status;
         equipment.PurchasedDate = request.PurchasedDate;
         equipment.Description = request.Description?.Trim();
@@ -369,6 +395,8 @@ public class EquipmentController : ControllerBase
             // Dấu ! nói với compiler rằng Department chắc chắn có dữ liệu
             // Vì Department không bắt buộc có Department hợp lệ và đã check epartmentExists ở trên.
             DepartmentName = e.Department!.Name,
+            MaintenanceDepartmentId = e.MaintenanceDepartmentId,
+            MaintenanceDepartmentName = e.MaintenanceDepartment != null ? e.MaintenanceDepartment.Name : null,
             Status = e.Status,
             PurchasedDate = e.PurchasedDate,
             Description = e.Description,

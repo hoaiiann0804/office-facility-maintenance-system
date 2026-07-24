@@ -6,6 +6,8 @@ export interface Equipment {
   name: string;
   departmentId: number;
   departmentName: string;
+  maintenanceDepartmentId?: number | null;
+  maintenanceDepartmentName?: string | null;
   status: EquipmentStatus;
   purchasedDate: string | null;
   description: string | null;
