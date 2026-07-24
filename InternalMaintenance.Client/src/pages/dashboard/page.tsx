@@ -134,8 +134,10 @@ export function DashboardPage() {
             <Panel>
               <span className="eyebrow">Analytics</span>
               <h2>Biểu đồ phân tích</h2>
-              {isStatsLoading || !charts ? (
+              {isChartsLoading ? (
                 <Spinner />
+              ) : !charts ? (
+                <p style={{ color: "var(--bad)" }}>Không thể tải dữ liệu biểu đồ do lỗi API. Vui lòng kiểm tra lại Backend.</p>
               ) : (
                 <div
                   className="filter-grid"

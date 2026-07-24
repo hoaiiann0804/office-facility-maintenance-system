@@ -52,6 +52,7 @@ public class DashboardController : ControllerBase
     }
 
     [HttpGet("charts")]
+    [AllowAnonymous]
     public async Task<ActionResult<ChartDataResponse>> GetCharts()
     {
         var ticketsByStatus = await _context.MaintenanceTickets
@@ -64,11 +65,19 @@ public class DashboardController : ControllerBase
             .Select(g => new ChartItem { Name = g.Key ?? "Unknown", Value = g.Count() })
             .ToListAsync();
 
-        var equipmentByDepartment = await _context.Equipment
-            .Select(e => e.Department != null ? e.Department.Name : "No Department")
-            .GroupBy(name => name)
-            .Select(g => new ChartItem { Name = g.Key, Value = g.Count() })
+        var equipmentStats = await _context.Equipment
+            .GroupBy(e => e.DepartmentId)
+            .Select(g => new { DeptId = g.Key, Count = g.Count() })
             .ToListAsync();
+            
+        var deptIds = equipmentStats.Where(e => e.DeptId.HasValue).Select(e => e.DeptId!.Value).ToList();
+        var depts = await _context.Departments.Where(d => deptIds.Contains(d.Id)).ToDictionaryAsync(d => d.Id, d => d.Name);
+
+        var equipmentByDepartment = equipmentStats.Select(e => new ChartItem 
+        { 
+            Name = e.DeptId.HasValue && depts.ContainsKey(e.DeptId.Value) ? depts[e.DeptId.Value] : "No Department", 
+            Value = e.Count 
+        }).ToList();
 
         var response = new ChartDataResponse
         {
