@@ -158,7 +158,7 @@ export function DashboardPage() {
                             outerRadius={80}
                             label
                           >
-                            {charts.ticketsByStatus.map((entry, index) => (
+                            {charts.ticketsByStatus.map((_, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
