@@ -259,7 +259,7 @@ export function DashboardPage() {
         </main>
 
         <aside className="inspector">
-          <Panel>
+          {/* <Panel>
             <span className="eyebrow">Next step</span>
             <h3>Go to Tickets</h3>
             <p className="section-lead">
@@ -268,16 +268,16 @@ export function DashboardPage() {
             <Link className="button primary" to={appRoutes.tickets}>
               Open tickets
             </Link>
-          </Panel>
+          </Panel> */}
 
-          <Panel>
+          {/* <Panel>
             <span className="eyebrow">API layer</span>
             <h3>Kết nối hoàn tất</h3>
             <p className="section-lead">
               Dashboard đang hiển thị dữ liệu thời gian thực từ backend API — không còn sử dụng mock
               data.
             </p>
-          </Panel>
+          </Panel> */}
         </aside>
       </div>
 

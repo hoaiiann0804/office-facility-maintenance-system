@@ -56,17 +56,17 @@ public class DashboardController : ControllerBase
     {
         var ticketsByStatus = await _context.MaintenanceTickets
             .GroupBy(t => t.Status)
-            .Select(g => new ChartItem { Name = g.Key, Value = g.Count() })
+            .Select(g => new ChartItem { Name = g.Key ?? "Unknown", Value = g.Count() })
             .ToListAsync();
 
         var ticketsByPriority = await _context.MaintenanceTickets
             .GroupBy(t => t.Priority)
-            .Select(g => new ChartItem { Name = g.Key, Value = g.Count() })
+            .Select(g => new ChartItem { Name = g.Key ?? "Unknown", Value = g.Count() })
             .ToListAsync();
 
         var equipmentByDepartment = await _context.Equipment
-            .Include(e => e.Department)
-            .GroupBy(e => e.Department != null ? e.Department.Name : "No Department")
+            .Select(e => e.Department != null ? e.Department.Name : "No Department")
+            .GroupBy(name => name)
             .Select(g => new ChartItem { Name = g.Key, Value = g.Count() })
             .ToListAsync();
 
