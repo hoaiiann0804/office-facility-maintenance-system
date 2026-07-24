@@ -374,25 +374,6 @@ export function TicketsPage() {
                         ))}
                       </div>
                     </div>
-                    <div className="mini-card">
-                      <strong>Comments</strong>
-                      <div className="stack">
-                        {selectedTicket.comments.length ? (
-                          selectedTicket.comments.map((comment: TicketComment) => (
-                            <div key={comment.id} className="comment-item">
-                              <strong>{comment.userName}</strong>
-                              <span>{comment.content}</span>
-                              <small>{formatDateTime(comment.createdAt)}</small>
-                            </div>
-                          ))
-                        ) : (
-                          <EmptyState
-                            title="Chưa có comment"
-                            description="Ticket này chưa có bình luận nào."
-                          />
-                        )}
-                      </div>
-                    </div>
                   </div>
                 </>
               ) : (
@@ -404,16 +385,6 @@ export function TicketsPage() {
             </Panel>
           </div>
         </main>
-
-        <aside className="inspector">
-          <Panel>
-            <span className="eyebrow">Prepared API</span>
-            <h3>Backend layer ready</h3>
-            <p className="section-lead">
-              Hook `shared/api/*` đã sẵn sàng cho endpoint `auth`, `tickets`, `comments`, `history`.
-            </p>
-          </Panel>
-        </aside>
       </div>
 
       <TicketBoard
