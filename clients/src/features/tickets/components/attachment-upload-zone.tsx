@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+// Chặn sớm để người dùng không phải chờ upload một file chắc chắn bị API từ chối.
+// Đây chỉ là kiểm tra UX; API vẫn validate request và HEAD storage vẫn kiểm tra kích thước object thật.
+const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MiB
 const ALLOWED_TYPES = [
   "image/jpeg",
   "image/jpg",

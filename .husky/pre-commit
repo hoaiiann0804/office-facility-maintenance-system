@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-cd InternalMaintenance.Client && pnpm lint-staged
+cd clients && pnpm lint-staged
