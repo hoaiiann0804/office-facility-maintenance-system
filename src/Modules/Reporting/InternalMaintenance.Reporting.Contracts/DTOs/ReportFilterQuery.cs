@@ -1,5 +1,6 @@
-namespace InternalMaintenance.Api.Modules.Reports.Contracts;
+namespace InternalMaintenance.Reporting.Contracts;
 
+// Query/response DTOs thuộc contract của Reporting nên host có thể bind HTTP mà không kéo implementation vào API.
 public class ReportFilterQuery
 {
     public DateTime? FromDate { get; set; }

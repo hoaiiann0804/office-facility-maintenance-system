@@ -1,8 +1,8 @@
 using ClosedXML.Excel;
-using InternalMaintenance.Api.Modules.Reports.Contracts;
+using InternalMaintenance.Reporting.Contracts;
 using System.IO;
 
-namespace InternalMaintenance.Api.Modules.Reports.Services;
+namespace InternalMaintenance.Reporting.Infrastructure;
 
 public class ReportExportService
 {
@@ -26,7 +26,16 @@ public class ReportExportService
         wsTech.Cell("A1").Style.Font.FontSize = 14;
         wsTech.Cell("A1").Style.Font.FontColor = XLColor.FromHtml("#1E3A8A");
 
-        var filterText = $"Thời gian: {(filter.FromDate.HasValue ? filter.FromDate.Value.ToString("dd/MM/yyyy") : "Tất cả")} - {(filter.ToDate.HasValue ? filter.ToDate.Value.ToString("dd/MM/yyyy") : "Hiện tại")}";
+        // Ghi lại toàn bộ filter đã áp dụng để file export không bị hiểu nhầm là báo cáo toàn hệ thống.
+        var filterParts = new List<string>
+        {
+            $"Thời gian: {(filter.FromDate.HasValue ? filter.FromDate.Value.ToString("dd/MM/yyyy") : "Tất cả")} - {(filter.ToDate.HasValue ? filter.ToDate.Value.ToString("dd/MM/yyyy") : "Hiện tại")}" 
+        };
+        if (filter.DepartmentId.HasValue)
+            filterParts.Add($"DepartmentId: {filter.DepartmentId.Value}");
+        if (filter.TechnicianId.HasValue)
+            filterParts.Add($"TechnicianId: {filter.TechnicianId.Value}");
+        var filterText = string.Join(" | ", filterParts);
         wsTech.Cell("A2").Value = filterText;
         wsTech.Cell("A2").Style.Font.Italic = true;
 
@@ -109,7 +118,9 @@ public class ReportExportService
         wsSla.Cell("A9").Value = "Phân Tích Tuân Thủ Theo Mức Độ Ưu Tiên:";
         wsSla.Cell("A9").Style.Font.Bold = true;
 
-        var headersPriority = new[] { "Mức Độ Ưu Tiên", "Tổng Ticket", "Đạt SLA", "Trễ SLA", "Tỷ Lệ Đạt (%)" };
+        // completedQuery chỉ gồm ticket Resolved/Closed có MetSLA hoặc MissedSLA;
+        // đổi tên cột để không bị hiểu là tổng mọi ticket, kể cả ticket đang xử lý.
+        var headersPriority = new[] { "Mức Độ Ưu Tiên", "Ticket Có Kết Quả SLA", "Đạt SLA", "Trễ SLA", "Tỷ Lệ Đạt (%)" };
         for (int i = 0; i < headersPriority.Length; i++)
         {
             var cell = wsSla.Cell(10, i + 1);
@@ -189,7 +200,7 @@ public class ReportExportService
         wsCost.Cell("A5").Value = "Tổng Lượt Gửi Đối Tác (Vendor):";
         wsCost.Cell("B5").Value = costReport.TotalVendorDispatches;
 
-        wsCost.Cell("A6").Value = "Chi Phí Trung Bình / Lượt:";
+        wsCost.Cell("A6").Value = "Chi Phí Trung Bình / Ticket:";
         var cellAvgCost = wsCost.Cell("B6");
         cellAvgCost.Value = (double)costReport.AvgCostPerTicket;
         cellAvgCost.Style.NumberFormat.Format = "#,##0 ₫";
@@ -200,7 +211,7 @@ public class ReportExportService
         wsCost.Cell("A8").Value = "Chi Phí Phân Bổ Theo Phòng Ban:";
         wsCost.Cell("A8").Style.Font.Bold = true;
 
-        var headersDeptCost = new[] { "Phòng Ban", "Số Lượt Sửa Chữa", "Tổng Chi Phí (VNĐ)" };
+        var headersDeptCost = new[] { "Phòng Ban", "Số Ticket", "Tổng Chi Phí (VNĐ)" };
         for (int i = 0; i < headersDeptCost.Length; i++)
         {
             var cell = wsCost.Cell(9, i + 1);
@@ -227,7 +238,7 @@ public class ReportExportService
         wsCost.Cell(rowC, 1).Style.Font.Bold = true;
         rowC++;
 
-        var headersEq = new[] { "Mã Thiết Bị", "Tên Thiết Bị", "Phòng Ban Quản Lý", "Số Lần Sửa", "Tổng Tiền Sửa (VNĐ)" };
+        var headersEq = new[] { "Mã Thiết Bị", "Tên Thiết Bị", "Phòng Ban Quản Lý", "Số Ticket Bảo Trì", "Tổng Tiền Sửa (VNĐ)" };
         for (int i = 0; i < headersEq.Length; i++)
         {
             var cell = wsCost.Cell(rowC, i + 1);
@@ -247,6 +258,33 @@ public class ReportExportService
             var c = wsCost.Cell(rowC, 5);
             c.Value = (double)eq.TotalRepairCost;
             c.Style.NumberFormat.Format = "#,##0 ₫";
+            rowC++;
+        }
+
+        // Bổ sung breakdown vendor vì response đã tổng hợp sẵn; dispatch count là số lần gửi, khác với ticket count ở bảng trên.
+        rowC += 2;
+        wsCost.Cell(rowC, 1).Value = "Chi Phí Theo Vendor:";
+        wsCost.Cell(rowC, 1).Style.Font.Bold = true;
+        rowC++;
+
+        var headersVendor = new[] { "Vendor", "Số Lượt Dispatch", "Tổng Chi Phí (VNĐ)" };
+        for (int i = 0; i < headersVendor.Length; i++)
+        {
+            var cell = wsCost.Cell(rowC, i + 1);
+            cell.Value = headersVendor[i];
+            cell.Style.Font.Bold = true;
+            cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#0891B2");
+            cell.Style.Font.FontColor = XLColor.White;
+        }
+        rowC++;
+
+        foreach (var vendor in costReport.VendorCosts)
+        {
+            wsCost.Cell(rowC, 1).Value = vendor.VendorName;
+            wsCost.Cell(rowC, 2).Value = vendor.DispatchCount;
+            var cell = wsCost.Cell(rowC, 3);
+            cell.Value = (double)vendor.TotalCost;
+            cell.Style.NumberFormat.Format = "#,##0 ₫";
             rowC++;
         }
 

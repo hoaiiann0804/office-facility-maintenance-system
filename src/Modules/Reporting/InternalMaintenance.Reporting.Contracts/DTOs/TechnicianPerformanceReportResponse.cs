@@ -1,4 +1,4 @@
-namespace InternalMaintenance.Api.Modules.Reports.Contracts;
+namespace InternalMaintenance.Reporting.Contracts;
 
 public class TechnicianPerformanceReportResponse
 {
