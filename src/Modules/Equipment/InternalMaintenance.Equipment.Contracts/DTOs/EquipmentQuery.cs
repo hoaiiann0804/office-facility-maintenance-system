@@ -1,6 +1,6 @@
 
-using InternalMaintenance.Api.Common.Pagination;
-namespace InternalMaintenance.Api.Modules.Equipment.Contracts;
+using InternalMaintenance.BuildingBlocks.Pagination;
+namespace InternalMaintenance.Assets.Contracts;
 
 public class EquipmentQuery : PaginationQuery
 {

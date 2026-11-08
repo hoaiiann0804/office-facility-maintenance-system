@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace InternalMaintenance.Api.Modules.Equipment.Contracts;
+namespace InternalMaintenance.Assets.Contracts;
 
 public class CreateEquipmentRequest
 {
