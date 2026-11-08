@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Use case chỉ gọi Domain và public contracts; AppDbContext/EF adapter vẫn do API host cung cấp. -->
+    <ProjectReference Include="..\InternalMaintenance.Maintenance.Domain\InternalMaintenance.Maintenance.Domain.csproj" />
+    <ProjectReference Include="..\InternalMaintenance.Maintenance.Contracts\InternalMaintenance.Maintenance.Contracts.csproj" />
+    <ProjectReference Include="..\..\Equipment\InternalMaintenance.Equipment.Contracts\InternalMaintenance.Equipment.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\InternalMaintenance.Identity.Contracts\InternalMaintenance.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Vendors\InternalMaintenance.Vendors.Contracts\InternalMaintenance.Vendors.Contracts.csproj" />
+  </ItemGroup>
+</Project>

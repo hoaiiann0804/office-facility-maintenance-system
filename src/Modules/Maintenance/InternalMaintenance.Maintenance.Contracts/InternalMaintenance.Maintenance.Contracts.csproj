@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Các query/response của Maintenance dùng kiểu phân trang chung, nhưng không cần biết về API host hay EF Core. -->
+    <ProjectReference Include="..\..\..\Shared\InternalMaintenance.BuildingBlocks\InternalMaintenance.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

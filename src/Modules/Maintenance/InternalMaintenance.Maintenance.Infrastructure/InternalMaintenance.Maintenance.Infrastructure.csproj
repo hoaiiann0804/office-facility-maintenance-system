@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
+    <ProjectReference Include="..\InternalMaintenance.Maintenance.Application\InternalMaintenance.Maintenance.Application.csproj" />
+    <ProjectReference Include="..\InternalMaintenance.Maintenance.Domain\InternalMaintenance.Maintenance.Domain.csproj" />
+    <ProjectReference Include="..\InternalMaintenance.Maintenance.Contracts\InternalMaintenance.Maintenance.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Shared\InternalMaintenance.Persistence\InternalMaintenance.Persistence.csproj" />
+    <ProjectReference Include="..\..\..\Shared\InternalMaintenance.BuildingBlocks\InternalMaintenance.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Equipment\InternalMaintenance.Equipment.Contracts\InternalMaintenance.Equipment.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\InternalMaintenance.Identity.Contracts\InternalMaintenance.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Vendors\InternalMaintenance.Vendors.Contracts\InternalMaintenance.Vendors.Contracts.csproj" />
+  </ItemGroup>
+</Project>
