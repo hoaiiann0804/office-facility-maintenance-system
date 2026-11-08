@@ -1,6 +1,6 @@
-namespace InternalMaintenance.Api.Modules.TicketAttachments.Contracts;
+namespace InternalMaintenance.TicketAttachments.Contracts;
 
-// Input cho bước 2: client xác nhận sau khi file đã upload xong lên storage.
+// Request xác nhận metadata sau khi client tải file lên object storage thành công.
 public class ConfirmAttachmentRequest
 {
     public string StorageKey { get; set; } = string.Empty;

@@ -1,6 +1,6 @@
-namespace InternalMaintenance.Api.Modules.TicketAttachments.Contracts;
+namespace InternalMaintenance.TicketAttachments.Contracts;
 
-// Metadata chỉ để trả về cho client; không chứa file bytes.
+// Chỉ trả metadata cho client; nội dung file vẫn được tải qua URL có thời hạn.
 public class TicketAttachmentResponse
 {
     public int Id { get; set; }

@@ -1,10 +1,14 @@
-using InternalMaintenance.Api.Constants;
+namespace InternalMaintenance.TicketAttachments.Domain;
 
-namespace InternalMaintenance.Api.Modules.TicketAttachments;
-
+/// <summary>
+/// Các quy tắc nghiệp vụ kiểm tra loại file, kích thước upload và trạng thái ticket hợp lệ.
+/// [Lean Modular Monolith Refactoring]:
+/// Di chuyển từ InternalMaintenance.TicketAttachments.Domain sang InternalMaintenance.TicketAttachments.Contracts.
+/// </summary>
 public static class TicketAttachmentRules
 {
-    // Nơi tập trung các rule nghiệp vụ của attachment: dung lượng, loại file và trạng thái ticket.
+    // Ticket status là vocabulary do Maintenance sở hữu. Attachments giữ tập trạng thái được phép
+    // tại policy integration này thay vì tham chiếu trực tiếp Maintenance Domain.
     public const long MaxUploadFileSizeBytes = 100L * 1024 * 1024;
 
     public static readonly string[] AllowedImageContentTypes =
@@ -28,11 +32,11 @@ public static class TicketAttachmentRules
 
     public static readonly string[] AllowedTicketStatuses =
     {
-        TicketStatuses.Pending,
-        TicketStatuses.Assigned,
-        TicketStatuses.InProgress,
-        TicketStatuses.Resolved,
-        TicketStatuses.WaitingForVendor
+        "Pending",
+        "Assigned",
+        "InProgress",
+        "Resolved",
+        "WaitingForVendor"
     };
 
     public static bool IsUploadAllowedStatus(string status)

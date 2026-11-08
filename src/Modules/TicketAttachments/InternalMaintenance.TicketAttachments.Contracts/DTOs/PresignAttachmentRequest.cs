@@ -1,6 +1,6 @@
-namespace InternalMaintenance.Api.Modules.TicketAttachments.Contracts;
+namespace InternalMaintenance.TicketAttachments.Contracts;
 
-// Input cho bước 1: client xin URL upload tạm thời.
+// Request tạo URL upload tạm thời; file bytes không đi qua API host.
 public class PresignAttachmentRequest
 {
     public string FileName { get; set; } = string.Empty;

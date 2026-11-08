@@ -3,11 +3,11 @@ using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using InternalMaintenance.Api.Common.Results;
+using InternalMaintenance.BuildingBlocks.Results;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
-namespace InternalMaintenance.Api.Modules.TicketAttachments.Storage;
+namespace InternalMaintenance.TicketAttachments.Infrastructure;
 
 public sealed class R2AttachmentStorageService : IAttachmentStorageService
 {
@@ -40,6 +40,11 @@ public sealed class R2AttachmentStorageService : IAttachmentStorageService
         string storageKey,
         string contentType)
     {
+        // R2 direct upload dùng presigned PUT; PUT này không mang policy giới hạn Content-Length
+        // như HTML form POST (R2 hiện không hỗ trợ presigned POST). Vì vậy UI chặn sớm để tránh
+        // upload nhầm, còn backend phải kiểm tra Content-Length bằng HEAD trước khi tạo attachment.
+        // Nếu cần từ chối byte vượt ngưỡng trước khi lưu object, phải đưa luồng qua upload gateway
+        // đọc stream có giới hạn; gateway sẽ nhận thêm băng thông và phải đáp ứng giới hạn request-body.
         // Tại sao không đưa contentType vào SignedHeaders khi upload?
         // Vì browser sẽ trigger CORS Preflight (OPTIONS) trước khi PUT.
         // Preflight không mang Content-Type header, nên chữ ký sẽ không khớp
@@ -95,7 +100,7 @@ public sealed class R2AttachmentStorageService : IAttachmentStorageService
     // - Client gọi confirm sớm 
     // - upload thất bại nhưng vẫn confirm
     // lưu metadata "ảo" vào DB
-    public async Task<ServiceResult<bool>> ObjectExistsAsync(string storageKey)
+    public async Task<ServiceResult<AttachmentObjectMetadata?>> GetObjectMetadataAsync(string storageKey)
     {
         var urlResult = BuildPresignedUrl(
             httpMethod: HttpMethod.Head.Method,
@@ -104,7 +109,7 @@ public sealed class R2AttachmentStorageService : IAttachmentStorageService
 
         if (!urlResult.IsSuccess)
         {
-            return ServiceResult<bool>.Fail(urlResult.StatusCode, urlResult.Message!);
+            return ServiceResult<AttachmentObjectMetadata?>.Fail(urlResult.StatusCode, urlResult.Message!);
         }
 
         using var client = _httpClientFactory.CreateClient();
@@ -113,17 +118,27 @@ public sealed class R2AttachmentStorageService : IAttachmentStorageService
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
-            return ServiceResult<bool>.Success(false);
+            return ServiceResult<AttachmentObjectMetadata?>.Success(null);
         }
 
         if (!response.IsSuccessStatusCode)
         {
-            return ServiceResult<bool>.Fail(
+            return ServiceResult<AttachmentObjectMetadata?>.Fail(
                 (int)response.StatusCode,
                 $"Failed to verify object existence. Storage returned {(int)response.StatusCode}.");
         }
 
-        return ServiceResult<bool>.Success(true);
+        // Chỉ HEAD mới biết kích thước object thật; nếu storage không trả Content-Length thì không
+        // thể xác nhận metadata chính xác, vì vậy trả lỗi thay vì tin kích thước client gửi lên.
+        if (response.Content.Headers.ContentLength is not long contentLength)
+        {
+            return ServiceResult<AttachmentObjectMetadata?>.Fail(
+                StatusCodes.Status502BadGateway,
+                "Storage did not return the uploaded object's content length.");
+        }
+
+        return ServiceResult<AttachmentObjectMetadata?>.Success(
+            new AttachmentObjectMetadata(contentLength));
     }
 
     // Hàm này xóa object trong storage bằng DELETE.

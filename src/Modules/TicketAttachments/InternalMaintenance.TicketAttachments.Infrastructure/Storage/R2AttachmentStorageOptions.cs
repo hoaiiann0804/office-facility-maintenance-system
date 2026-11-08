@@ -1,4 +1,4 @@
-namespace InternalMaintenance.Api.Modules.TicketAttachments.Storage;
+namespace InternalMaintenance.TicketAttachments.Infrastructure;
 
 // Dùng cấu hình cho Storage
 public sealed class R2AttachmentStorageOptions

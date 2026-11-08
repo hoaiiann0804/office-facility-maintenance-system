@@ -1,6 +1,6 @@
-namespace InternalMaintenance.Api.Modules.TicketAttachments.Contracts;
+namespace InternalMaintenance.TicketAttachments.Contracts;
 
-// Kết quả bước 1: URL upload, storage key và tên file đã sinh.
+// Trả URL có hạn dùng và storage key để client upload trực tiếp lên object storage.
 public class PresignAttachmentResponse
 {
     public string UploadUrl { get; set; } = string.Empty;
