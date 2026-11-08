@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace InternalMaintenance.Api.Modules.Vendors.Contracts;
+namespace InternalMaintenance.Vendors.Contracts;
 
-public class UpdateVendorRequest
+public class CreateVendorRequest
 {
     [Required]
     [StringLength(200)]
@@ -24,6 +24,4 @@ public class UpdateVendorRequest
     [Required(ErrorMessage = "Địa chỉ là bắt buộc")]
     [StringLength(500)]
     public string Address { get; set; } = string.Empty;
-
-    public bool IsActive { get; set; } = true;
 }
