@@ -97,6 +97,7 @@ public sealed class ProjectReferenceArchitectureTests
 
     private static string[] GetProjectReferenceNames(XDocument project) => project
         .Descendants("ProjectReference")
-        .Select(reference => Path.GetFileNameWithoutExtension((string?)reference.Attribute("Include") ?? string.Empty)!)
+        .Select(reference => ((string?)reference.Attribute("Include") ?? string.Empty).Replace('\\', '/'))
+        .Select(includePath => Path.GetFileNameWithoutExtension(includePath)!)
         .ToArray();
 }
