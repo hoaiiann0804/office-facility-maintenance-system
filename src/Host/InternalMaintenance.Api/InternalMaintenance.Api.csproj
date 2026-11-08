@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Các contract module độc lập với API host; host chỉ tham chiếu để ghép adapter và endpoint. -->
+    <ProjectReference Include="..\..\Modules\Equipment\InternalMaintenance.Equipment.Contracts\InternalMaintenance.Equipment.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Equipment\InternalMaintenance.Equipment.Infrastructure\InternalMaintenance.Equipment.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\InternalMaintenance.Identity.Contracts\InternalMaintenance.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\InternalMaintenance.Identity.Infrastructure\InternalMaintenance.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Organization\InternalMaintenance.Organization.Contracts\InternalMaintenance.Organization.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Organization\InternalMaintenance.Organization.Infrastructure\InternalMaintenance.Organization.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Vendors\InternalMaintenance.Vendors.Contracts\InternalMaintenance.Vendors.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Vendors\InternalMaintenance.Vendors.Infrastructure\InternalMaintenance.Vendors.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\TicketAttachments\InternalMaintenance.TicketAttachments.Contracts\InternalMaintenance.TicketAttachments.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\TicketAttachments\InternalMaintenance.TicketAttachments.Infrastructure\InternalMaintenance.TicketAttachments.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Shared\InternalMaintenance.Persistence\InternalMaintenance.Persistence.csproj" />
+    <ProjectReference Include="..\..\Modules\Reporting\InternalMaintenance.Reporting.Contracts\InternalMaintenance.Reporting.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Reporting\InternalMaintenance.Reporting.Infrastructure\InternalMaintenance.Reporting.Infrastructure.csproj" />
+    <!-- Host công khai API của module Maintenance nhưng không sở hữu các contract của module đó. -->
+    <ProjectReference Include="..\..\Modules\Maintenance\InternalMaintenance.Maintenance.Contracts\InternalMaintenance.Maintenance.Contracts.csproj" />
+    <!-- API gọi use case qua module assembly; persistence vẫn ở host để giữ transaction hiện tại. -->
+    <ProjectReference Include="..\..\Modules\Maintenance\InternalMaintenance.Maintenance.Application\InternalMaintenance.Maintenance.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Maintenance\InternalMaintenance.Maintenance.Infrastructure\InternalMaintenance.Maintenance.Infrastructure.csproj" />
+    <PackageReference Include="DotNetEnv" Version="3.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Contract phân trang dùng chung được tham chiếu một chiều, không kéo module vào API host. -->
+    <ProjectReference Include="..\..\Shared\InternalMaintenance.BuildingBlocks\InternalMaintenance.BuildingBlocks.csproj" />
+    <!-- Host ghép module Maintenance với persistence; domain module được biên dịch độc lập. -->
+    <ProjectReference Include="..\..\Modules\Maintenance\InternalMaintenance.Maintenance.Domain\InternalMaintenance.Maintenance.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

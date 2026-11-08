@@ -1,3 +1,47 @@
 <Solution>
-  <Project Path="InternalMaintenance.Api/InternalMaintenance.Api.csproj" />
+  <Folder Name="/src/" />
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/InternalMaintenance.Api/InternalMaintenance.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/InternalMaintenance.BuildingBlocks/InternalMaintenance.BuildingBlocks.csproj" />
+    <Project Path="src/Shared/InternalMaintenance.Persistence/InternalMaintenance.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Equipment/">
+    <Project Path="src/Modules/Equipment/InternalMaintenance.Equipment.Contracts/InternalMaintenance.Equipment.Contracts.csproj" />
+    <Project Path="src/Modules/Equipment/InternalMaintenance.Equipment.Infrastructure/InternalMaintenance.Equipment.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Organization/">
+    <Project Path="src/Modules/Organization/InternalMaintenance.Organization.Contracts/InternalMaintenance.Organization.Contracts.csproj" />
+    <Project Path="src/Modules/Organization/InternalMaintenance.Organization.Infrastructure/InternalMaintenance.Organization.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Vendors/">
+    <Project Path="src/Modules/Vendors/InternalMaintenance.Vendors.Contracts/InternalMaintenance.Vendors.Contracts.csproj" />
+    <Project Path="src/Modules/Vendors/InternalMaintenance.Vendors.Infrastructure/InternalMaintenance.Vendors.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/InternalMaintenance.Identity.Contracts/InternalMaintenance.Identity.Contracts.csproj" />
+    <Project Path="src/Modules/Identity/InternalMaintenance.Identity.Infrastructure/InternalMaintenance.Identity.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/TicketAttachments/">
+    <Project Path="src/Modules/TicketAttachments/InternalMaintenance.TicketAttachments.Contracts/InternalMaintenance.TicketAttachments.Contracts.csproj" />
+    <Project Path="src/Modules/TicketAttachments/InternalMaintenance.TicketAttachments.Infrastructure/InternalMaintenance.TicketAttachments.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Reporting/">
+    <Project Path="src/Modules/Reporting/InternalMaintenance.Reporting.Contracts/InternalMaintenance.Reporting.Contracts.csproj" />
+    <Project Path="src/Modules/Reporting/InternalMaintenance.Reporting.Infrastructure/InternalMaintenance.Reporting.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Maintenance/">
+    <Project Path="src/Modules/Maintenance/InternalMaintenance.Maintenance.Contracts/InternalMaintenance.Maintenance.Contracts.csproj" />
+    <Project Path="src/Modules/Maintenance/InternalMaintenance.Maintenance.Domain/InternalMaintenance.Maintenance.Domain.csproj" />
+    <Project Path="src/Modules/Maintenance/InternalMaintenance.Maintenance.Application/InternalMaintenance.Maintenance.Application.csproj" />
+    <Project Path="src/Modules/Maintenance/InternalMaintenance.Maintenance.Infrastructure/InternalMaintenance.Maintenance.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
+    <Project Path="tests/Maintenance.Domain.Tests/Maintenance.Domain.Tests.csproj" />
+    <Project Path="tests/Reporting.Tests/Reporting.Tests.csproj" />
+    <Project Path="tests/Api.IntegrationTests/Api.IntegrationTests.csproj" />
+  </Folder>
 </Solution>

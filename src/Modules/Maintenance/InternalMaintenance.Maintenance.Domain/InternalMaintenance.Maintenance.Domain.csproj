@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>InternalMaintenance.Maintenance.Domain</AssemblyName>
+    <RootNamespace>InternalMaintenance.Maintenance.Domain</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Maintenance Domain được tách trước vì chỉ chứa quy tắc và entity .NET thuần.
+    Không thêm EF/ASP.NET/package tham chiếu module khác vào đây; API host sẽ tham chiếu project này.
+  -->
+</Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <ProjectReference Include="..\InternalMaintenance.Equipment.Contracts\InternalMaintenance.Equipment.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Shared\InternalMaintenance.Persistence\InternalMaintenance.Persistence.csproj" />
+    <ProjectReference Include="..\..\Organization\InternalMaintenance.Organization.Contracts\InternalMaintenance.Organization.Contracts.csproj" />
+    <ProjectReference Include="..\..\Maintenance\InternalMaintenance.Maintenance.Contracts\InternalMaintenance.Maintenance.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Shared\InternalMaintenance.BuildingBlocks\InternalMaintenance.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

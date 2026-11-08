@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <ProjectReference Include="..\InternalMaintenance.Reporting.Contracts\InternalMaintenance.Reporting.Contracts.csproj" />
+    <ProjectReference Include="..\..\Maintenance\InternalMaintenance.Maintenance.Contracts\InternalMaintenance.Maintenance.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\InternalMaintenance.Identity.Contracts\InternalMaintenance.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Vendors\InternalMaintenance.Vendors.Contracts\InternalMaintenance.Vendors.Contracts.csproj" />
+  </ItemGroup>
+</Project>

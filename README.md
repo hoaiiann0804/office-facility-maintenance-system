@@ -197,71 +197,71 @@ Three analytical pillars accessible from the `/reports` page:
 
 ### 1. Dashboard & Analytics
 Overview of maintenance tickets, KPI summaries, and equipment status.
-![Dashboard UI](./InternalMaintenance.Client/public/screenshots/dashboard.png)
-![Dashboard UI](./InternalMaintenance.Client/public/screenshots/dashboard2.png)
+![Dashboard UI](./clients/public/screenshots/dashboard.png)
+![Dashboard UI](./clients/public/screenshots/dashboard2.png)
 
 ### 2. Ticket Management
 List of maintenance tickets with color-coded status badges, priority indicators, and SLA tracking.
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment1.png)
+![Ticket Details](./clients/public/screenshots/equipment1.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment2.png)
+![Ticket Details](./clients/public/screenshots/equipment2.png)
 
 ### 3. Ticket Details & Workflow
 Detailed view of a ticket showing status transitions, assignee, support technician, SLA countdown, and discussion thread.
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment3.png)
+![Ticket Details](./clients/public/screenshots/equipment3.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment4.png)
+![Ticket Details](./clients/public/screenshots/equipment4.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment5.png)
+![Ticket Details](./clients/public/screenshots/equipment5.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment6.png)
+![Ticket Details](./clients/public/screenshots/equipment6.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment7.png)
+![Ticket Details](./clients/public/screenshots/equipment7.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment8.png)
+![Ticket Details](./clients/public/screenshots/equipment8.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment9.png)
+![Ticket Details](./clients/public/screenshots/equipment9.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment10.png)
+![Ticket Details](./clients/public/screenshots/equipment10.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment11.png)
+![Ticket Details](./clients/public/screenshots/equipment11.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment12.png)
+![Ticket Details](./clients/public/screenshots/equipment12.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment13.png)
+![Ticket Details](./clients/public/screenshots/equipment13.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment14.png)
+![Ticket Details](./clients/public/screenshots/equipment14.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment15.png)
+![Ticket Details](./clients/public/screenshots/equipment15.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment16.png)
+![Ticket Details](./clients/public/screenshots/equipment16.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment17.png)
+![Ticket Details](./clients/public/screenshots/equipment17.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment18.png)
+![Ticket Details](./clients/public/screenshots/equipment18.png)
 
-![Ticket Details](./InternalMaintenance.Client/public/screenshots/equipment19.png)
+![Ticket Details](./clients/public/screenshots/equipment19.png)
 
 ### 4. Equipment Management
 Asset tracking interface with department assignment and active/maintenance status toggle.
-![Equipment Management](./InternalMaintenance.Client/public/screenshots/equipment20.png)
+![Equipment Management](./clients/public/screenshots/equipment20.png)
 
-![Equipment Management](./InternalMaintenance.Client/public/screenshots/equipment21.png)
+![Equipment Management](./clients/public/screenshots/equipment21.png)
 
-![Equipment Management](./InternalMaintenance.Client/public/screenshots/equipment22.png)
+![Equipment Management](./clients/public/screenshots/equipment22.png)
 
 ### 5. User Management & Access Control
 Admin directory for managing users, roles (Admin/Manager/Staff/Technician), and department assignments.
-![User Management](./InternalMaintenance.Client/public/screenshots/user1.png)
+![User Management](./clients/public/screenshots/user1.png)
 
-![User Management](./InternalMaintenance.Client/public/screenshots/user2.png)
+![User Management](./clients/public/screenshots/user2.png)
 
-![User Management](./InternalMaintenance.Client/public/screenshots/user3.png)
+![User Management](./clients/public/screenshots/user3.png)
 
-![User Management](./InternalMaintenance.Client/public/screenshots/user4.png)
+![User Management](./clients/public/screenshots/user4.png)
 
-![User Management](./InternalMaintenance.Client/public/screenshots/user5.png)
+![User Management](./clients/public/screenshots/user5.png)
 
 ## Business Workflow
 
@@ -342,7 +342,7 @@ InternalMaintenanceManagement.slnx
 |   +-- Program.cs
 |   +-- appsettings.json
 |
-+-- InternalMaintenance.Client/            # React 19 + TypeScript + Vite Frontend
++-- clients/                               # React 19 + TypeScript + Vite Frontend
 |   +-- src/
 |   |   +-- features/
 |   |   |   +-- reports/                   # Reports API hooks (reports-api.ts)
@@ -487,7 +487,7 @@ API: `http://localhost:5253` | Swagger: `http://localhost:5253/swagger`
 ### Start the Frontend
 
 ```powershell
-cd InternalMaintenance.Client
+cd clients
 pnpm install
 pnpm dev
 ```

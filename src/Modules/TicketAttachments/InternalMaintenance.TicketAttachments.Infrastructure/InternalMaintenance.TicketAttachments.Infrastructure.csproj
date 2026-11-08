@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <ProjectReference Include="..\InternalMaintenance.TicketAttachments.Contracts\InternalMaintenance.TicketAttachments.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Shared\InternalMaintenance.Persistence\InternalMaintenance.Persistence.csproj" />
+    <!-- Attachments giao tiếp với Maintenance qua projection/port công khai, không phụ thuộc use case nội bộ. -->
+    <ProjectReference Include="..\..\Maintenance\InternalMaintenance.Maintenance.Contracts\InternalMaintenance.Maintenance.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\InternalMaintenance.Identity.Contracts\InternalMaintenance.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Shared\InternalMaintenance.BuildingBlocks\InternalMaintenance.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

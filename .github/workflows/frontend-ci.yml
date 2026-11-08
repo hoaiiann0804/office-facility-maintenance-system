@@ -3,10 +3,10 @@ name: Frontend CI
 on:
   push:
     paths:
-      - "InternalMaintenance.Client/**"
+      - "clients/**"
   pull_request:
     paths:
-      - "InternalMaintenance.Client/**"
+      - "clients/**"
   workflow_dispatch:
 
 concurrency:
@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: InternalMaintenance.Client
+        working-directory: clients
 
     steps:
       - name: Checkout repository
@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: 22.x
           cache: pnpm
-          cache-dependency-path: InternalMaintenance.Client/pnpm-lock.yaml
+          cache-dependency-path: clients/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -58,6 +58,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: InternalMaintenance.Client/dist
+          path: clients/dist
           if-no-files-found: error
           retention-days: 7
