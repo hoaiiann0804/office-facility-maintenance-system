@@ -1,0 +1,31 @@
+name: .NET tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore solution
+        run: dotnet restore InternalMaintenanceManagement.slnx
+      - name: Build solution
+        run: dotnet build InternalMaintenanceManagement.slnx --configuration Release --no-restore
+      - name: Run domain tests
+        run: dotnet test tests/Maintenance.Domain.Tests/Maintenance.Domain.Tests.csproj --configuration Release --no-build --no-restore
+      - name: Run architecture tests
+        run: dotnet test tests/Architecture.Tests/Architecture.Tests.csproj --configuration Release --no-build --no-restore
+      # Reporting.Tests kiểm tra nội dung workbook nên chạy độc lập, không cần khởi động SQL Server.
+      - name: Run reporting tests
+        run: dotnet test tests/Reporting.Tests/Reporting.Tests.csproj --configuration Release --no-build --no-restore
+      # Hosted Ubuntu runner có Docker để Testcontainers khởi chạy SQL Server cho integration tests.
+      - name: Run SQL Server integration tests
+        run: dotnet test tests/Api.IntegrationTests/Api.IntegrationTests.csproj --configuration Release --no-build --no-restore
