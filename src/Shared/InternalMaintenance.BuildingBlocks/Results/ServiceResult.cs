@@ -1,5 +1,5 @@
 
-namespace InternalMaintenance.Api.Common.Results;
+namespace InternalMaintenance.BuildingBlocks.Results;
 
 // Dùng khi không cần trả data
 public sealed record ServiceResult(
@@ -11,7 +11,8 @@ public sealed record ServiceResult(
     string? Message)
 {
     // Dùng để tạo kết quả thành công 
-    public static ServiceResult Success(int statusCode = StatusCodes.Status204NoContent)
+    // 204 = HTTP No Content; giữ numeric status để BuildingBlocks không cần tham chiếu ASP.NET Core.
+    public static ServiceResult Success(int statusCode = 204)
         => new(true, statusCode, null);
     // Tạo kết quả thất bại
     public static ServiceResult Fail(int statusCode, string message)

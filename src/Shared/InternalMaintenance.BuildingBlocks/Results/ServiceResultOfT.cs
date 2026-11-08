@@ -1,4 +1,4 @@
-namespace InternalMaintenance.Api.Common.Results;
+namespace InternalMaintenance.BuildingBlocks.Results;
 
 // Dùng khi cần trả Data
 public sealed record ServiceResult<T>(
@@ -9,7 +9,7 @@ public sealed record ServiceResult<T>(
 {
     public static ServiceResult<T> Success(
         T data,
-        int statusCode = StatusCodes.Status200OK)
+        int statusCode = 200)
         => new(true, statusCode, null, data);
 
     public static ServiceResult<T> Fail(int statusCode, string message)

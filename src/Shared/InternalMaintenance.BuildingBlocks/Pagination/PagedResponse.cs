@@ -1,4 +1,4 @@
-namespace InternalMaintenance.Api.Common.Pagination;
+namespace InternalMaintenance.BuildingBlocks.Pagination;
 
 public class PagedResponse<T>
 {
