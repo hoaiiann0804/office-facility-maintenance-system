@@ -1,4 +1,4 @@
-namespace InternalMaintenance.Api.Modules.Departments.Contracts;
+namespace InternalMaintenance.Organization.Contracts;
 
 public class UpdateDepartmentRequest : CreateDepartmentRequest
 {

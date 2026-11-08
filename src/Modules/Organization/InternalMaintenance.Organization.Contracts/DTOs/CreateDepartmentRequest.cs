@@ -1,7 +1,6 @@
-
 using System.ComponentModel.DataAnnotations;
 
-namespace InternalMaintenance.Api.Modules.Departments.Contracts;
+namespace InternalMaintenance.Organization.Contracts;
 
 public class CreateDepartmentRequest
 {
@@ -12,5 +11,5 @@ public class CreateDepartmentRequest
     [Required(ErrorMessage = "Description must not exceed 500 characters")]
     public string? Description { get; set; }
 
-    public bool IsMaintenanceTeam { get; set; } = false;
+    public bool IsMaintenanceTeam { get; set; }
 }

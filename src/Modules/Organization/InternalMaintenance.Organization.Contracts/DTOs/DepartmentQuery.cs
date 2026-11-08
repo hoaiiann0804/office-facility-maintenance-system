@@ -1,6 +1,6 @@
-using InternalMaintenance.Api.Common.Pagination;
+using InternalMaintenance.BuildingBlocks.Pagination;
 
-namespace InternalMaintenance.Api.Modules.Departments.Contracts;
+namespace InternalMaintenance.Organization.Contracts;
 
 public class DepartmentQuery : PaginationQuery
 {
