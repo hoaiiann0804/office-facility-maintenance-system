@@ -1,594 +1,420 @@
-# Office Facility Maintenance Management System
+<div align="center">
 
-> A web-based internal platform for managing office equipment maintenance across departments, technicians, vendors, and staff. It centralizes requests, assignment, status tracking, SLA monitoring, vendor dispatch, automated email notifications, comments, history, and management reporting into one auditable workflow.
+# 🏢 Office Facility Maintenance Management System
 
-[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)]()
-[![React 19](https://img.shields.io/badge/React-19-61DAFB)]()
-[![SQL Server 2022](https://img.shields.io/badge/SQL%20Server-2022-D83B01)]()
-[![Status](https://img.shields.io/badge/status-active-success)]()
+**Enterprise-grade internal facility & equipment maintenance platform — Built as a Vertical Slice Modular Monolith (.NET 10 & React 19).**  
+*Hệ thống quản lý bảo trì trang thiết bị văn phòng tập trung — Xây dựng theo kiến trúc Vertical Slice Modular Monolith (.NET 10 & React 19).*
 
-## About
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![SQL Server 2022](https://img.shields.io/badge/SQL%20Server-2022-CC2927?style=flat-square&logo=microsoftsqlserver)](https://www.microsoft.com/sql-server)
+[![Cloudflare R2](https://img.shields.io/badge/Storage-Cloudflare%20R2-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/r2/)
+[![Resend](https://img.shields.io/badge/Email-Resend%20API-000000?style=flat-square&logo=resend&logoColor=white)](https://resend.com/)
+[![Status](https://img.shields.io/badge/Status-Active-22C55E?style=flat-square)]()
 
-Office Facility Maintenance Management System is an internal maintenance platform built for an office environment. It is designed for office assets such as printers, routers, air conditioners, meeting-room devices, and other shared equipment that need structured maintenance handling.
+[Introduction](#-introduction--giới-thiệu) • [Features](#-key-features--tính-năng-chính) • [Screenshots](#-ui-showcase--hình-ảnh-giao-diện) • [Architecture](#-architecture-overview--kiến-trúc-tổng-quan) • [Installation](#-installation--cài-đặt) • [Running](#-running-the-project--chạy-project) • [Env Config](#-environment-configuration--cấu-hình-môi-trường) • [Roadmap](#-roadmap--lộ-trình-phát-triển)
 
-The system helps:
-
-- staff report issues in one place and monitor resolution timelines
-- managers assign work to primary and support technicians with better visibility
-- technicians update progress in a controlled workflow with real-time SLA countdowns
-- technicians dispatch equipment to external vendor partners when internal repair is not possible, with SLA paused automatically during the external service period
-- administrators maintain users, departments, equipment, and vendor partner directories
-- the organization track SLA compliance, vendor costs, and technician performance through built-in analytics and exportable reports
-
-## Business Context
-
-Before this system, maintenance requests were typically handled through scattered channels such as phone calls, email, chat tools, or direct messages. That approach makes it easy to miss requests, duplicate work, and lose operational history.
-
-This project replaces that fragmented process with a centralized workflow so the team can:
-
-- capture every request consistently with automated SLA targets based on priority
-- track who created, assigned, supported, and resolved each ticket
-- enforce mandatory resolution notes and cancellation reasons
-- monitor SLA deadlines and trigger automated email alerts when tickets are near breach or overdue
-- connect each maintenance request to a department and an equipment item
-- dispatch equipment to external vendor partners with automatic SLA pause and repair cost tracking
-- review ticket history and comments later for audit and reporting
-- export comprehensive management reports covering technician performance, SLA compliance, and maintenance cost analysis
-
-## Current Scope
-
-The repository currently contains:
-
-- an ASP.NET Core Web API backend
-- a React + Vite frontend
-- JWT authentication with refresh tokens
-- role-based access control (Admin, Manager, Staff, Technician)
-- department, equipment, user, ticket, ticket attachment, vendor, and dashboard modules
-- SLA calculation, real-time status badges, and background breach monitoring worker
-- SMTP email alert service for SLA near-breach, breach, escalation, and ticket completion
-- vendor dispatch workflow with SLA pause / resume and repair cost logging
-- reporting & analytics module with technician performance, SLA compliance, and maintenance cost reports exportable to Excel
-- pre-commit code formatting automation with Husky and lint-staged
-- seeded demo data for local development
-
-The frontend currently includes:
-
-- `Login`
-- `Dashboard`
-- `Tickets`
-- `Equipment`
-- `Users`
-- `Departments`
-- `Vendors`
-- `Reports & Analytics`
+</div>
 
-## Key Features
-
-### Authentication
-
-- JWT login
-- current user profile lookup
-- password change
-- refresh token rotation
-- logout via refresh-token revocation
-
-### User Management
-
-- admin-only user directory
-- role-aware access
-- department assignment
-- active/inactive status control
-- reset password support
-- new Admin accounts are not created from the user-management form; existing Admin accounts can still be maintained
-
-### Department Management
-
-- create, update, read, delete departments
-- unique department name protection
-- dependency checks before deletion
-- `IsMaintenanceTeam` flag to mark specialized maintenance departments
-
-### Equipment Management
-
-- create, update, read, delete equipment
-- equipment assigned to a department
-- immutable equipment code after creation
-- support for office asset tracking
+---
 
-### Maintenance Tickets
+## 📖 Introduction / Giới thiệu
 
-- create maintenance requests with priority-based SLA deadlines
-- view ticket queue and detail
-- assign primary technician and optional support technician
-- change ticket status through workflow rules
-- cancel tickets with mandatory cancellation reason modal
-- add comments and discussion threads
-- track status history and audit log
-- store resolution notes, cancellation reasons, and resolution timestamps
-
-### SLA Management & Automated Escalation
-
-- automated target resolution duration based on priority:
-  - **Critical**: 2 hours
-  - **High**: 8 hours
-  - **Medium**: 24 hours (1 day)
-  - **Low**: 48 hours (2 days)
-- real-time SLA countdown timers and color-coded status badges on client UI (`InSLA`, `NearBreach`, `Breached`, `MetSLA`, `MissedSLA`, `Paused`, `Cancelled`)
-- background `SlaMonitorWorker` running periodically to evaluate open tickets against SLA deadlines
-- automated near-breach warnings (< 1 hour remaining) and breach detection
-- automated escalation alerts when overdue duration exceeds threshold
+**EN:** **Office Facility Maintenance Management System** is an internal operations platform designed to centralize and automate the entire lifecycle of office equipment maintenance (printers, routers, air conditioners, meeting-room devices, and shared assets). It replaces fragmented channels (phone calls, emails, chat messages) with a single auditable workflow featuring automated SLA tracking, external vendor dispatch, real-time dashboards, and executive reporting.
 
-### Email Notifications & Alerts
+**VI:** **Office Facility Maintenance Management System** là nền tảng quản lý bảo trì nội bộ giúp doanh nghiệp chuẩn hóa và tự động hóa toàn bộ vòng đời xử lý sự cố thiết bị văn phòng (máy in, router mạng, điều hòa, thiết bị phòng họp, tài sản dùng chung). Hệ thống thay thế các kênh rời rạc (điện thoại, email, tin nhắn) bằng một quy trình tập trung, minh bạch, có kiểm toán (audit trail), giám sát SLA tự động, điều phối nhà cung cấp ngoài và báo cáo điều hành.
 
-- SMTP integration using MailKit / MimeKit (`SmtpEmailService`)
-- near-breach warning emails sent to assigned technicians
-- SLA breach alerts sent to department managers
-- escalation emails sent to system administrators for severely overdue tickets
-- SLA outcome notification emails sent upon ticket completion (`MetSLA` / `MissedSLA`)
+### Role-Based Access Model / Mô hình Phân quyền (RBAC)
 
-### Ticket Attachments & Storage
+| Role / Vai trò | English Description | Mô tả Tiếng Việt |
+| :--- | :--- | :--- |
+| **Admin** | Full system access: manage users, departments, equipment, vendors, all tickets, and organization-wide analytics. | Toàn quyền hệ thống: quản lý người dùng, phòng ban, thiết bị, nhà cung cấp, toàn bộ ticket và báo cáo toàn công ty. |
+| **Manager** | Department-scoped management: assign primary & support technicians, track department tickets, manage vendors, and view department reports. | Quản lý phạm vi phòng ban: phân công kỹ thuật viên chính/hỗ trợ, theo dõi ticket phòng ban, quản lý vendor và xem báo cáo phòng ban. |
+| **Technician** | Execute assigned repairs (primary or support), update workflow status, dispatch to external vendors (`WaitingForVendor`), upload evidence, and log resolution notes. | Tiếp nhận và xử lý ticket được giao (chính hoặc hỗ trợ), cập nhật trạng thái, gửi sửa chữa ngoài (`WaitingForVendor`), đính kèm minh chứng và ghi nhận kết quả. |
+| **Staff** | Submit maintenance requests, monitor real-time SLA progress, collaborate via ticket comments, and confirm ticket closure (`Closed`). | Tạo yêu cầu bảo trì, theo dõi tiến độ SLA theo thời gian thực, trao đổi qua bình luận và xác nhận đóng ticket (`Closed`). |
 
-- presigned file upload flow (Cloudflare R2 / S3 / Local storage compatible)
-- list attachments per ticket
-- preview modal for images, videos, and PDF documents
-- secure download link generation
-- attachment deletion with role/owner permissions
+---
 
-### Vendor Management
+## ✨ Key Features / Tính năng chính
 
-- create and manage external vendor partner records (name, contact person, phone, email, address)
-- active/inactive status toggle per vendor
-- vendor directory accessible by Admin and Manager roles
-- vendors selectable when dispatching equipment for external repair
+### 1. Authentication & Access Control / Xác thực & Bảo mật
+- **EN:** JWT authentication with Refresh Token rotation & revocation, Google OAuth 2.0 Single Sign-On (SSO), password policy enforcement, and role-based access policies (`TicketAccessPolicy`).
+- **VI:** Xác thực JWT kết hợp xoay vòng & thu hồi Refresh Token, đăng nhập một lần qua **Google OAuth 2.0 SSO**, kiểm soát mật khẩu và phân quyền chặt chẽ ở cả API lẫn UI.
 
-### Vendor Dispatch & SLA Pause
+### 2. Maintenance Tickets & SLA Workflow / Quản lý Ticket & SLA Tự động
+- **EN:** Controlled state machine (`Pending` → `Assigned` → `InProgress` ⇄ `WaitingForVendor` → `Resolved` → `Closed`, or `Cancelled` with mandatory reason). Automated SLA deadlines by priority (`Critical`: 2h, `High`: 8h, `Medium`: 24h, `Low`: 48h) with real-time countdowns, status badges (`InSLA`, `NearBreach`, `Breached`, `Paused`, `MetSLA`, `MissedSLA`), comment threads, and immutable audit history.
+- **VI:** Luồng trạng thái chặt chẽ, bắt buộc ghi chú hoàn tất (`ResolutionNote`) hoặc lý do hủy (`CancellationReason`). Tự động tính hạn SLA theo mức độ ưu tiên (`Critical`: 2h, `High`: 8h, `Medium`: 24h, `Low`: 48h), hiển thị đếm ngược real-time, luồng bình luận và lịch sử thay đổi trạng thái.
 
-- technicians can transition a ticket to `WaitingForVendor` status to dispatch equipment to an external partner
-- when dispatched, the ticket SLA timer is automatically **paused** (`SlaStatus = Paused`) so the waiting period does not count against the internal team's SLA
-- the dispatch log records the selected vendor, estimated return date, technician notes, and actual repair cost (`RepairCost`)
-- when the equipment is returned, the technician resumes work (`InProgress`), and the SLA timer continues from the paused point
-- repair cost data feeds directly into the maintenance cost analytics and Excel reports
+### 3. Vendor Dispatch & SLA Pause / Điều phối Nhà cung cấp & Tạm dừng SLA
+- **EN:** Dispatch equipment to external repair partners (`WaitingForVendor`) to automatically **pause** the SLA timer (`Paused`), log estimated return dates and `RepairCost`, and **resume** SLA calculation upon return (`InProgress`).
+- **VI:** Khi gửi thiết bị ra ngoài sửa chữa (`WaitingForVendor`), hệ thống tự động **tạm dừng đồng hồ SLA**, lưu thông tin đối tác, ngày dự kiến trả và chi phí sửa chữa (`RepairCost`), sau đó tự động **tiếp tục tính SLA** khi nhận lại thiết bị.
 
-### Dashboard & Analytics
+### 4. Automated Alerts via Outbox & Resend / Cảnh báo Email qua Outbox & Resend
+- **EN:** `SlaMonitorWorker` periodically evaluates active tickets using high-performance `ExecuteUpdateAsync`, enqueues notifications into `SlaNotificationOutboxMessage`, and dispatches HTML alerts via **Resend HTTP API** for near-breach (< 1h), breach, manager escalation, and completion.
+- **VI:** `SlaMonitorWorker` định kỳ quét các ticket đang mở, đẩy thông báo vào bảng **Outbox (`SlaNotificationOutboxMessage`)** và gửi email cảnh báo qua **Resend HTTP API** khi sắp quá hạn (< 1 giờ), vi phạm SLA, leo thang quản lý hoặc hoàn tất.
 
-- real-time KPI overview (tickets by status, active vs maintenance equipment, technician and department metrics)
-- interactive status and priority distribution charts
-- department equipment breakdown
-- role-scoped data filtering
+### 5. Ticket Attachments on Cloudflare R2 / Tệp đính kèm trên Cloudflare R2
+- **EN:** Direct browser-to-storage uploads via **Cloudflare R2 Presigned URLs**, in-app preview modal for images, videos, and PDFs, plus a background cleanup worker for unconfirmed/orphaned uploads.
+- **VI:** Upload file trực tiếp từ trình duyệt lên **Cloudflare R2** bằng **Presigned URL**, hỗ trợ xem trước ảnh, video, PDF ngay trên giao diện và có worker dọn dẹp file rác định kỳ.
 
-### Reporting & Analytics (Admin / Manager)
+### 6. Dashboard & Executive Reporting / Dashboard & Báo cáo Phân tích
+- **EN:** Role-scoped KPI dashboards and 3 analytical pillars (Admin/Manager): **Technician Performance** (MTTR, compliance rate), **SLA Compliance** (6-month trends, priority breakdown), and **Maintenance Cost** (vendor spend, top 5 costliest assets). Exportable to multi-sheet **Excel (.xlsx)** via ClosedXML or **PDF** print.
+- **VI:** Dashboard KPI theo thời gian thực và 3 báo cáo chuyên sâu: **Hiệu suất kỹ thuật viên (MTTR)**, **Tuân thủ SLA (xu hướng 6 tháng)** và **Chi phí bảo trì (Top 5 thiết bị tốn kém nhất)**. Hỗ trợ xuất **Excel (.xlsx)** 3 sheet bằng ClosedXML và in **PDF**.
 
-Three analytical pillars accessible from the `/reports` page:
+---
 
-**Technician Performance**
-- total assigned, in-progress, waiting-for-vendor, resolved counts per technician
-- SLA compliance rate and missed SLA count per technician
-- average resolution time (MTTR) in hours
-- bar chart comparison of SLA compliance rates across the team
+## 📸 UI Showcase / Hình ảnh giao diện
 
-**SLA Compliance**
-- overall compliance rate across all tickets
-- breakdown by priority (Critical / High / Medium / Low)
-- monthly SLA compliance trend line chart (last 6 months)
-- counts for active tickets: InSLA, NearBreach, Breached, Paused
+### 1. Dashboard & Analytics / Tổng quan & Phân tích
 
-**Maintenance Cost**
-- total vendor repair spend, total vendor dispatches, and average cost per dispatch
-- monthly cost trend bar chart (last 6 months)
-- cost breakdown by department (pie chart)
-- top 5 costliest equipment items (replacement candidates)
+| Overview Dashboard / Tổng quan KPI | Charts & Breakdown / Biểu đồ phân tích |
+| :---: | :---: |
+| ![Dashboard Overview](./clients/public/screenshots/dashboard.png) | ![Dashboard Charts](./clients/public/screenshots/dashboard2.png) |
 
-**Export**
-- **Excel (.xlsx)**: one-click export generating a single workbook with all three report sheets
-- **PDF**: browser print dialog for on-screen printing or PDF generation
-- **Filters**: date range (with future-date validation), department, and technician filters
+### 2. Ticket Queue, Detail & Workflow / Danh sách, Chi tiết & Luồng xử lý Ticket
 
-### Theme & UI Polish
+| Ticket Queue / Danh sách Ticket | Ticket Detail / Chi tiết Ticket |
+| :---: | :---: |
+| ![Ticket Queue 1](./clients/public/screenshots/equipment1.png) | ![Ticket Queue 2](./clients/public/screenshots/equipment2.png) |
+| ![Ticket Detail 1](./clients/public/screenshots/equipment3.png) | ![Ticket Detail 2](./clients/public/screenshots/equipment4.png) |
 
-- Light and Dark mode toggle with system preference support
-- responsive tables, modal dialogs, SLA badges, and status indicators
+<details>
+<summary>🖼️ View all Ticket Workflow & Attachment screenshots (15 images) / Xem toàn bộ ảnh quy trình Ticket & Đính kèm (15 ảnh)</summary>
 
-### Code Quality & Git Hooks
+| | | |
+| :---: | :---: | :---: |
+| ![Ticket 5](./clients/public/screenshots/equipment5.png) | ![Ticket 6](./clients/public/screenshots/equipment6.png) | ![Ticket 7](./clients/public/screenshots/equipment7.png) |
+| ![Ticket 8](./clients/public/screenshots/equipment8.png) | ![Ticket 9](./clients/public/screenshots/equipment9.png) | ![Ticket 10](./clients/public/screenshots/equipment10.png) |
+| ![Ticket 11](./clients/public/screenshots/equipment11.png) | ![Ticket 12](./clients/public/screenshots/equipment12.png) | ![Ticket 13](./clients/public/screenshots/equipment13.png) |
+| ![Ticket 14](./clients/public/screenshots/equipment14.png) | ![Ticket 15](./clients/public/screenshots/equipment15.png) | ![Ticket 16](./clients/public/screenshots/equipment16.png) |
+| ![Ticket 17](./clients/public/screenshots/equipment17.png) | ![Ticket 18](./clients/public/screenshots/equipment18.png) | ![Ticket 19](./clients/public/screenshots/equipment19.png) |
 
-- Husky pre-commit hook integration
-- lint-staged automated formatting with Prettier and lint checking with ESLint prior to code commits
+</details>
 
-## UI & Features Screenshots
+### 3. Equipment Management / Quản lý Thiết bị
 
-### 1. Dashboard & Analytics
-Overview of maintenance tickets, KPI summaries, and equipment status.
-![Dashboard UI](./clients/public/screenshots/dashboard.png)
-![Dashboard UI](./clients/public/screenshots/dashboard2.png)
+| Equipment Directory / Danh mục Thiết bị | Asset Details / Chi tiết Tài sản | Asset Status / Trạng thái Thiết bị |
+| :---: | :---: | :---: |
+| ![Equipment 20](./clients/public/screenshots/equipment20.png) | ![Equipment 21](./clients/public/screenshots/equipment21.png) | ![Equipment 22](./clients/public/screenshots/equipment22.png) |
 
-### 2. Ticket Management
-List of maintenance tickets with color-coded status badges, priority indicators, and SLA tracking.
-![Ticket Details](./clients/public/screenshots/equipment1.png)
+### 4. User Management & Access Control / Quản lý Người dùng & Phân quyền
 
-![Ticket Details](./clients/public/screenshots/equipment2.png)
+| User Directory / Danh sách Người dùng | Create & Edit User / Tạo & Sửa User |
+| :---: | :---: |
+| ![User 1](./clients/public/screenshots/user1.png) | ![User 2](./clients/public/screenshots/user2.png) |
 
-### 3. Ticket Details & Workflow
-Detailed view of a ticket showing status transitions, assignee, support technician, SLA countdown, and discussion thread.
+<details>
+<summary>🖼️ View additional User Management screens (3 images) / Xem thêm màn hình Quản lý Người dùng (3 ảnh)</summary>
 
-![Ticket Details](./clients/public/screenshots/equipment3.png)
+| | | |
+| :---: | :---: | :---: |
+| ![User 3](./clients/public/screenshots/user3.png) | ![User 4](./clients/public/screenshots/user4.png) | ![User 5](./clients/public/screenshots/user5.png) |
 
-![Ticket Details](./clients/public/screenshots/equipment4.png)
+</details>
 
-![Ticket Details](./clients/public/screenshots/equipment5.png)
+---
 
-![Ticket Details](./clients/public/screenshots/equipment6.png)
+## 🏛️ Architecture Overview / Kiến trúc tổng quan
 
-![Ticket Details](./clients/public/screenshots/equipment7.png)
+**EN:** The backend follows a **Vertical Slice Modular Monolith** architecture across **7 isolated Bounded Contexts** (`Identity`, `Organization`, `Equipment`, `Maintenance`, `Vendors`, `TicketAttachments`, `Reporting`). Cross-module communication is strictly routed through `*.Contracts` (zero cross-module domain entity navigation), enforced automatically by `Architecture.Tests`.
 
-![Ticket Details](./clients/public/screenshots/equipment8.png)
+**VI:** Backend được tổ chức theo kiến trúc **Vertical Slice Modular Monolith** gồm **7 Bounded Contexts độc lập**. Giao tiếp liên module bắt buộc đi qua `*.Contracts` (không tham chiếu chéo Entity Domain) và được kiểm soát tự động bằng bộ test **`Architecture.Tests`**.
 
-![Ticket Details](./clients/public/screenshots/equipment9.png)
-
-![Ticket Details](./clients/public/screenshots/equipment10.png)
-
-![Ticket Details](./clients/public/screenshots/equipment11.png)
-
-![Ticket Details](./clients/public/screenshots/equipment12.png)
-
-![Ticket Details](./clients/public/screenshots/equipment13.png)
-
-![Ticket Details](./clients/public/screenshots/equipment14.png)
-
-![Ticket Details](./clients/public/screenshots/equipment15.png)
-
-![Ticket Details](./clients/public/screenshots/equipment16.png)
-
-![Ticket Details](./clients/public/screenshots/equipment17.png)
-
-![Ticket Details](./clients/public/screenshots/equipment18.png)
-
-![Ticket Details](./clients/public/screenshots/equipment19.png)
-
-### 4. Equipment Management
-Asset tracking interface with department assignment and active/maintenance status toggle.
-![Equipment Management](./clients/public/screenshots/equipment20.png)
-
-![Equipment Management](./clients/public/screenshots/equipment21.png)
-
-![Equipment Management](./clients/public/screenshots/equipment22.png)
-
-### 5. User Management & Access Control
-Admin directory for managing users, roles (Admin/Manager/Staff/Technician), and department assignments.
-![User Management](./clients/public/screenshots/user1.png)
-
-![User Management](./clients/public/screenshots/user2.png)
-
-![User Management](./clients/public/screenshots/user3.png)
-
-![User Management](./clients/public/screenshots/user4.png)
-
-![User Management](./clients/public/screenshots/user5.png)
-
-## Business Workflow
+### System Architecture Diagram / Sơ đồ Kiến trúc Hệ thống
 
 ```mermaid
 flowchart TB
-    A[Staff] --> B[Create Ticket with SLA Deadline]
-    B --> C[Pending]
-    C --> D[Manager Assign Technician & Support Tech]
-    D --> E[Assigned]
-    E --> F[Technician Starts Work]
-    F --> G[In Progress]
-    G -->|Internal Fix| H[Resolved with Resolution Note & SLA Check]
-    G -->|Needs External Repair| V[WaitingForVendor - SLA Paused]
-    V -->|Equipment Returned| G
-    H --> I[Staff Confirm]
-    I --> J[Closed]
-    C -. Cancel with Reason .-> K[Cancelled]
-    E -. Cancel with Reason .-> K
+    Client["React 19 + TypeScript SPA<br/>(Vite, TanStack Query, Zustand, Recharts)"]
+    R2["Cloudflare R2<br/>(Object Storage)"]
+    Resend["Resend HTTP API<br/>(Email Alerts)"]
+    Google["Google OAuth 2.0<br/>(SSO)"]
+
+    subgraph APIHost ["ASP.NET Core 10 Host (InternalMaintenance.Api)"]
+        Controllers["Thin Controllers & Minimal Endpoints"]
+        Workers["Background Workers<br/>(SlaMonitorWorker, Outbox, Cleanup)"]
+    end
+
+    subgraph Modules ["7 Bounded Context Modules (Vertical Slices)"]
+        M1["Identity<br/>(Auth, Users, Roles)"]
+        M2["Organization<br/>(Departments)"]
+        M3["Equipment<br/>(Assets)"]
+        M4["Maintenance<br/>(Tickets, SLA, Workflow)"]
+        M5["Vendors<br/>(External Partners)"]
+        M6["TicketAttachments<br/>(Presign & Confirm)"]
+        M7["Reporting<br/>(Analytics & Excel)"]
+    end
+
+    subgraph Shared ["Shared Kernel & Persistence"]
+        BB["BuildingBlocks<br/>(ServiceResult, Pagination, Security)"]
+        DB["Persistence<br/>(AppDbContext + Outbox)"]
+    end
+
+    SQL[("SQL Server 2022")]
+
+    Client -->|REST / JWT| Controllers
+    Client -->|Presigned PUT/GET| R2
+    Client -->|ID Token| Google
+    Controllers --> Modules
+    Workers --> M4
+    Workers --> M6
+    Workers -->|Send Email| Resend
+    M6 -->|Generate Presign URL| R2
+    Modules --> BB
+    Modules --> DB
+    DB --> SQL
 ```
 
-## Access Model
+### Ticket & SLA Lifecycle / Vòng đời Ticket & Trạng thái SLA
 
-The backend uses role-based access control:
-
-- `Admin`
-- `Manager`
-- `Staff`
-- `Technician`
-
-Ticket visibility is filtered by role:
-
-- `Admin` can access all tickets
-- `Manager` can access tickets in their department
-- `Staff` can access tickets they created
-- `Technician` can access tickets assigned to them (as primary or support technician) or created by them
-
-Report access is restricted to `Admin` and `Manager` roles only. Managers see data scoped to their department; Admins see the full organization view.
-
-## Tech Stack
-
-**Frontend:** React 19, TypeScript, Vite, TanStack Query, React Router, Zustand, React Hook Form, Zod, Recharts
-**Backend:** ASP.NET Core 10, Entity Framework Core, JWT Authentication, BCrypt.Net-Next, MailKit / MimeKit (SMTP), ClosedXML (Excel export), BackgroundService (`SlaMonitorWorker`), Swagger/OpenAPI
-**Database:** Microsoft SQL Server 2022
-**Tooling:** Docker Compose, pnpm, ESLint, Prettier, Husky, lint-staged, Vitest
-
-## Repository Structure
-
-```text
-InternalMaintenanceManagement.slnx
-|
-+-- .husky/                                # Git hook automation
-|   +-- pre-commit                         # Pre-commit hook triggering lint-staged & Prettier
-|
-+-- InternalMaintenance.Api/               # ASP.NET Core 10 Web API Backend
-|   +-- Constants/                         # Domain constants & policies
-|   |   +-- SlaPolicy.cs                   # SLA threshold & status definitions
-|   +-- Data/                              # Data access & database context
-|   |   +-- AppDbContext.cs                # EF Core DbContext definition
-|   |   +-- DbInitializer.cs               # Startup database migrations & demo data seeders
-|   +-- Extensions/
-|   |   +-- ServiceCollectionExtensions.cs # DI registrations
-|   +-- Modules/                           # Feature-based API Modules (Modular Monolith)
-|   |   +-- Auth/
-|   |   +-- Dashboard/
-|   |   +-- Departments/
-|   |   +-- Equipment/
-|   |   +-- Reports/                       # Reporting & analytics with Excel export
-|   |   |   +-- Contracts/                 # DTOs: ReportFilterQuery, TechnicianPerformanceReportResponse, etc.
-|   |   |   +-- Services/                  # ReportExportService (ClosedXML Excel generation)
-|   |   |   +-- ReportsController.cs       # Endpoints for performance, SLA, cost & export
-|   |   +-- TicketAttachments/
-|   |   +-- Tickets/
-|   |   +-- Users/
-|   |   +-- Vendors/                       # Vendor partner CRUD & active/inactive toggle
-|   +-- Services/                          # Core business services & background tasks
-|   |   +-- SlaMonitorWorker.cs            # BackgroundService checking SLA breach & escalation
-|   |   +-- SmtpEmailService.cs            # MailKit/MimeKit SMTP email sender
-|   +-- Program.cs
-|   +-- appsettings.json
-|
-+-- clients/                               # React 19 + TypeScript + Vite Frontend
-|   +-- src/
-|   |   +-- features/
-|   |   |   +-- reports/                   # Reports API hooks (reports-api.ts)
-|   |   |   +-- vendors/                   # Vendor table, modals & mutations
-|   |   +-- pages/
-|   |   |   +-- reports/                   # Reporting & Analytics page screen
-|   |   |   +-- vendors/                   # Vendor partner management page screen
-|   |   +-- entities/vendor/               # Vendor entity models
-|
-+-- docker-compose.yml
-+-- .env.example
-+-- README.md
+```mermaid
+stateDiagram-v2
+    [*] --> Pending: Staff creates Ticket (SLA DueAt calculated)
+    Pending --> Assigned: Manager assigns Technician
+    Pending --> Cancelled: Cancelled (Reason required)
+    Assigned --> InProgress: Technician starts work
+    Assigned --> Cancelled: Cancelled (Reason required)
+    InProgress --> WaitingForVendor: Dispatch to Vendor (SLA Paused)
+    WaitingForVendor --> InProgress: Equipment returned (SLA Resumed)
+    InProgress --> Resolved: Fixed (ResolutionNote + MetSLA/MissedSLA)
+    Resolved --> Closed: Staff confirms closure
+    Closed --> [*]
+    Cancelled --> [*]
 ```
 
-## API Modules
+### Tech Stack / Công nghệ sử dụng
 
-### Authentication
+| Layer / Tầng | Technologies / Công nghệ |
+| :--- | :--- |
+| **Backend** | .NET 10, ASP.NET Core Web API, Entity Framework Core, ClosedXML, DotNetEnv, BCrypt.Net-Next, Swagger/OpenAPI |
+| **Frontend** | React 19, TypeScript 6, Vite 8, TanStack Query v5, TanStack Table v8, React Router v7, Zustand v5, React Hook Form, Zod, Recharts, Tailwind CSS, Radix UI |
+| **Database** | Microsoft SQL Server 2022 (Docker Container) |
+| **Cloud & Integrations** | Cloudflare R2 (S3-compatible Presigned Storage), Resend HTTP API (Email), Google OAuth 2.0 (SSO) |
+| **Testing & Quality** | xUnit (`Architecture.Tests`, `Maintenance.Domain.Tests`, `Reporting.Tests`, `Api.IntegrationTests`), Vitest, MSW, Husky, lint-staged, ESLint, Prettier |
 
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `POST /api/auth/change-password`
-- `POST /api/auth/refresh-token`
-- `POST /api/auth/logout`
+---
 
-### Users
+## 🛠️ Installation / Cài đặt
 
-- `GET /api/users`
-- `GET /api/users/{id}`
-- `POST /api/users`
-- `PUT /api/users/{id}`
-- `PATCH /api/users/{id}/status`
-- `PATCH /api/users/{id}/reset-password`
+### Prerequisites / Yêu cầu hệ thống
 
-### Departments
+- **[.NET 10 SDK](https://dotnet.microsoft.com/download)**
+- **[Node.js LTS](https://nodejs.org/)** & **[pnpm](https://pnpm.io/)** (`v10+`)
+- **[Docker Desktop](https://www.docker.com/products/docker-desktop/)**
 
-- `GET /api/departments`
-- `GET /api/departments/{id}`
-- `POST /api/departments`
-- `PUT /api/departments/{id}`
-- `DELETE /api/departments/{id}`
+### Step 1: Clone & Configure Environment / Clone & Tạo file cấu hình
 
-### Equipment
+```bash
+git clone https://github.com/<your-username>/internal-maintenance-management.git
+cd internal-maintenance-management
 
-- `GET /api/equipment`
-- `GET /api/equipment/{id}`
-- `POST /api/equipment`
-- `PUT /api/equipment/{id}`
-- `DELETE /api/equipment/{id}`
+# Backend & Docker environment variables
+cp .env.example .env
 
-### Vendors
+# Frontend environment variables
+cp clients/.env.example clients/.env
+```
 
-- `GET /api/vendors`
-- `GET /api/vendors/{id}`
-- `POST /api/vendors`
-- `PUT /api/vendors/{id}`
-- `PATCH /api/vendors/{id}/toggle-active`
+### Step 2: Install Dependencies / Cài đặt thư viện
 
-### Dashboard
+```bash
+# Restore .NET solution dependencies
+dotnet restore InternalMaintenanceManagement.slnx
 
-- `GET /api/dashboard/summary`
-- `GET /api/dashboard/charts`
+# Install Frontend packages & initialize Husky Git hooks
+cd clients
+pnpm install
+cd ..
+```
 
-### Ticket Attachments
+---
 
-- `POST /api/tickets/{ticketId}/attachments/presign`
-- `POST /api/tickets/{ticketId}/attachments/confirm`
-- `GET /api/tickets/{ticketId}/attachments`
-- `GET /api/tickets/{ticketId}/attachments/{attachmentId}/download-url`
-- `DELETE /api/tickets/{ticketId}/attachments/{attachmentId}`
+## 🚀 Running the Project / Chạy project
 
-### Maintenance Tickets
+### 1. Start SQL Server 2022 / Khởi động Database
 
-- `GET /api/tickets`
-- `GET /api/tickets/{id}`
-- `POST /api/tickets`
-- `PUT /api/tickets/{id}`
-- `PATCH /api/tickets/{id}/assign`
-- `PATCH /api/tickets/{id}/status`
-- `POST /api/tickets/{id}/comments`
-- `GET /api/tickets/{id}/comments`
-- `GET /api/tickets/{id}/history`
+```bash
+# Create external volume once on a fresh machine / Tạo volume nếu chạy lần đầu
+docker volume create internal-maintenance-management_internal_sqlserver_data_dev
 
-Ticket statuses: `Pending`, `Assigned`, `InProgress`, `WaitingForVendor`, `Resolved`, `Closed`, `Cancelled`
-
-Ticket priorities: `Low`, `Medium`, `High`, `Critical`
-
-SLA statuses: `InSLA`, `NearBreach`, `Breached`, `Paused`, `MetSLA`, `MissedSLA`, `Cancelled`
-
-### Reports & Analytics (Admin / Manager only)
-
-- `GET /api/reports/technician-performance`
-- `GET /api/reports/sla-compliance`
-- `GET /api/reports/maintenance-cost`
-- `GET /api/reports/export/excel`
-
-Supported query parameters: `fromDate`, `toDate`, `departmentId`, `technicianId`
-
-## Ticket Workflow Rules
-
-- A ticket can be cancelled from `Pending` or `Assigned` (requires a `cancellationReason`)
-- SLA deadline (`dueAt`) is automatically determined based on priority at creation
-- A ticket can move from `InProgress` to `WaitingForVendor`; SLA is **paused** automatically
-- A ticket can move from `WaitingForVendor` back to `InProgress`; SLA **resumes**
-- A ticket can move from `InProgress` to `Resolved` (requires a `resolutionNote`)
-- Moving to `Resolved` or `Closed` checks completion against `dueAt` to record `MetSLA` or `MissedSLA`
-- Closed tickets should not be modified
-- Every status change is stored in history
-
-## Seeded Demo Data
-
-Seeded users (password: `Temp@123456`):
-
-- `admin@test.com`
-- `manager@test.com`
-- `staff@test.com`
-- `technician@test.com`
-
-Seeded equipment: `PRN-ACC-001` (Canon Printer), `RTR-IT-001` (Main Office Router)
-
-## Getting Started
-
-### Prerequisites
-
-- .NET 10 SDK
-- Node.js LTS + pnpm
-- Docker Desktop
-
-### Start the Database
-
-```powershell
+# Start SQL Server container
 docker compose up -d
 ```
 
-### Start the API
+### 2. Start Backend API / Khởi động Backend API
 
-```powershell
-dotnet run --project InternalMaintenance.Api
+```bash
+dotnet run --project src/Host/InternalMaintenance.Api
 ```
 
-API: `http://localhost:5253` | Swagger: `http://localhost:5253/swagger`
+- **API URL**: `http://localhost:5253`
+- **Swagger UI**: `http://localhost:5253/swagger`
+- *(Development mode automatically applies EF Core Migrations and seeds demo data / Môi trường Dev tự động chạy Migration và nạp dữ liệu mẫu.)*
 
-### Start the Frontend
+### 3. Start Frontend SPA / Khởi động Frontend
 
-```powershell
+Open a new terminal / Mở terminal mới:
+
+```bash
 cd clients
-pnpm install
 pnpm dev
 ```
 
-Frontend: `http://localhost:5173`
+- **Frontend URL**: `http://localhost:5173`
 
-## Business Rules
+### 4. Run Test Suites / Chạy Kiểm thử
 
-- One equipment item cannot have multiple active maintenance tickets
-- Equipment code is immutable after creation
-- A department cannot be deleted if related users or equipment still exist
-- SLA timer is paused when a ticket enters `WaitingForVendor` and resumed when it returns to `InProgress`
-- Report endpoints reject date inputs in the future; `fromDate` must not exceed `toDate`
-- Report data is scoped by role: Admins see all, Managers see their department only
+```bash
+# Run all Backend tests (Architecture, Domain, Reporting, Integration)
+dotnet test InternalMaintenanceManagement.slnx
 
-## Feature Implementation Status
+# Run Frontend unit tests
+cd clients
+pnpm test:run
+```
 
-| Feature / Module | Status | Backend | Frontend | Description |
-| --- | --- | --- | --- | --- |
-| **JWT Auth & Refresh Token** | Completed | Yes | Yes | Login, logout, token rotation, current user lookup |
-| **Role-Based Access (RBAC)** | Completed | Yes | Yes | Admin, Manager, Staff, Technician authorization |
-| **User Management** | Completed | Yes | Yes | User directory, active status toggle, reset password |
-| **Department Management** | Completed | Yes | Yes | Department CRUD, `IsMaintenanceTeam` flag |
-| **Equipment Management** | Completed | Yes | Yes | Asset tracking, department link, immutable code |
-| **Maintenance Tickets** | Completed | Yes | Yes | Create ticket, primary & support technician assignment, status workflow |
-| **Ticket Cancellation Reason** | Completed | Yes | Yes | Required cancellation reason modal & detail display |
-| **SLA Tracking & Breach Alerts** | Completed | Yes | Yes | Priority SLA deadlines, UI timers/badges, background monitor worker |
-| **Email Notifications** | Completed | Yes | Yes | SMTP alerts for Near-Breach, SLA Breach, Escalation & Completion |
-| **Ticket Comments & History** | Completed | Yes | Yes | Discussion thread, automated status audit log |
-| **Ticket Attachments & Files** | Completed | Yes | Yes | Presigned upload, image/video/PDF preview, deletion |
-| **Dashboard & Analytics** | Completed | Yes | Yes | Summary KPIs, status & priority charts, dept equipment stats |
-| **Vendor Management** | Completed | Yes | Yes | Vendor CRUD, active/inactive toggle, contact directory |
-| **Vendor Dispatch & SLA Pause** | Completed | Yes | Yes | WaitingForVendor workflow, SLA pause/resume, repair cost logging |
-| **Reporting & Analytics** | Completed | Yes | Yes | Technician performance, SLA compliance, maintenance cost reports |
-| **Excel Export** | Completed | Yes | Yes | ClosedXML multi-sheet workbook with all three report dimensions |
-| **Dark / Light Theme** | Completed | N/A | Yes | Theme mode switcher with persistent UI state |
-| **Pre-commit Formatting (Husky)** | Completed | N/A | Yes | Git pre-commit hooks with lint-staged & Prettier |
-| **Equipment QR Code** | Planned | No | No | Generate & scan QR codes for rapid asset lookup |
-| **Preventive Maintenance** | Planned | No | No | Scheduled recurring maintenance tasks & automatic tickets |
-| **Push / In-App Notifications** | Planned | No | No | Real-time alerts via SignalR |
-| **Multi-building / Location** | Planned | No | No | Location hierarchy (Building -> Floor -> Room) |
-| **Multi-tenancy & SaaS** | Planned | No | No | Organization isolation & multi-tenant billing |
+### 🔑 Seeded Demo Accounts / Tài khoản Demo
 
-## Roadmap
+Default password for all seeded development accounts / Mật khẩu chung: **`Temp@123456`**
 
-### Phase 1 — Core Operational (Completed)
+| Role / Vai trò | Email | Description / Mô tả |
+| :--- | :--- | :--- |
+| **Admin** | `admin@test.com` | System administrator / Quản trị viên toàn hệ thống |
+| **Manager** | `manager@test.com` | Department manager / Quản lý phòng ban |
+| **Technician** | `technician@test.com` | Maintenance technician / Kỹ thuật viên |
+| **Staff** | `staff@test.com` | General staff / Nhân viên tạo yêu cầu |
 
-- [x] JWT Authentication & Refresh Tokens
-- [x] Role-Based Access Control
-- [x] User, Department & Equipment Management
-- [x] Maintenance Ticket Lifecycle
-- [x] SLA Tracking, Background Monitor Worker & Email Alerts
-- [x] Ticket Comments, History & File Attachments
-- [x] Dashboard KPIs & Analytics Charts
-- [x] Husky Pre-commit Formatting
+*(Seeded equipment / Thiết bị mẫu: `PRN-ACC-001` — Canon Printer, `RTR-IT-001` — Main Office Router)*
 
-### Phase 2 — Vendor & External Repair (Completed)
+---
 
-- [x] Vendor Management (CRUD, active/inactive, contact directory)
-- [x] Vendor Dispatch Workflow (`WaitingForVendor` status)
-- [x] Automatic SLA Pause on dispatch and Resume on return
-- [x] Repair cost logging per vendor dispatch (`RepairCost`)
+## ⚙️ Environment Configuration / Cấu hình môi trường
 
-### Phase 3 — Reporting & Analytics (Completed)
+### Backend & Docker (`.env` at root / tại thư mục gốc)
 
-- [x] Technician Performance Report (assigned, resolved, MTTR, SLA compliance rate)
-- [x] SLA Compliance Report (overall rate, by-priority breakdown, 6-month trend)
-- [x] Maintenance Cost Report (total vendor spend, monthly trend, dept breakdown, top costly equipment)
-- [x] One-click Excel export (3 sheets in one workbook)
-- [x] PDF print export via browser
-- [x] Date range, department, and technician filters with future-date validation
+Loaded automatically by `DotNetEnv` on API startup / Được nạp tự động qua `DotNetEnv` khi khởi chạy API.
 
-### Phase 4 — Asset Lifecycle & Preventive Maintenance (Planned)
+| Group / Nhóm | Variable / Biến | Description (EN / VI) | Example / Giá trị mẫu |
+| :--- | :--- | :--- | :--- |
+| **Database** | `MSSQL_SA_PASSWORD` | SQL Server `sa` password / Mật khẩu `sa` | `YourStrong!ProductionPassword123` |
+| | `SQLSERVER_PORT` | Host port mapped to container / Cổng SQL Server | `1433` |
+| | `ConnectionStrings__DefaultConnection` | EF Core SQL Server connection string / Chuỗi kết nối DB | `Server=127.0.0.1,1433;Database=InternalMaintenanceDb;...` |
+| **JWT** | `Jwt__Key` | Signing secret (min 32 chars) / Khóa bí mật ký JWT | `replace-with-a-random-secret-key-...` |
+| | `Jwt__Issuer` | Token issuer / Bên phát hành token | `InternalMaintenanceApi` |
+| | `Jwt__Audience` | Token audience / Bên nhận token | `InternalMaintenanceClient` |
+| | `Jwt__ExpiresInMinutes` | Access token lifetime (mins) / Thời hạn Access Token | `60` |
+| | `Jwt__RefreshTokenExpiresInDays` | Refresh token lifetime (days) / Thời hạn Refresh Token | `7` |
+| **CORS** | `Cors__AllowedOrigins__0` | Allowed frontend origins (`0`, `1`, ...) / Origin được phép | `http://localhost:5173` |
+| **Email (Resend)** | `Resend__ApiKey` | Resend HTTP API key / API Key dịch vụ Resend | `re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
+| | `Resend__FromEmail` | Verified sender address / Email người gửi | `no-reply@mail.shopmini.io.vn` |
+| | `Resend__FromName` | Sender display name / Tên hiển thị người gửi | `Maintenance System` |
+| **Cloudflare R2** | `R2__AccountId` | Cloudflare Account ID | `your_cloudflare_account_id` |
+| | `R2__BucketName` | R2 bucket name / Tên bucket lưu file | `internal-maintenance-attachments` |
+| | `R2__AccessKeyId` | R2 S3 Access Key ID | `your_r2_access_key_id` |
+| | `R2__SecretAccessKey` | R2 S3 Secret Access Key | `your_r2_secret_access_key` |
+| | `R2__Endpoint` | R2 S3 API endpoint | `https://<account_id>.r2.cloudflarestorage.com` |
+| | `R2__Region` | R2 region (`auto`) / Vùng lưu trữ | `auto` |
+| | `R2__PresignExpiresMinutes` | Presigned URL TTL (mins) / Thời hạn link upload/tải | `15` |
+| **Google SSO** | `Google__ClientId` | Google OAuth 2.0 Client ID | `your_id.apps.googleusercontent.com` |
 
-- [ ] **Equipment QR Code**: Generate printable QR code labels per equipment item; enable camera-scan lookup on mobile web
-- [ ] **Preventive Maintenance Scheduling**: Define recurring inspection schedules per equipment; automatically generate tickets before the due date
-- [ ] **Maintenance History Timeline**: Equipment-level view of all past tickets, repairs, and costs
-- [ ] **Warranty Tracking**: Store warranty expiry per equipment and surface warnings when creating tickets
+### Frontend (`clients/.env`)
 
-### Phase 5 — Collaboration & Real-Time Features (Planned)
+```env
+# Backend API Base URL
+VITE_API_BASE_URL=http://localhost:5253/api
 
-- [ ] **Push / In-App Notifications**: Real-time alerts inside the app when a ticket is assigned, commented on, or SLA is breached (SignalR)
-- [ ] **@Mention in Comments**: Tag a colleague in a comment to trigger a notification
-- [ ] **Technician Workload View**: Visual board showing current open ticket load per technician
-- [ ] **Mobile-Responsive PWA**: Progressive Web App support for field technicians
+# Google OAuth 2.0 Client ID (must match Google__ClientId in backend)
+VITE_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+```
 
-### Phase 6 — Location & Physical Hierarchy (Planned)
+---
 
-- [ ] **Location Hierarchy**: Building -> Floor -> Room model so equipment can be pinned to a physical location
-- [ ] **Location-Based Ticket Routing**: Suggest the nearest available technician based on room location
+## 📁 Project Structure / Cấu trúc thư mục
 
-### Longer-Term Ideas
+```text
+InternalMaintenanceManagement.slnx
+├── .github/workflows/                 # CI/CD pipelines (backend-ci, frontend-ci, dotnet)
+├── .husky/                            # Git hooks (pre-commit running lint-staged & Prettier)
+├── clients/                           # Frontend SPA (React 19 + TypeScript + Vite)
+│   ├── public/screenshots/            # Application UI screenshots
+│   └── src/
+│       ├── app/                       # Router, Providers, global store setup
+│       ├── components/                # Shared UI components (Radix UI / Tailwind)
+│       ├── entities/                  # Client-side domain models (ticket, vendor, ...)
+│       ├── features/                  # Feature slices (auth, tickets, reports, vendors, ...)
+│       ├── pages/                     # Route pages (Dashboard, Tickets, Reports, ...)
+│       └── shared/                    # Axios client, OpenAPI generated types, helpers
+├── deploy/                            # Production deployment scripts & configs
+├── docs/                              # Architecture plans, gap analyses & refactor logs
+├── sql/                               # Database maintenance & repair SQL scripts
+├── src/
+│   ├── Host/
+│   │   └── InternalMaintenance.Api/   # Composition Root, Controllers, Migrations, Seed
+│   ├── Modules/                       # 7 Independent Bounded Contexts (Vertical Slices)
+│   │   ├── Equipment/                 # Contracts + Infrastructure (Features/)
+│   │   ├── Identity/                  # Contracts + Infrastructure (Features/Auth, Features/Users)
+│   │   ├── Maintenance/               # Contracts + Domain + Application + Infrastructure
+│   │   ├── Organization/              # Contracts + Infrastructure (Features/)
+│   │   ├── Reporting/                 # Contracts + Infrastructure (Features/ + ClosedXML)
+│   │   ├── TicketAttachments/         # Contracts + Infrastructure (Features/ + R2 Storage)
+│   │   └── Vendors/                   # Contracts + Infrastructure (Features/)
+│   └── Shared/
+│       ├── InternalMaintenance.BuildingBlocks/  # ServiceResult, PagedResponse, ClaimsPrincipalExt
+│       └── InternalMaintenance.Persistence/     # AppDbContext, Configurations, Outbox
+├── tests/                             # Automated Test Suites
+│   ├── Api.IntegrationTests/          # End-to-end API integration tests
+│   ├── Architecture.Tests/            # Module boundary & dependency rule enforcement
+│   ├── Maintenance.Domain.Tests/      # SLA & Ticket Workflow domain unit tests
+│   └── Reporting.Tests/               # Reporting & analytics unit tests
+├── docker-compose.yml                 # SQL Server 2022 for Development
+├── docker-compose.prod.yml            # Resource-tuned SQL Server 2022 for Production
+└── .env.example                       # Environment variables template
+```
 
-- [ ] **Multi-Tenant Architecture**: Data isolation for multiple organizations within a single platform instance
-- [ ] **Subscription & Billing Model**: Usage tier management and invoicing
-- [ ] **Predictive Maintenance & Forecasting**: Analyze repair history to forecast equipment failure rates
+---
 
-## Contributing
+## 🤝 Contributing / Hướng dẫn đóng góp
 
-Pull requests are welcome. For larger changes, please open an issue first so scope and direction can be aligned.
+**EN:** Contributions are welcome! For major architectural changes, please open an issue first to discuss scope and design.  
+**VI:** Mọi đóng góp đều được hoan nghênh! Với các thay đổi lớn về kiến trúc, vui lòng mở issue trước để thảo luận.
 
-## License
+1. **Create a feature branch / Tạo nhánh mới**:
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
+2. **Follow Vertical Slice & Module Boundaries / Tuân thủ ranh giới kiến trúc**:
+   - Place new use cases inside `Features/` of the target module. / Đặt tính năng mới trong thư mục `Features/` của module tương ứng.
+   - Never reference another module's Domain entities directly; communicate via `*.Contracts`. / Giao tiếp liên module qua `*.Contracts`, không tham chiếu chéo Entity Domain.
+   - Ensure `dotnet test InternalMaintenanceManagement.slnx` (especially `Architecture.Tests`) passes 100%.
+3. **Code Formatting / Chuẩn hóa Code**:
+   - Frontend commits are automatically checked & formatted by **Husky + lint-staged + Prettier**.
+   - Backend code follows the root `.editorconfig`.
 
-No license file is currently included in this repository.
+---
+
+## 📄 License / Giấy phép
+
+**EN:** No `LICENSE` file is currently included in this repository. The codebase is maintained for internal facility management and technical showcase purposes. Please contact the repository owner before redistributing or using it commercially.
+
+**VI:** Hiện tại repository **chưa đính kèm file `LICENSE`**. Mã nguồn đang được phát triển cho mục đích quản lý bảo trì nội bộ và trình diễn kỹ thuật. Vui lòng liên hệ chủ sở hữu repository trước khi phân phối lại hoặc sử dụng cho mục đích thương mại.
+
+---
+
+## 🗺️ Roadmap / Lộ trình phát triển
+
+### Completed / Đã hoàn thành
+
+- [x] **Phase 1 — Core Operational**: JWT Auth, Google SSO, RBAC, User/Department/Equipment CRUD, Ticket Lifecycle, SLA Monitor Worker, Comments & Audit History.
+- [x] **Phase 2 — Vendor & External Repair**: Vendor directory, `WaitingForVendor` dispatch workflow, automatic SLA Pause/Resume, and `RepairCost` tracking.
+- [x] **Phase 3 — Reporting & Analytics**: Technician Performance (MTTR), SLA Compliance trends, Maintenance Cost breakdown, multi-sheet **Excel (.xlsx)** export, and PDF print.
+- [x] **Phase 4 — Architecture & Reliability**: Full refactoring into a **Vertical Slice Modular Monolith** across 7 modules, **Outbox Pattern** with Resend Email, **Cloudflare R2 Presigned URLs** with background cleanup, and automated `Architecture.Tests`.
+
+### Upcoming / Kế hoạch tiếp theo
+
+- [ ] **Phase 5 — Asset Lifecycle & Preventive Maintenance**:
+  - Printable **QR Code** labels & mobile camera scan for instant ticket creation / Sinh và quét QR Code thiết bị.
+  - Recurring **Preventive Maintenance** schedules & warranty expiry alerts / Lập lịch bảo trì định kỳ & theo dõi bảo hành.
+- [ ] **Phase 6 — Real-time & Collaboration**:
+  - Real-time in-app notifications via **SignalR**, `@mention` in comments, and mobile **PWA** support for field technicians / Thông báo real-time SignalR & giao diện PWA.
+- [ ] **Phase 7 — Location & Scale**:
+  - Physical location hierarchy (**Building → Floor → Room**) & **Multi-tenancy** architecture / Mô hình vị trí vật lý & kiến trúc đa tổ chức.
