@@ -1,11 +1,13 @@
 # Environment Variables & Secrets
 .env
 .env.*
+.env.selfhost
 *.env
 *.env.*
 !*.env.example
 !*.env.template
 !.env.example
+!.env.selfhost.example
 
 # Local AppSettings Secrets
 appsettings.Development.json
@@ -39,3 +41,9 @@ Docker/db-data/
 *.log
 *.bak
 *.zip
+.current-deployed-tag
+.last-deployed-tag
+
+# Private Docs, Internal Plans, Self-Host Runbook & Personal Files
+docs/
+.agents/
