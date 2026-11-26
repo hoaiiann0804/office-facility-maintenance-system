@@ -10,7 +10,7 @@ export const SLA_HOURS_MAP: Record<TicketPriority, number> = {
 };
 
 export type SlaStatusType =
-  "MetSLA" | "MissedSLA" | "InSLA" | "NearBreach" | "Breached" | "Cancelled";
+  "MetSLA" | "MissedSLA" | "InSLA" | "NearBreach" | "Breached" | "Paused" | "Cancelled";
 
 export interface SlaInfo {
   statusType: SlaStatusType;
@@ -116,6 +116,19 @@ export function calculateSlaInfo(ticket: MaintenanceTicket): SlaInfo {
         isBreached: true,
       };
     }
+  }
+
+  // Ticket đang chờ đối tác (WaitingForVendor) -> tạm dừng đồng hồ SLA
+  if (ticket.status === "WaitingForVendor" || ticket.slaStatus === "Paused") {
+    return {
+      statusType: "Paused",
+      deadline,
+      deadlineFormatted,
+      badgeLabel: "Tạm dừng SLA",
+      badgeVariant: "secondary",
+      remainingText: "Đang tạm dừng SLA (Chờ đối tác)",
+      isBreached: false,
+    };
   }
 
   // Ticket đang xử lý / chờ xử lý -> tính so với thời gian hiện tại

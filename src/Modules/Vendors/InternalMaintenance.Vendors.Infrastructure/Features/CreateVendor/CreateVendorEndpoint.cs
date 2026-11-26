@@ -1,4 +1,5 @@
 using InternalMaintenance.Vendors.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,8 @@ public static class CreateVendorEndpoint
 
             return Results.CreatedAtRoute("GetVendorById", new { id = result.Data!.Id }, result.Data);
         })
+        // [FIX G-05]: Chỉ Admin và Manager mới có quyền thêm mới đối tác.
+        .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin,Manager" })
         .WithName("CreateVendor")
         .Produces<VendorResponse>(StatusCodes.Status201Created);
     }

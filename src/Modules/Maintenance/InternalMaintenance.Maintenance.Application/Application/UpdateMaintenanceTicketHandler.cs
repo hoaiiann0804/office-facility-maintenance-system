@@ -35,22 +35,18 @@ public sealed class UpdateMaintenanceTicketHandler(
         if (ticket.Status is TicketStatuses.Closed or TicketStatuses.Resolved or TicketStatuses.Cancelled)
             return Invalid("Cannot edit a finalized ticket");
 
-        // Giữ nguyên ưu tiên của quy tắc cũ: người tạo ticket chỉ được sửa ticket Pending,
-        // kể cả khi người đó đồng thời mang role Admin/Manager.
-        if (ticket.CreatedByUserId == command.ActorUserId)
+        var isAuthorizedAdminOrManager = command.ActorRole == UserRoles.Admin ||
+            (command.ActorRole == UserRoles.Manager &&
+             await ManagerCanAccessAsync(ticket.EquipmentId, ticket.CreatedByUserId,
+                 command.ActorUserId, command.ActorDepartmentId, cancellationToken));
+
+        if (!isAuthorizedAdminOrManager)
         {
-            if (ticket.Status != TicketStatuses.Pending)
-                return Invalid("Ticket already in processing state");
-        }
-        else
-        {
-            if (command.ActorRole is not (UserRoles.Admin or UserRoles.Manager))
+            if (ticket.CreatedByUserId != command.ActorUserId)
                 return Fail(TicketUpdateError.Forbidden, "Forbidden");
 
-            if (command.ActorRole == UserRoles.Manager &&
-                !await ManagerCanAccessAsync(ticket.EquipmentId, ticket.CreatedByUserId,
-                    command.ActorUserId, command.ActorDepartmentId, cancellationToken))
-                return Fail(TicketUpdateError.Forbidden, "Forbidden");
+            if (ticket.Status != TicketStatuses.Pending)
+                return Invalid("Ticket already in processing state");
         }
 
         var priority = command.Priority.Trim();

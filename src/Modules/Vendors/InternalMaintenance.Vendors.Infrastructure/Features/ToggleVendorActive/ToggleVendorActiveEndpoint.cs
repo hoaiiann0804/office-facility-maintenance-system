@@ -1,4 +1,5 @@
 using InternalMaintenance.Vendors.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -29,6 +30,8 @@ public static class ToggleVendorActiveEndpoint
 
             return Results.Ok(result.Data);
         })
+        // [FIX G-05]: Chỉ Admin và Manager mới có quyền bật/tắt trạng thái hoạt động của đối tác.
+        .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin,Manager" })
         .WithName("ToggleVendorActive")
         .Produces<VendorResponse>(StatusCodes.Status200OK);
     }

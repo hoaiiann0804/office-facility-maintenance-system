@@ -28,7 +28,8 @@ public static class GetVendorByIdEndpoint
                 ? Results.NotFound(new { message = "Vendor not found" })
                 : Results.Ok(vendor);
         })
-        .AllowAnonymous()
+        // [FIX G-05]: Bỏ .AllowAnonymous(), yêu cầu người gọi phải đăng nhập hợp lệ.
+        .RequireAuthorization()
         .WithName("GetVendorById")
         .Produces<VendorResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);

@@ -45,6 +45,7 @@ export interface ApiGroup {
 
 export interface WireframeData {
   quickLogins: QuickLogin[];
+  productionQuickLogins: QuickLogin[];
   workflow: TicketStatus[];
   priorities: TicketPriority[];
   equipmentStatuses: EquipmentStatus[];
@@ -84,6 +85,37 @@ export const wireframeData: WireframeData = {
       password: "Temp@123456",
       role: "Staff",
       hint: "Create tickets and track progress",
+    },
+  ],
+  // Bộ tài khoản Quick Login riêng biệt dành cho môi trường Production (khớp với IdentitySeedData khi isProduction = true)
+  productionQuickLogins: [
+    {
+      label: "Demo Admin",
+      email: "demo.admin@office.vn",
+      password: "Demo@Prod2026!",
+      role: "Admin",
+      hint: "Toàn quyền quản trị & Báo cáo (Production Demo)",
+    },
+    {
+      label: "Demo Manager",
+      email: "demo.manager@office.vn",
+      password: "Demo@Prod2026!",
+      role: "Manager",
+      hint: "Điều phối & Giám sát SLA (Production Demo)",
+    },
+    {
+      label: "Demo Kỹ thuật",
+      email: "demo.tech@office.vn",
+      password: "Demo@Prod2026!",
+      role: "Technician",
+      hint: "Xử lý sự cố & Nghiệm thu (Production Demo)",
+    },
+    {
+      label: "Demo Nhân viên",
+      email: "demo.staff@office.vn",
+      password: "Demo@Prod2026!",
+      role: "Staff",
+      hint: "Báo hỏng & Theo dõi phiếu (Production Demo)",
     },
   ],
   workflow: ["Pending", "Assigned", "InProgress", "Resolved", "Closed"],

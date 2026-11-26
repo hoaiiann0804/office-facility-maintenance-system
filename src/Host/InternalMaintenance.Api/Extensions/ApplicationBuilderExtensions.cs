@@ -33,9 +33,17 @@ public static class ApplicationBuilderExtensions
             // Ap dung tat ca cac Migration chua thuc thi vao Database va dong bo schema
             await dbContext.Database.MigrateAsync();
 
-            // Seed du lieu mac dinh (Roles, Departments, Equipment, Test Accounts, Vendors)
-            await SeedData.InitializeAsync(dbContext);
-            app.Logger.LogInformation("Database migrations and seed data initialized successfully.");
+            // [PHÂN TÁCH TÀI KHOẢN QUICK LOGIN GIỮA DEVELOPMENT VÀ PRODUCTION]:
+            // - Ở Development: Seed bộ tài khoản Dev (*@test.com).
+            // - Ở Production (khi DemoMode:Enabled = true): Seed bộ tài khoản Demo riêng của Production (demo.*@office.vn).
+            var isProduction = !app.Environment.IsDevelopment();
+            var includeDemoData = app.Environment.IsDevelopment() ||
+                                  app.Configuration.GetValue<bool>("DemoMode:Enabled", true);
+            await SeedData.InitializeAsync(dbContext, includeDemoData, isProduction);
+            app.Logger.LogInformation(
+                "Database migrations and seed data initialized successfully (IsProduction: {IsProduction}, IncludeDemoData: {IncludeDemoData}).",
+                isProduction,
+                includeDemoData);
         }
         catch (Exception ex)
         {
@@ -43,6 +51,7 @@ public static class ApplicationBuilderExtensions
                 "Database initialization/seed failed during startup.");
         }
 
+        app.UseForwardedHeaders();
         app.UseCors(ServiceCollectionExtensions.FrontendCorsPolicyName);
         app.UseAuthentication();
         app.UseAuthorization();

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { wireframeData } from "../../shared/mock/wireframe-data";
+import { TICKET_PRIORITIES, TICKET_WORKFLOW_STATUSES } from "../../entities/ticket/model/constants";
 import type {
   TicketHistoryItem,
   TicketPriority,
@@ -14,27 +14,42 @@ import {
   TicketSlaBadge,
   TicketSlaDetailBar,
 } from "../../features/tickets/components/ticket-sla-badge";
-import { calculateSlaInfo } from "../../features/tickets/lib/sla-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Wrench, User, Calendar, Edit3, History } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Wrench,
+  User,
+  Calendar,
+  Edit3,
+  History,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 import { formatDateTime } from "@/shared/lib/date-utils";
 
-type SlaFilterType = "All" | "InSLA" | "NearBreach" | "Breached" | "MetSLA";
+type SlaFilterType = "All" | "InSLA" | "NearBreach" | "Breached" | "MetSLA" | "Paused";
 
 export function TicketsPage() {
   const [search, setSearch] = useState("");
   const [ticketStatus, setTicketStatus] = useState<"All" | TicketStatus>("All");
   const [ticketPriority, setTicketPriority] = useState<"All" | TicketPriority>("All");
   const [slaFilter, setSlaFilter] = useState<SlaFilterType>("All");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+  // [FIX F-01 / G-08 - TÌM KIẾM & LỌC SLA TRỰC TIẾP TRÊN SQL SERVER]:
+  // Truyền thẳng keyword (mã phiếu, tiêu đề, tên/mã thiết bị, người tạo) và slaStatus
+  // xuống API GET /api/tickets để SQL Server lọc trên toàn bộ các trang dữ liệu
+  // trước khi cắt phân trang, tránh bỏ sót các phiếu cũ hoặc phiếu quá hạn nằm ở trang 2, trang 3.
   const {
     data: ticketsPage,
     isLoading,
@@ -42,41 +57,17 @@ export function TicketsPage() {
   } = useTicketsQuery({
     status: ticketStatus === "All" ? undefined : ticketStatus,
     priority: ticketPriority === "All" ? undefined : ticketPriority,
+    keyword: search.trim() || undefined,
+    slaStatus: slaFilter === "All" ? undefined : slaFilter,
+    page,
+    pageSize,
   });
 
+  const totalPages = ticketsPage?.totalPages ?? 1;
+  const totalItems = ticketsPage?.totalItems ?? 0;
+
   const tickets = useMemo(() => ticketsPage?.items ?? [], [ticketsPage?.items]);
-  const filteredTickets = useMemo(() => {
-    let result = tickets;
-
-    const keyword = search.trim().toLowerCase();
-    if (keyword) {
-      result = result.filter((ticket) =>
-        [
-          ticket.ticketCode,
-          ticket.title,
-          ticket.description,
-          ticket.equipmentName,
-          ticket.equipmentCode,
-          ticket.createdByUserName,
-        ]
-          .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(keyword)),
-      );
-    }
-
-    if (slaFilter !== "All") {
-      result = result.filter((ticket) => {
-        const sla = calculateSlaInfo(ticket);
-        if (slaFilter === "Breached") return sla.isBreached || sla.statusType === "MissedSLA";
-        if (slaFilter === "NearBreach") return sla.statusType === "NearBreach";
-        if (slaFilter === "InSLA") return sla.statusType === "InSLA";
-        if (slaFilter === "MetSLA") return sla.statusType === "MetSLA";
-        return true;
-      });
-    }
-
-    return result;
-  }, [tickets, search, slaFilter]);
+  const filteredTickets = tickets;
 
   const activeTicketId = selectedTicketId ?? filteredTickets[0]?.id ?? null;
 
@@ -147,7 +138,7 @@ export function TicketsPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">Tickets</CardTitle>
               <Badge variant="secondary" className="text-xs">
-                {filteredTickets.length} / {tickets.length}
+                {filteredTickets.length} / {totalItems}
               </Badge>
             </div>
 
@@ -159,7 +150,10 @@ export function TicketsPage() {
                   type="text"
                   value={search}
                   placeholder="Tìm mã ticket, tiêu đề, thiết bị..."
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
                   className="pl-8 text-xs h-8"
                 />
               </div>
@@ -170,9 +164,12 @@ export function TicketsPage() {
                   <select
                     className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-[11px] shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     value={ticketStatus}
-                    onChange={(e) => setTicketStatus(e.target.value as TicketStatus | "All")}
+                    onChange={(e) => {
+                      setTicketStatus(e.target.value as TicketStatus | "All");
+                      setPage(1);
+                    }}
                   >
-                    {["All", ...wireframeData.workflow, "Cancelled"].map((status) => (
+                    {["All", ...TICKET_WORKFLOW_STATUSES, "Cancelled"].map((status) => (
                       <option key={status} value={status} className="bg-background text-foreground">
                         {status}
                       </option>
@@ -185,9 +182,12 @@ export function TicketsPage() {
                   <select
                     className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-[11px] shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     value={ticketPriority}
-                    onChange={(e) => setTicketPriority(e.target.value as TicketPriority | "All")}
+                    onChange={(e) => {
+                      setTicketPriority(e.target.value as TicketPriority | "All");
+                      setPage(1);
+                    }}
                   >
-                    {["All", ...wireframeData.priorities].map((p) => (
+                    {["All", ...TICKET_PRIORITIES].map((p) => (
                       <option key={p} value={p} className="bg-background text-foreground">
                         {p}
                       </option>
@@ -200,7 +200,10 @@ export function TicketsPage() {
                   <select
                     className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-[11px] shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-semibold text-primary"
                     value={slaFilter}
-                    onChange={(e) => setSlaFilter(e.target.value as SlaFilterType)}
+                    onChange={(e) => {
+                      setSlaFilter(e.target.value as SlaFilterType);
+                      setPage(1);
+                    }}
                   >
                     <option value="All" className="bg-background text-foreground">
                       Tất cả SLA
@@ -213,6 +216,9 @@ export function TicketsPage() {
                     </option>
                     <option value="Breached" className="bg-background text-foreground">
                       Quá hạn (Breached)
+                    </option>
+                    <option value="Paused" className="bg-background text-foreground">
+                      Tạm dừng (Vendor)
                     </option>
                     <option value="MetSLA" className="bg-background text-foreground">
                       Đạt SLA
@@ -276,6 +282,38 @@ export function TicketsPage() {
               </div>
             )}
           </CardContent>
+
+          {/* [FIX G-08]: Thanh chuyển trang (Pagination UI) cho danh sách Ticket */}
+          {totalPages > 1 && (
+            <div className="px-3 py-2 border-t flex items-center justify-between text-xs text-muted-foreground bg-muted/20">
+              <span>
+                Trang <strong className="text-foreground">{page}</strong> / {totalPages} (
+                {totalItems} phiếu)
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  disabled={page <= 1 || isLoading}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  disabled={page >= totalPages || isLoading}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Right Column: Ticket Detail View (7 cols) */}
@@ -478,6 +516,18 @@ export function TicketsPage() {
                                 Đã tạm dừng SLA:{" "}
                                 <span className="font-medium text-foreground">
                                   {Math.floor(vl.pausedMinutes / 60)}h {vl.pausedMinutes % 60}m
+                                </span>
+                              </div>
+                            )}
+                            {/* [FIX G-01]: Hiển thị chi phí sửa chữa thực tế của đối tác trong lịch sử Vendor */}
+                            {vl.repairCost != null && vl.repairCost >= 0 && (
+                              <div className="text-muted-foreground">
+                                Chi phí sửa chữa:{" "}
+                                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                  {new Intl.NumberFormat("vi-VN", {
+                                    style: "currency",
+                                    currency: "VND",
+                                  }).format(vl.repairCost)}
                                 </span>
                               </div>
                             )}

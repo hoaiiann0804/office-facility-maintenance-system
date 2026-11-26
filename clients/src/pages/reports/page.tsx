@@ -4,6 +4,8 @@ import {
   useTechnicianPerformanceQuery,
   useSlaComplianceQuery,
   useMaintenanceCostQuery,
+  useFailedSlaNotificationsQuery,
+  useRetrySlaNotificationMutation,
   downloadExcelReport,
   type ReportFilterQuery,
 } from "@/features/reports/api/reports-api";
@@ -23,8 +25,12 @@ import {
   Wrench,
   Building2,
   Award,
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatDateTime } from "@/shared/lib/date-utils";
 import {
   BarChart,
   Bar,
@@ -33,6 +39,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -103,6 +110,37 @@ export function ReportsPage() {
     useTechnicianPerformanceQuery(filter);
   const { data: slaReport } = useSlaComplianceQuery(filter);
   const { data: costReport } = useMaintenanceCostQuery(filter);
+  const {
+    data: outboxFailures = [],
+    isLoading: isOutboxLoading,
+    refetch: refetchOutboxFailures,
+  } = useFailedSlaNotificationsQuery(50, activeTab === "sla");
+  const retryOutboxMutation = useRetrySlaNotificationMutation();
+
+  const getNotificationTypeLabel = (type: number | string) => {
+    switch (type) {
+      case 0:
+      case "NearBreach":
+        return "Sắp vi phạm SLA (NearBreach)";
+      case 1:
+      case "Breached":
+        return "Quá hạn SLA (Breached)";
+      case 2:
+      case "Escalated":
+        return "Leo thang khẩn cấp (Escalated)";
+      default:
+        return String(type);
+    }
+  };
+
+  const handleRetryOutbox = async (outboxId: number) => {
+    try {
+      const res = await retryOutboxMutation.mutateAsync(outboxId);
+      toast.success(res.message || "Đã đưa thông báo vào hàng đợi gửi lại.");
+    } catch {
+      toast.error("Không thể gửi lại thông báo này. Vui lòng thử lại.");
+    }
+  };
 
   const handleExportExcel = async () => {
     try {
@@ -352,7 +390,9 @@ export function ReportsPage() {
                   Tổng Lượt Xử Lý Xong
                 </div>
                 <div className="text-2xl font-bold mt-1 text-emerald-600">
-                  {techReports.reduce((acc, t) => acc + t.totalResolved, 0)}
+                  {/* [FIX]: Cộng cả ticket đang ở trạng thái Resolved và ticket đã Closed
+                      để tổng số phiếu hoàn thành khớp với tổng (Đạt SLA + Trễ SLA). */}
+                  {techReports.reduce((acc, t) => acc + t.totalResolved + t.totalClosed, 0)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">Ticket hoàn thành sửa chữa</p>
               </CardContent>
@@ -364,13 +404,20 @@ export function ReportsPage() {
                   Tỷ Lệ Đạt SLA Trung Bình
                 </div>
                 <div className="text-2xl font-bold mt-1 text-purple-600">
-                  {techReports.length > 0
-                    ? Math.round(
-                        (techReports.reduce((acc, t) => acc + t.slaComplianceRate, 0) /
-                          techReports.length) *
-                          10,
-                      ) / 10
-                    : 100}
+                  {/* [FIX]: Chỉ tính trung bình trên các kỹ thuật viên đã có ít nhất 1 ticket hoàn thành,
+                      tránh việc KTV chưa có phiếu hoàn thành nào (mặc định 100%) làm sai lệch tỷ lệ chung. */}
+                  {(() => {
+                    const activeTechs = techReports.filter(
+                      (t) => t.metSlaCount + t.missedSlaCount > 0,
+                    );
+                    return activeTechs.length > 0
+                      ? Math.round(
+                          (activeTechs.reduce((acc, t) => acc + t.slaComplianceRate, 0) /
+                            activeTechs.length) *
+                            10,
+                        ) / 10
+                      : 100;
+                  })()}
                   %
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">Cam kết tiến độ toàn đội</p>
@@ -466,7 +513,10 @@ export function ReportsPage() {
                             {t.waitingForVendorCount}
                           </td>
                           <td className="px-4 py-3 text-center text-emerald-600 font-semibold">
-                            {t.totalResolved}
+                            {/* [FIX]: Cột "Đã xong" phải tính cả ticket ở trạng thái Resolved lẫn Closed
+                                để không bị hụt số lượng khi Admin/Requester bấm Đóng ticket, đồng thời khớp
+                                với số lượng (Đạt SLA + Trễ SLA) và mẫu số tính MTTR. */}
+                            {t.totalResolved + t.totalClosed}
                           </td>
                           <td className="px-4 py-3 text-center text-emerald-600">
                             {t.metSlaCount}
@@ -475,17 +525,23 @@ export function ReportsPage() {
                             {t.missedSlaCount}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                                t.slaComplianceRate >= 90
-                                  ? "bg-emerald-500/10 text-emerald-600"
-                                  : t.slaComplianceRate >= 75
-                                    ? "bg-amber-500/10 text-amber-600"
-                                    : "bg-destructive/10 text-destructive"
-                              }`}
-                            >
-                              {t.slaComplianceRate}%
-                            </span>
+                            {/* [FIX]: Nếu kỹ thuật viên chưa có ticket nào hoàn tất (Đạt SLA + Trễ SLA === 0)
+                                thì hiển thị "-" thay vì 100% ảo. */}
+                            {t.metSlaCount + t.missedSlaCount > 0 ? (
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                                  t.slaComplianceRate >= 90
+                                    ? "bg-emerald-500/10 text-emerald-600"
+                                    : t.slaComplianceRate >= 75
+                                      ? "bg-amber-500/10 text-amber-600"
+                                      : "bg-destructive/10 text-destructive"
+                                }`}
+                              >
+                                {t.slaComplianceRate}%
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-center font-medium">
                             {t.avgResolutionHours > 0 ? `${t.avgResolutionHours} giờ` : "-"}
@@ -621,6 +677,102 @@ export function ReportsPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* [BƯỚC 3B - F-02]: Bảng Giám Sát Hàng Đợi Email Cảnh Báo SLA (Transactional Outbox) */}
+          <Card className="shadow-sm overflow-hidden">
+            <CardHeader className="pb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <span>Giám Sát Hàng Đợi Email Cảnh Báo SLA (Transactional Outbox)</span>
+                </CardTitle>
+                <CardDescription className="text-xs mt-0.5">
+                  Theo dõi các thông báo cảnh báo SLA gửi qua email bị gián đoạn và chủ động đưa lại
+                  vào hàng đợi (Retry)
+                </CardDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void refetchOutboxFailures()}
+                disabled={isOutboxLoading}
+                className="gap-1.5 text-xs self-start sm:self-auto"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isOutboxLoading ? "animate-spin" : ""}`} />
+                <span>Làm mới</span>
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              {isOutboxLoading ? (
+                <div className="p-6 text-center text-xs text-muted-foreground">
+                  Đang kiểm tra hàng đợi Outbox...
+                </div>
+              ) : outboxFailures.length === 0 ? (
+                <div className="p-6 flex items-center justify-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>
+                    Hệ thống Transactional Outbox hoạt động ổn định — Không có email cảnh báo SLA
+                    nào bị lỗi.
+                  </span>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead className="bg-muted/60 text-muted-foreground uppercase text-[10px] font-semibold border-y">
+                      <tr>
+                        <th className="px-4 py-2.5">Mã Ticket</th>
+                        <th className="px-4 py-2.5">Loại cảnh báo</th>
+                        <th className="px-4 py-2.5 text-center">Số lần thử</th>
+                        <th className="px-4 py-2.5">Thời điểm lỗi</th>
+                        <th className="px-4 py-2.5">Nguyên nhân lỗi</th>
+                        {role === "Admin" && <th className="px-4 py-2.5 text-right">Thao tác</th>}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {outboxFailures.map((item) => (
+                        <tr key={item.outboxId} className="hover:bg-muted/30 transition-colors">
+                          <td className="px-4 py-3 font-mono font-semibold text-primary">
+                            {item.ticketCode}
+                          </td>
+                          <td className="px-4 py-3 font-medium">
+                            {getNotificationTypeLabel(item.notificationType)}
+                          </td>
+                          <td className="px-4 py-3 text-center font-semibold">
+                            {item.attemptCount}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                            {formatDateTime(item.failedAt)}
+                          </td>
+                          <td
+                            className="px-4 py-3 text-destructive max-w-xs truncate"
+                            title={item.error ?? ""}
+                          >
+                            {item.error || "Lỗi kết nối dịch vụ gửi email"}
+                          </td>
+                          {role === "Admin" && (
+                            <td className="px-4 py-3 text-right">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2.5 text-xs gap-1"
+                                disabled={retryOutboxMutation.isPending}
+                                onClick={() => void handleRetryOutbox(item.outboxId)}
+                              >
+                                <RefreshCw className="h-3 w-3" />
+                                <span>Gửi lại</span>
+                              </Button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -710,22 +862,28 @@ export function ReportsPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={costReport.departmentCosts}
+                        data={costReport.departmentCosts.filter((d) => d.totalCost > 0)}
                         dataKey="totalCost"
                         nameKey="departmentName"
                         cx="50%"
-                        cy="50%"
-                        outerRadius={80}
+                        cy="45%"
+                        outerRadius={70}
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         label={(entry: any) =>
-                          `${entry.departmentName}: ${Math.round(entry.totalCost / 1000000)}M`
+                          `${entry.departmentName}: ${(entry.totalCost / 1000000).toFixed(1)}M`
                         }
                       >
-                        {costReport.departmentCosts.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
+                        {costReport.departmentCosts
+                          .filter((d) => d.totalCost > 0)
+                          .map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
                       </Pie>
                       <Tooltip formatter={(val) => [formatVND(Number(val)), "Chi phí"]} />
+                      <Legend
+                        verticalAlign="bottom"
+                        wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (

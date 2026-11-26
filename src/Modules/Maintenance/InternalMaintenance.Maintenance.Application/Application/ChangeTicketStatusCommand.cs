@@ -17,4 +17,6 @@ public sealed record ChangeTicketStatusCommand(
     string? VendorNote,
     int ActorUserId,
     string ActorRole,
-    int? ActorDepartmentId);
+    int? ActorDepartmentId,
+    // [FIX G-01]: Bổ sung chi phí sửa chữa thực tế của đối tác (RepairCost) khi nhận lại thiết bị từ Vendor.
+    decimal? VendorRepairCost = null);

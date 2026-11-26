@@ -1,4 +1,5 @@
 using InternalMaintenance.Vendors.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +32,8 @@ public static class UpdateVendorEndpoint
 
             return Results.Ok(result.Data);
         })
+        // [FIX G-05]: Chỉ Admin và Manager mới có quyền cập nhật thông tin đối tác.
+        .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin,Manager" })
         .WithName("UpdateVendor")
         .Produces<VendorResponse>(StatusCodes.Status200OK);
     }

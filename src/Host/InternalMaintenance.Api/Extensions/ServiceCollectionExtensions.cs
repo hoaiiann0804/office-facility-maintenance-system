@@ -13,6 +13,7 @@ using InternalMaintenance.Api.Modules.Reports;
 using InternalMaintenance.Api.Services;
 using InternalMaintenance.Api.Services.Implementation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,6 +49,15 @@ public static class ServiceCollectionExtensions
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
 
+        // Tin cậy X-Forwarded-For / X-Forwarded-Proto từ Nginx & Cloudflare Tunnel
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders =
+                ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+
         var allowedOrigins = configuration
             .GetSection("Cors:AllowedOrigins")
             .Get<string[]>() ?? [];
@@ -65,7 +75,12 @@ public static class ServiceCollectionExtensions
                         var uri = new Uri(origin);
                         var host = uri.Host;
                         return host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+                               host.Equals("shopmini.io.vn", StringComparison.OrdinalIgnoreCase) ||
+                               host.EndsWith(".shopmini.io.vn", StringComparison.OrdinalIgnoreCase) ||
                                host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase) ||
+                               host.EndsWith(".trycloudflare.com", StringComparison.OrdinalIgnoreCase) ||
+                               host.EndsWith(".ngrok-free.app", StringComparison.OrdinalIgnoreCase) ||
+                               host.EndsWith(".ngrok.io", StringComparison.OrdinalIgnoreCase) ||
                                allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
                     }
                     catch

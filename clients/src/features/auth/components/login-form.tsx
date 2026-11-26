@@ -6,8 +6,9 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { Eye, EyeOff, Shield, Wrench, Bell, BarChart3 } from "lucide-react";
-import { wireframeData } from "../../../shared/mock/wireframe-data";
+import { DEV_QUICK_LOGINS, PROD_QUICK_LOGINS } from "../config/demo-accounts";
 import { appRoutes } from "../../../shared/config/routes";
+import { env } from "../../../shared/config/env";
 import { useLoginMutation } from "../api/use-login-mutation";
 import { useGoogleLoginMutation } from "../api/use-google-login-mutation";
 import { getFriendlyErrorMessage } from "@/shared/lib/error-utils";
@@ -40,7 +41,11 @@ export function LoginForm() {
   const navigate = useNavigate();
   const loginMutation = useLoginMutation();
   const googleLoginMutation = useGoogleLoginMutation();
-  const isDev = import.meta.env.DEV;
+  const isDemoMode = env.enableDemoMode;
+  // [PHÂN TÁCH TÀI KHOẢN QUICK LOGIN DEV vs PRODUCTION]:
+  // - Khi chạy Production (env.isProduction = true): dùng danh sách productionQuickLogins (demo.*@office.vn).
+  // - Khi chạy Development (env.isProduction = false): dùng danh sách quickLogins (*@test.com).
+  const activeQuickLogins = env.isProduction ? PROD_QUICK_LOGINS : DEV_QUICK_LOGINS;
 
   const {
     register,
@@ -50,8 +55,8 @@ export function LoginForm() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: wireframeData.quickLogins[0]?.email ?? "",
-      password: wireframeData.quickLogins[0]?.password ?? "",
+      email: isDemoMode ? (activeQuickLogins[0]?.email ?? "") : "",
+      password: isDemoMode ? (activeQuickLogins[0]?.password ?? "") : "",
     },
   });
 
@@ -188,24 +193,28 @@ export function LoginForm() {
             </p>
           </div>
 
-          {/* Quick logins — dev only */}
-          {isDev && (
+          {/* Quick logins — hiển thị trên cả Development (tài khoản Dev) lẫn Production (tài khoản Demo riêng) */}
+          {isDemoMode && (
             <Card className="border-dashed">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">
-                  Quick Login (Dev mode)
+                  {env.isProduction
+                    ? "Quick Login — Trải nghiệm nhanh (1 Click)"
+                    : "Quick Login (Dev Mode — 1 Click)"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-2 pt-0">
-                {wireframeData.quickLogins.map((item) => (
+                {activeQuickLogins.map((item) => (
                   <button
                     key={item.email}
                     type="button"
+                    disabled={isSubmitting || loginMutation.isPending}
                     onClick={() => {
                       setValue("email", item.email, { shouldValidate: true });
                       setValue("password", item.password, { shouldValidate: true });
+                      void onSubmit({ email: item.email, password: item.password });
                     }}
-                    className="text-left p-2.5 rounded-lg border hover:bg-accent hover:border-primary/30 transition-all group"
+                    className="text-left p-2.5 rounded-lg border hover:bg-accent hover:border-primary/30 transition-all group cursor-pointer disabled:opacity-60"
                   >
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <span className="text-xs font-semibold group-hover:text-primary transition-colors truncate">

@@ -1,5 +1,5 @@
 import { http } from "@/shared/api/http";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface ReportFilterQuery {
   fromDate?: string;
@@ -92,6 +92,18 @@ export interface MaintenanceCostResponse {
   topCostlyEquipment: CostlyEquipmentItem[];
 }
 
+// [BƯỚC 3B - F-02]: DTO biểu diễn bản ghi thông báo email SLA bị lỗi trong bảng SlaNotificationOutboxMessages
+export interface SlaOutboxFailureItem {
+  outboxId: number;
+  maintenanceTicketId: number;
+  ticketCode: string;
+  notificationType: number | string;
+  queuedAt: string;
+  failedAt: string;
+  attemptCount: number;
+  error: string | null;
+}
+
 export function useTechnicianPerformanceQuery(filter: ReportFilterQuery) {
   return useQuery<TechnicianPerformanceItem[]>({
     queryKey: ["reports", "technician-performance", filter],
@@ -118,6 +130,34 @@ export function useMaintenanceCostQuery(filter: ReportFilterQuery) {
     queryFn: async () => {
       const { data } = await http.get("/reports/maintenance-cost", { params: filter });
       return data;
+    },
+  });
+}
+
+// [BƯỚC 3B - F-02]: Lấy danh sách các thông báo email SLA bị lỗi (GET /api/maintenance/sla-notifications/failed)
+export function useFailedSlaNotificationsQuery(limit = 50, enabled = true) {
+  return useQuery<SlaOutboxFailureItem[]>({
+    queryKey: ["reports", "sla-outbox-failures", limit],
+    queryFn: async () => {
+      const { data } = await http.get("/maintenance/sla-notifications/failed", {
+        params: { limit },
+      });
+      return data;
+    },
+    enabled,
+  });
+}
+
+// [BƯỚC 3B - F-02]: Đưa thông báo SLA bị lỗi vào lại hàng đợi để SlaMonitorWorker gửi lại (POST .../retry)
+export function useRetrySlaNotificationMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (outboxId: number) => {
+      const { data } = await http.post(`/maintenance/sla-notifications/failed/${outboxId}/retry`);
+      return data as { message: string };
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["reports", "sla-outbox-failures"] });
     },
   });
 }

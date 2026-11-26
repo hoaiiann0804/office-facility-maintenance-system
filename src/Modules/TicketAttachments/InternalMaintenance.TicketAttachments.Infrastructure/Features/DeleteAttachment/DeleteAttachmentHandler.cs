@@ -1,7 +1,9 @@
 using InternalMaintenance.BuildingBlocks.Results;
+using InternalMaintenance.Identity.Contracts;
 using InternalMaintenance.Maintenance.Contracts;
 using InternalMaintenance.Persistence;
 using InternalMaintenance.TicketAttachments.Contracts;
+using InternalMaintenance.TicketAttachments.Domain;
 using InternalMaintenance.TicketAttachments.Infrastructure.Features.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +56,15 @@ public sealed class DeleteAttachmentHandler(
                 "You do not have permission to delete this attachment");
         }
 
+        // [FIX G-11 (Mục 3.1.4) - CHẶN XÓA FILE TRÊN TICKET ĐÃ KẾT THÚC & KIỂM TRA QUYỀN SỞ HỮU FILE]:
+        // 1. Không cho phép xóa file đính kèm khi ticket đã đóng hoặc hủy (Closed / Cancelled).
+        if (!TicketAttachmentRules.IsUploadAllowedStatus(ticket.Status))
+        {
+            return ServiceResult.Fail(
+                StatusCodes.Status400BadRequest,
+                "Ticket status does not allow attachment deletion");
+        }
+
         var attachment = await db.TicketAttachments
             .FirstOrDefaultAsync(item =>
                 item.Id == attachmentId &&
@@ -65,6 +76,20 @@ public sealed class DeleteAttachmentHandler(
             return ServiceResult.Fail(
                 StatusCodes.Status404NotFound,
                 "Attachment not found");
+        }
+
+        // 2. Chỉ người tải file lên (UploadedByUserId), Kỹ thuật viên chính phụ trách ticket,
+        //    hoặc Admin/Manager mới được quyền xóa file đính kèm đó (ngăn Staff xóa file của KTV và ngược lại).
+        var canDeleteAttachment =
+            actorContext.Role is UserRoles.Admin or UserRoles.Manager ||
+            attachment.UploadedByUserId == actorContext.UserId ||
+            ticket.AssignedTechnicianId == actorContext.UserId;
+
+        if (!canDeleteAttachment)
+        {
+            return ServiceResult.Fail(
+                StatusCodes.Status403Forbidden,
+                "You can only delete attachments that you uploaded");
         }
 
         attachment.IsDeleted = true;
