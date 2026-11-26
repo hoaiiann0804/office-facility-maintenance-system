@@ -30,7 +30,9 @@ public static class GetVendorsEndpoint
             var vendors = await vendorCatalog.GetAllAsync(isActive, cancellationToken);
             return Results.Ok(vendors);
         })
-        .AllowAnonymous()
+        // [FIX G-05]: Bỏ .AllowAnonymous() để không lộ thông tin liên hệ đối tác cho người chưa đăng nhập;
+        // kế thừa .RequireAuthorization() từ group cha để Technician/Manager/Admin đã đăng nhập đều gọi được.
+        .RequireAuthorization()
         .WithName("GetVendors")
         .Produces<IReadOnlyList<VendorResponse>>(StatusCodes.Status200OK);
     }

@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace InternalMaintenance.Identity.Infrastructure.Features.Auth.SwitchRole;
 
@@ -26,8 +28,23 @@ public static class SwitchRoleEndpoint
         return group.MapPost("switch-role", async (
             [FromBody] SwitchRoleRequest request,
             ClaimsPrincipal user,
-            IAuthService authService) =>
+            IAuthService authService,
+            IHostEnvironment environment,
+            IConfiguration configuration) =>
         {
+            // [FIX G-02 - PHÂN TÁCH MÔI TRƯỜNG DEVELOPMENT / DEMO VÀ PRODUCTION]:
+            // Cho phép chuyển đổi vai trò nhanh khi đang ở môi trường Development HOẶC khi chủ động bật
+            // cờ cấu hình "DemoMode:Enabled": true (phục vụ nhà tuyển dụng/người dùng test nhanh).
+            // Trên Production thật ("DemoMode:Enabled": false), chặn hoàn toàn với HTTP 403 Forbidden.
+            var isDemoModeEnabled = environment.IsDevelopment() ||
+                                    configuration.GetValue<bool>("DemoMode:Enabled");
+            if (!isDemoModeEnabled)
+            {
+                return Results.Json(
+                    new { message = "Role switching is disabled in Production environment." },
+                    statusCode: StatusCodes.Status403Forbidden);
+            }
+
             var currentUserId = user.GetRequiredUserId();
             var result = await authService.SwitchRoleAsync(currentUserId, request);
             return result.IsSuccess

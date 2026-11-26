@@ -10,7 +10,8 @@ namespace InternalMaintenance.Identity.Infrastructure;
 /// </summary>
 public static class IdentitySeedData
 {
-    private const string TemporaryPassword = "Temp@123456";
+    private const string DevTemporaryPassword = "Temp@123456";
+    private const string ProdDemoPassword = "Demo@Prod2026!";
 
     public static async Task SeedRolesAsync(AppDbContext context)
     {
@@ -21,7 +22,7 @@ public static class IdentitySeedData
         await context.SaveChangesAsync();
     }
 
-    public static async Task SeedUsersAsync(AppDbContext context)
+    public static async Task SeedUsersAsync(AppDbContext context, bool isProduction = false)
     {
         var adminRole = await context.Roles.FirstAsync(role => role.Name == "Admin");
         var managerRole = await context.Roles.FirstAsync(role => role.Name == "Manager");
@@ -33,10 +34,26 @@ public static class IdentitySeedData
         var accountingDepartment = await context.Departments
             .FirstOrDefaultAsync(department => department.Name == "Accounting");
 
-        await EnsureUserAsync(context, "System Admin", "admin@test.com", adminRole.Id, null);
-        await EnsureUserAsync(context, "Manager Test", "manager@test.com", managerRole.Id, itDepartment?.Id);
-        await EnsureUserAsync(context, "Staff Test", "staff@test.com", staffRole.Id, accountingDepartment?.Id);
-        await EnsureUserAsync(context, "Technician Test", "technician@test.com", technicianRole.Id, itDepartment?.Id);
+        // [PHÂN TÁCH TÀI KHOẢN QUICK LOGIN GIỮA DEVELOPMENT VÀ PRODUCTION]:
+        // - Môi trường Development: Dùng bộ tài khoản *@test.com (mật khẩu Temp@123456).
+        // - Môi trường Production: Dùng bộ tài khoản test riêng cho Nhà tuyển dụng / Người dùng trải nghiệm
+        //   (demo.*@office.vn, mật khẩu Demo@Prod2026!) để vẫn bấm Quick Login 1-click trên Production
+        //   nhưng tách biệt hoàn toàn với tài khoản Dev.
+        if (isProduction)
+        {
+            await EnsureUserAsync(context, "Demo Admin (Production)", "demo.admin@office.vn", ProdDemoPassword, adminRole.Id, null);
+            await EnsureUserAsync(context, "Demo Manager (Production)", "demo.manager@office.vn", ProdDemoPassword, managerRole.Id, itDepartment?.Id);
+            await EnsureUserAsync(context, "Demo Staff (Production)", "demo.staff@office.vn", ProdDemoPassword, staffRole.Id, accountingDepartment?.Id);
+            await EnsureUserAsync(context, "Demo Technician (Production)", "demo.tech@office.vn", ProdDemoPassword, technicianRole.Id, itDepartment?.Id);
+        }
+        else
+        {
+            await EnsureUserAsync(context, "System Admin", "admin@test.com", DevTemporaryPassword, adminRole.Id, null);
+            await EnsureUserAsync(context, "Manager Test", "manager@test.com", DevTemporaryPassword, managerRole.Id, itDepartment?.Id);
+            await EnsureUserAsync(context, "Staff Test", "staff@test.com", DevTemporaryPassword, staffRole.Id, accountingDepartment?.Id);
+            await EnsureUserAsync(context, "Technician Test", "technician@test.com", DevTemporaryPassword, technicianRole.Id, itDepartment?.Id);
+        }
+
         await context.SaveChangesAsync();
     }
 
@@ -52,6 +69,7 @@ public static class IdentitySeedData
         AppDbContext context,
         string fullName,
         string email,
+        string defaultPassword,
         int roleId,
         int? departmentId)
     {
@@ -64,11 +82,13 @@ public static class IdentitySeedData
             {
                 FullName = fullName,
                 Email = email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(TemporaryPassword),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
                 RoleId = roleId,
                 DepartmentId = departmentId,
                 IsActive = true,
-                MustChangePassword = true,
+                // [QUICK LOGIN 1-CLICK]: Tài khoản Quick Login của cả Dev lẫn Production đều đặt
+                // MustChangePassword = false để nhà tuyển dụng/người dùng bấm 1 click là vào thẳng Dashboard.
+                MustChangePassword = false,
                 LastLoginAt = null,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = null
@@ -85,10 +105,11 @@ public static class IdentitySeedData
         // Không mở khóa tài khoản Admin đã bị vô hiệu hóa. Chỉ hash lại mật khẩu cũ chưa được mã hóa.
         if (!IsBCryptHash(user.PasswordHash))
         {
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(TemporaryPassword);
-            user.MustChangePassword = true;
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword);
         }
 
+        // Đảm bảo tài khoản Quick Login không bị chặn bởi hộp thoại bắt buộc đổi mật khẩu khi demo.
+        user.MustChangePassword = false;
         user.UpdatedAt = DateTime.UtcNow;
     }
 
