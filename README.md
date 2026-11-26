@@ -418,3 +418,8 @@ InternalMaintenanceManagement.slnx
   - Real-time in-app notifications via **SignalR**, `@mention` in comments, and mobile **PWA** support for field technicians / Thông báo real-time SignalR & giao diện PWA.
 - [ ] **Phase 7 — Location & Scale**:
   - Physical location hierarchy (**Building → Floor → Room**) & **Multi-tenancy** architecture / Mô hình vị trí vật lý & kiến trúc đa tổ chức.
+
+
+### Technical TODO / Ghi chú kỹ thuật
+
+- [ ] **TicketCode collision**: TicketCode có xác suất va chạm thấp, cân nhắc SEQUENCE nếu log cho thấy. (Hiện không retry; lỗi trùng `TicketCode` nổi lên thành exception thay vì bị báo là `DuplicateRace`.)

@@ -5,6 +5,7 @@ using InternalMaintenance.Maintenance.Contracts;
 using InternalMaintenance.Maintenance.Domain;
 using InternalMaintenance.Persistence;
 using InternalMaintenance.Vendors.Contracts;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace InternalMaintenance.Maintenance.Infrastructure;
@@ -20,6 +21,11 @@ public sealed class EfTicketCreationStore(
     IEquipmentTicketContextReader equipmentReader,
     IVendorDirectory vendorDirectory) : ITicketCreationStore
 {
+    // Tên phải khớp HasDatabaseName trong MaintenanceTicketConfiguration.
+    private const string ActiveEquipmentIndexName = "IX_MaintenanceTickets_EquipmentId_Active";
+    private const int UniqueIndexViolation = 2601;
+    private const int UniqueConstraintViolation = 2627;
+
     public Task<bool> HasEquipmentOccupyingTicketAsync(int equipmentId, CancellationToken cancellationToken) =>
         db.MaintenanceTickets.AnyAsync(ticket =>
             ticket.EquipmentId == equipmentId &&
@@ -33,14 +39,17 @@ public sealed class EfTicketCreationStore(
             await db.SaveChangesAsync(cancellationToken);
             return true;
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex) when (IsActiveEquipmentIndexViolation(ex))
         {
-            if (await HasEquipmentOccupyingTicketAsync(ticket.EquipmentId, cancellationToken))
-                return false;
-
-            throw;
+            // Chỉ vi phạm đúng filtered unique index của thiết bị mới là "duplicate race".
+            // Lỗi khác (TicketCode, FK, timeout...) không bị bắt và nổi lên thành exception.
+            return false;
         }
     }
+
+    private static bool IsActiveEquipmentIndexViolation(DbUpdateException ex) =>
+        ex.GetBaseException() is SqlException { Number: UniqueIndexViolation or UniqueConstraintViolation } sql &&
+        sql.Message.Contains(ActiveEquipmentIndexName, StringComparison.OrdinalIgnoreCase);
 
     public Task<MaintenanceTicketResponse?> GetResponseAsync(int ticketId, CancellationToken cancellationToken) =>
         TicketMappingExtensions.LoadResponseByIdAsync(
