@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { ShieldCheck, Briefcase, Wrench, User, Sparkles } from "lucide-react";
 import { useAuthStore } from "../model/auth-store";
 import { useSwitchRoleMutation } from "../api/use-switch-role-mutation";
+import { env } from "@/shared/config/env";
 import { cn } from "@/lib/utils";
 
 const ROLES = [
@@ -43,6 +44,11 @@ export function DemoRoleSwitcher() {
   const session = useAuthStore((state) => state.session);
   const currentRole = session?.user.roleName ?? "Staff";
   const switchMutation = useSwitchRoleMutation();
+
+  // [FIX G-02]: Đồng bộ với env.enableDemoMode (mặc định bật ở Development, tắt ở Production).
+  if (!env.enableDemoMode) {
+    return null;
+  }
 
   const handleRoleChange = async (roleName: string) => {
     if (roleName === currentRole || switchMutation.isPending) return;

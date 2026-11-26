@@ -88,6 +88,9 @@ export interface TicketQuery {
   status?: TicketStatus;
   priority?: TicketPriority;
   equipmentId?: number;
+  // [FIX F-01 / G-08]: Truyền từ khóa tìm kiếm và bộ lọc trạng thái SLA lên Server
+  keyword?: string;
+  slaStatus?: string;
   page?: number;
   pageSize?: number;
 }
@@ -114,6 +117,8 @@ export interface ChangeTicketStatusRequest {
   vendorId?: number;
   vendorEstimatedReturnDate?: string;
   vendorNote?: string;
+  // [FIX G-01]: Chi phí sửa chữa thực tế của đối tác khi nhận lại thiết bị từ Vendor.
+  vendorRepairCost?: number | null;
 }
 
 export interface CreateTicketCommentRequest {

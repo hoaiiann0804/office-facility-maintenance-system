@@ -70,6 +70,7 @@ export function TicketActionPanel({ ticket }: Props) {
   const [vendorId, setVendorId] = useState("");
   const [vendorReturnDate, setVendorReturnDate] = useState("");
   const [vendorNote, setVendorNote] = useState("");
+  const [vendorRepairCost, setVendorRepairCost] = useState("");
 
   const [prevTicket, setPrevTicket] = useState(ticket);
   if (ticket !== prevTicket) {
@@ -83,6 +84,7 @@ export function TicketActionPanel({ ticket }: Props) {
     setVendorId("");
     setVendorReturnDate("");
     setVendorNote("");
+    setVendorRepairCost("");
   }
 
   const assignMutation = useAssignTicketMutation(ticket.id);
@@ -191,6 +193,20 @@ export function TicketActionPanel({ ticket }: Props) {
       }
     }
 
+    // [FIX G-01]: Khi nhận thiết bị từ đối tác về (WaitingForVendor -> InProgress),
+    // kiểm tra chi phí sửa chữa thực tế (nếu nhập) phải là số không âm.
+    let parsedRepairCost: number | undefined = undefined;
+    if (ticket.status === "WaitingForVendor" && newStatus === "InProgress") {
+      if (vendorRepairCost.trim() !== "") {
+        const costValue = Number(vendorRepairCost);
+        if (Number.isNaN(costValue) || costValue < 0) {
+          toast.error("Chi phí sửa chữa không hợp lệ (không được nhỏ hơn 0).");
+          return;
+        }
+        parsedRepairCost = costValue;
+      }
+    }
+
     try {
       await statusMutation.mutateAsync({
         status: newStatus as
@@ -201,9 +217,11 @@ export function TicketActionPanel({ ticket }: Props) {
         vendorEstimatedReturnDate:
           newStatus === "WaitingForVendor" ? new Date(vendorReturnDate).toISOString() : undefined,
         vendorNote: newStatus === "WaitingForVendor" ? vendorNote.trim() : undefined,
+        vendorRepairCost: parsedRepairCost,
       });
       toast.success("Cập nhật trạng thái thành công!");
       setStatusNote("");
+      setVendorRepairCost("");
       setIsVendorDialogOpen(false);
     } catch (e) {
       toastApiError(e, "Không thể cập nhật trạng thái.");
@@ -331,6 +349,25 @@ export function TicketActionPanel({ ticket }: Props) {
               />
             </div>
 
+            {isAssignedTech && ticket.status === "WaitingForVendor" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="vendor-repair-cost">
+                  Chi phí sửa chữa thực tế của đối tác (VNĐ)
+                </Label>
+                <input
+                  id="vendor-repair-cost"
+                  type="number"
+                  min={0}
+                  step={1000}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  value={vendorRepairCost}
+                  onChange={(e) => setVendorRepairCost(e.target.value)}
+                  placeholder="Nhập số tiền theo hóa đơn đối tác (VD: 500000)..."
+                  disabled={isWorking}
+                />
+              </div>
+            )}
+
             {isAssignedTech && ticket.status === "InProgress" && (
               <div className="space-y-1.5">
                 <Label htmlFor="resolution-note">
@@ -400,18 +437,21 @@ export function TicketActionPanel({ ticket }: Props) {
                   </Button>
                 )}
 
-              {(isRequester || role === "Admin" || role === "Manager") && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setIsCancelDialogOpen(true)}
-                  disabled={isWorking}
-                >
-                  <XCircle className="h-4 w-4 mr-1" />
-                  Hủy ticket
-                </Button>
-              )}
+              {(isRequester || role === "Admin" || role === "Manager") &&
+                (ticket.status === "Pending" ||
+                  ticket.status === "Assigned" ||
+                  ticket.status === "InProgress") && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setIsCancelDialogOpen(true)}
+                    disabled={isWorking}
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Hủy ticket
+                  </Button>
+                )}
             </div>
           </CardContent>
         </Card>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useChangePasswordMutation } from "../api/use-change-password-mutation";
+import { useAuthStore } from "../model/auth-store";
 import { getFriendlyErrorMessage } from "@/shared/lib/error-utils";
 import {
   Dialog,
@@ -68,14 +69,23 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
   };
 
   const isPending = changePasswordMutation.isPending;
+  const mustChangePassword = Boolean(
+    useAuthStore((state) => state.session?.user.mustChangePassword),
+  );
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !mustChangePassword && onClose()}>
+      <DialogContent
+        className={mustChangePassword ? "sm:max-w-md [&>button]:hidden" : "sm:max-w-md"}
+      >
         <DialogHeader>
-          <DialogTitle>Đổi Mật Khẩu Cá Nhân</DialogTitle>
+          <DialogTitle>
+            {mustChangePassword ? "Bắt Buộc Đổi Mật Khẩu Lần Đầu" : "Đổi Mật Khẩu Cá Nhân"}
+          </DialogTitle>
           <DialogDescription>
-            Nhập mật khẩu hiện tại và thiết lập mật khẩu mới cho tài khoản của bạn.
+            {mustChangePassword
+              ? "Tài khoản của bạn đang dùng mật khẩu tạm thời. Vui lòng đổi mật khẩu mới để bắt đầu sử dụng hệ thống."
+              : "Nhập mật khẩu hiện tại và thiết lập mật khẩu mới cho tài khoản của bạn."}
           </DialogDescription>
         </DialogHeader>
 
@@ -126,9 +136,11 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
           </div>
 
           <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
-              Hủy
-            </Button>
+            {!mustChangePassword && (
+              <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+                Hủy
+              </Button>
+            )}
             <Button type="submit" disabled={isPending}>
               {isPending ? "Đang xử lý..." : "Lưu thay đổi"}
             </Button>

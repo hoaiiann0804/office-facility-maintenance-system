@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useSwitchRoleMutation } from "@/features/auth/api/use-switch-role-mutation";
+import { env } from "@/shared/config/env";
 import { cn } from "@/lib/utils";
 
 type UserProfileProps = {
@@ -120,41 +121,46 @@ export function UserProfile({ fullName, roleName, onLogout, onChangePassword }: 
 
           <DropdownMenuSeparator />
 
-          {/* Demo Role Switcher Section */}
-          <div className="px-1 py-1">
-            <div className="flex items-center gap-1.5 px-1.5 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              <Sparkles className="h-3 w-3 text-primary" />
-              <span>Chuyển vai trò (Demo)</span>
-            </div>
-            <div className="grid grid-cols-1 gap-0.5">
-              {DEMO_ROLES.map((role) => {
-                const Icon = role.icon;
-                const isActive = roleName === role.name;
+          {/* [FIX SEC-10 / UX-05]: Chỉ hiển thị mục Chuyển vai trò (Demo) khi bật env.enableDemoMode
+              (mặc định bật ở Development, tắt trên Production). */}
+          {env.enableDemoMode && (
+            <>
+              <div className="px-1 py-1">
+                <div className="flex items-center gap-1.5 px-1.5 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                  <Sparkles className="h-3 w-3 text-primary" />
+                  <span>Chuyển vai trò (Demo)</span>
+                </div>
+                <div className="grid grid-cols-1 gap-0.5">
+                  {DEMO_ROLES.map((role) => {
+                    const Icon = role.icon;
+                    const isActive = roleName === role.name;
 
-                return (
-                  <DropdownMenuItem
-                    key={role.name}
-                    onClick={() => handleRoleChange(role.name)}
-                    disabled={switchMutation.isPending}
-                    className={cn(
-                      "flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors",
-                      isActive
-                        ? "bg-primary/10 text-primary font-semibold"
-                        : "hover:bg-accent text-foreground",
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon className={cn("h-4 w-4", role.color)} />
-                      <span>{role.label}</span>
-                    </div>
-                    {isActive && <Check className="h-3.5 w-3.5 text-primary stroke-[2.5]" />}
-                  </DropdownMenuItem>
-                );
-              })}
-            </div>
-          </div>
+                    return (
+                      <DropdownMenuItem
+                        key={role.name}
+                        onClick={() => handleRoleChange(role.name)}
+                        disabled={switchMutation.isPending}
+                        className={cn(
+                          "flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors",
+                          isActive
+                            ? "bg-primary/10 text-primary font-semibold"
+                            : "hover:bg-accent text-foreground",
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Icon className={cn("h-4 w-4", role.color)} />
+                          <span>{role.label}</span>
+                        </div>
+                        {isActive && <Check className="h-3.5 w-3.5 text-primary stroke-[2.5]" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
+              </div>
 
-          <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
+            </>
+          )}
 
           <DropdownMenuItem
             onClick={onChangePassword}

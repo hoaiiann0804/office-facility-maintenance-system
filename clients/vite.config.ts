@@ -11,6 +11,19 @@ export default defineConfig({
     },
   },
   server: {
+    host: true,
+    port: 5173,
+    // Cho phép truy cập qua tên miền Tunnel (Cloudflare Tunnel, Ngrok, Custom Domain) không bị Vite chặn
+    allowedHosts: true,
+    proxy: {
+      "/api": "http://localhost:5253",
+      "/swagger": "http://localhost:5253",
+    },
+  },
+  preview: {
+    host: true,
+    port: 5173,
+    allowedHosts: true,
     proxy: {
       "/api": "http://localhost:5253",
       "/swagger": "http://localhost:5253",
