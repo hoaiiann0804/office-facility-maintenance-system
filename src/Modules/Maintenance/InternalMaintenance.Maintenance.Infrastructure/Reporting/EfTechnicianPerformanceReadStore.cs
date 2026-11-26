@@ -61,16 +61,37 @@ public sealed class EfTechnicianPerformanceReadStore(AppDbContext db) : ITechnic
                 WaitingForVendor = group.Count(ticket => ticket.Status == TicketStatuses.WaitingForVendor),
                 Resolved = group.Count(ticket => ticket.Status == TicketStatuses.Resolved),
                 Closed = group.Count(ticket => ticket.Status == TicketStatuses.Closed),
+                // [FIX BÁO CÁO HIỆU SUẤT KTV - ĐỒNG BỘ SỐ LIỆU ĐẠT/TRỄ SLA VỚI PHIẾU ĐÃ XONG]:
+                // 1. Các ticket mới khi Resolve đã chốt SlaStatus = MetSLA hoặc MissedSLA.
+                // 2. Các ticket cũ trong DB (tạo/đóng trước migration AddSlaFields) có SlaStatus = "" hoặc "InSLA":
+                //    đối chiếu ResolvedAt với DueAt (hoặc SlaStatus != Breached nếu không có DueAt) để mọi phiếu
+                //    đã hoàn tất (Resolved + Closed) đều được phân loại vào Đạt SLA hoặc Trễ SLA, không bị rơi về 0.
                 MetSla = group.Count(ticket =>
                     (ticket.Status == TicketStatuses.Resolved || ticket.Status == TicketStatuses.Closed) &&
-                    ticket.SlaStatus == SlaPolicy.MetSLA),
+                    (ticket.SlaStatus == SlaPolicy.MetSLA ||
+                     (ticket.SlaStatus != SlaPolicy.MissedSLA &&
+                      ticket.SlaStatus != SlaPolicy.Breached &&
+                      (!ticket.DueAt.HasValue ||
+                       !ticket.ResolvedAt.HasValue ||
+                       ticket.ResolvedAt.Value <= ticket.DueAt.Value)))),
                 MissedSla = group.Count(ticket =>
                     (ticket.Status == TicketStatuses.Resolved || ticket.Status == TicketStatuses.Closed) &&
-                    ticket.SlaStatus == SlaPolicy.MissedSLA),
+                    (ticket.SlaStatus == SlaPolicy.MissedSLA ||
+                     ticket.SlaStatus == SlaPolicy.Breached ||
+                     (ticket.SlaStatus != SlaPolicy.MetSLA &&
+                      ticket.DueAt.HasValue &&
+                      ticket.ResolvedAt.HasValue &&
+                      ticket.ResolvedAt.Value > ticket.DueAt.Value))),
+                // [FIX MTTR]: Chỉ tính trên các ticket đã hoàn thành (Resolved/Closed) có ResolvedAt,
+                // đồng thời trừ đi thời gian tạm dừng chờ đối tác (TotalSlaPausedMinutes * 60 giây).
                 AverageResolutionSeconds = group
-                    .Where(ticket => ticket.ResolvedAt.HasValue)
-                    .Average(ticket => (double?)EF.Functions.DateDiffSecond(
-                        ticket.CreatedAt, ticket.ResolvedAt!.Value))
+                    .Where(ticket =>
+                        (ticket.Status == TicketStatuses.Resolved || ticket.Status == TicketStatuses.Closed) &&
+                        ticket.ResolvedAt.HasValue)
+                    .Average(ticket => (double?)(
+                        EF.Functions.DateDiffSecond(ticket.CreatedAt, ticket.ResolvedAt!.Value) > ticket.TotalSlaPausedMinutes * 60
+                            ? EF.Functions.DateDiffSecond(ticket.CreatedAt, ticket.ResolvedAt!.Value) - (ticket.TotalSlaPausedMinutes * 60)
+                            : 0))
             });
 
         var technicians =

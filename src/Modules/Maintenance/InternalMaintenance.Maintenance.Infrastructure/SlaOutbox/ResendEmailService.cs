@@ -49,14 +49,33 @@ public class ResendEmailService : IEmailService
         return dt.Value.AddHours(7).ToString("dd/MM/yyyy HH:mm");
     }
 
-    private async Task SendEmailAsync(
+    private Task SendEmailAsync(
         string? toEmail,
         string subject,
         string bodyHtml,
         string? idempotencyKey = null,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(toEmail))
+        var list = string.IsNullOrWhiteSpace(toEmail) ? Array.Empty<string>() : new[] { toEmail.Trim() };
+        return SendEmailAsync(list, subject, bodyHtml, idempotencyKey, cancellationToken);
+    }
+
+    private async Task SendEmailAsync(
+        IEnumerable<string> toEmails,
+        string subject,
+        string bodyHtml,
+        string? idempotencyKey = null,
+        CancellationToken cancellationToken = default)
+    {
+        var validRecipients = toEmails
+            .Where(e => !string.IsNullOrWhiteSpace(e))
+            .Select(e => e.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var recipientsMasked = string.Join(", ", validRecipients.Select(MaskEmail));
+
+        if (validRecipients.Length == 0)
         {
             // Không coi thiếu địa chỉ nhận là gửi thành công; outbox cần lưu lại lỗi để quản trị viên bổ sung email.
             throw new PermanentEmailDeliveryException("The SLA email has no recipient address.");
@@ -76,7 +95,7 @@ public class ResendEmailService : IEmailService
         var payload = new
         {
             from = fromHeader,
-            to = new[] { toEmail.Trim() },
+            to = validRecipients,
             subject = subject,
             html = bodyHtml
         };
@@ -109,7 +128,7 @@ public class ResendEmailService : IEmailService
                 {
                     _logger.LogInformation(
                         "Successfully dispatched email to {RecipientMasked} (Subject: {Subject}) via Resend on attempt {Attempt}",
-                        MaskEmail(toEmail), subject, attempt);
+                        recipientsMasked, subject, attempt);
                     return;
                 }
 
@@ -137,7 +156,7 @@ public class ResendEmailService : IEmailService
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                _logger.LogWarning("Email sending operation canceled for recipient {RecipientMasked}", MaskEmail(toEmail));
+                _logger.LogWarning("Email sending operation canceled for recipient {RecipientMasked}", recipientsMasked);
                 throw;
             }
             catch (PermanentEmailDeliveryException)
@@ -150,7 +169,7 @@ public class ResendEmailService : IEmailService
                 _logger.LogWarning(
                     ex,
                     "Transient error occurred while sending email to {RecipientMasked} on attempt {Attempt}/{MaxAttempts}",
-                    MaskEmail(toEmail), attempt, maxAttempts);
+                    recipientsMasked, attempt, maxAttempts);
             }
 
             if (attempt < maxAttempts)
@@ -161,7 +180,7 @@ public class ResendEmailService : IEmailService
         }
 
         _logger.LogError("Failed to deliver email to {RecipientMasked} after {MaxAttempts} attempts. Subject: {Subject}",
-            MaskEmail(toEmail), maxAttempts, subject);
+            recipientsMasked, maxAttempts, subject);
 
         // Báo lỗi lên caller để outbox không đánh dấu message là đã gửi thành công.
         // Worker sẽ lưu lỗi và retry ở chu kỳ sau; nếu chỉ log rồi return, outbox sẽ mất dấu thất bại.
@@ -223,11 +242,32 @@ public class ResendEmailService : IEmailService
         CancellationToken cancellationToken = default,
         string? idempotencyKey = null)
     {
-        var recipient = (ticket.AssignedTechnicianId.HasValue
-                ? await _identityUserDirectory.FindEmailAsync(ticket.AssignedTechnicianId.Value, cancellationToken)
-                : null)
-            ?? _options.FallbackManagerEmail
-            ?? _options.FallbackAdminEmail;
+        // [FIX G-10 - TỐI ƯU GỬI ĐỒNG THỜI CHO CẢ KỸ THUẬT VIÊN VÀ QUẢN LÝ]:
+        // Khi quá hạn SLA, cả Kỹ thuật viên phụ trách (người trực tiếp làm việc) lẫn Quản lý
+        // (người giám sát điều phối) đều cần nhận email thông báo để phối hợp xử lý khẩn cấp.
+        var recipients = new List<string>();
+
+        // 1. Kỹ thuật viên chính phụ trách ticket
+        if (ticket.AssignedTechnicianId.HasValue)
+        {
+            var techEmail = await _identityUserDirectory.FindEmailAsync(ticket.AssignedTechnicianId.Value, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(techEmail))
+            {
+                recipients.Add(techEmail.Trim());
+            }
+        }
+
+        // 2. Quản lý phòng ban (FallbackManagerEmail)
+        if (!string.IsNullOrWhiteSpace(_options.FallbackManagerEmail))
+        {
+            recipients.Add(_options.FallbackManagerEmail.Trim());
+        }
+
+        // 3. Fallback an toàn về Admin nếu cả 2 đối tượng trên đều chưa có
+        if (recipients.Count == 0 && !string.IsNullOrWhiteSpace(_options.FallbackAdminEmail))
+        {
+            recipients.Add(_options.FallbackAdminEmail.Trim());
+        }
 
         var subject = $"[VI PHẠM SLA] Ticket #{ticket.TicketCode} ĐÃ QUÁ HẠN XỬ LÝ";
         var body = $@"
@@ -245,7 +285,7 @@ public class ResendEmailService : IEmailService
                 <p style='font-size: 12px; color: #64748b;'>Hệ thống Quản lý Bảo trì Thiết bị Văn phòng</p>
             </div>";
 
-        await SendEmailAsync(recipient, subject, body, idempotencyKey, cancellationToken);
+        await SendEmailAsync(recipients, subject, body, idempotencyKey, cancellationToken);
     }
 
     public async Task SendEscalationAlertAsync(

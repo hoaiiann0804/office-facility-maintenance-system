@@ -122,12 +122,20 @@ public sealed class ChangeTicketStatusHandler(
 
         if (oldStatus == TicketStatuses.WaitingForVendor && newStatus == TicketStatuses.InProgress)
         {
+            // [FIX G-01]: Kiểm tra không cho phép nhập chi phí sửa chữa âm và lưu RepairCost vào TicketVendorLog
+            // để Báo cáo Chi phí Bảo dưỡng (Maintenance Cost Report) và file Excel có dữ liệu thực tế.
+            if (command.VendorRepairCost.HasValue && command.VendorRepairCost.Value < 0)
+                return Invalid("Vendor repair cost cannot be negative");
+
             var activeLog = await store.GetOpenVendorLogAsync(ticket.Id, cancellationToken);
             var pausedMinutes = 0;
             if (activeLog is not null)
             {
                 activeLog.ActualReturnDate = changedAt;
-                activeLog.PausedMinutes = (int)(changedAt - activeLog.DispatchedAt).TotalMinutes;
+                activeLog.PausedMinutes = Math.Max(
+                    0,
+                    (int)Math.Round((changedAt - activeLog.DispatchedAt).TotalMinutes, MidpointRounding.AwayFromZero));
+                activeLog.RepairCost = command.VendorRepairCost;
                 pausedMinutes = activeLog.PausedMinutes;
             }
 

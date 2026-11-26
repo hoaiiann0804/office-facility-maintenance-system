@@ -77,6 +77,10 @@ public sealed class CreateTicketCommentHandler(
         if (command.ActorRole != UserRoles.Manager || !command.ActorDepartmentId.HasValue)
             return false;
 
+        // [FIX Mục 4.2]: Đồng bộ với TicketAccessPolicy — Manager luôn có quyền bình luận trên ticket do chính mình tạo.
+        if (ticket.CreatedByUserId == command.ActorUserId)
+            return true;
+
         var equipment = await equipmentReader.GetAsync(ticket.EquipmentId, cancellationToken);
         if (equipment is not null &&
             (equipment.DepartmentId == command.ActorDepartmentId ||

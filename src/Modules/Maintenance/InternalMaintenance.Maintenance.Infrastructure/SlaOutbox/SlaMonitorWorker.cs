@@ -67,8 +67,11 @@ public class SlaMonitorWorker : BackgroundService
         // Chỉ lấy các status mà SLA thực sự đang chạy để tránh ghi đè kết quả đã chốt.
         var tickets = await db.MaintenanceTickets
             .AsNoTracking()
-            .Where(t => t.DueAt != null)
+            .Where(t => t.DueAt != null && t.DueAt <= now.AddHours(1))
             .Where(t => TicketWorkflowRules.SlaTrackedStatuses.Contains(t.Status))
+            .Where(t => t.NearBreachNotifiedAt == null
+                || t.BreachedNotifiedAt == null
+                || t.EscalatedNotifiedAt == null)
             .ToListAsync(stoppingToken);
 
         foreach (var ticket in tickets)
